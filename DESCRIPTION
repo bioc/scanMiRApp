@@ -1,0 +1,15 @@
+Package: scanMiRApp
+Type: Package
+Title: scanMiR shiny application
+Version: 0.99.7
+Date: 2021-02-28
+Authors@R: c(
+    person("Pierre-Luc", "Germain", email="pierre-luc.germain@hest.ethz.ch", role=c("cre","aut"), comment=c(ORCID="0000-0003-3418-4218")),
+    person("Michael", "Soutschek", email="michael.soutschek@hest.ethz.ch", role="ctb"),
+    person("Fridolin", "Gross", email="fridolin.gross@hest.ethz.ch", role="ctb"))
+Imports: scanMiR, shiny, shinydashboard, DT, shinycssloaders, ensembldb, BSgenome, GenomeInfoDb, Biostrings, digest, fst, GenomicRanges, IRanges, BiocParallel, methods, plotly, ggplot2, AnnotationHub
+Suggests: knitr, rmarkdown
+Description: A shiny interface to the scanMiR package. The application enables the scanning of transcripts and custom sequences for miRNA binding sites, the visualization of KdModels and binding results, as well as browsing predicted repression data.
+License: GPL
+VignetteBuilder: knitr
+RoxygenNote: 7.1.1
