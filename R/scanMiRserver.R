@@ -1,4 +1,4 @@
-#' scanMiR.server
+#' scanMiRserver
 #'
 #' Server function for the scanMiR shiny app.
 #'
@@ -18,7 +18,7 @@
 #' @importFrom plotly renderPlotly
 #' @import shiny shinydashboard scanMiR ensembldb GenomicRanges IRanges DT
 #' @export
-scanMiR.server <- function(modlists, targetlists=list(), ensdbs=list(), 
+scanMiRserver <- function(modlists, targetlists=list(), ensdbs=list(), 
                            genomes=list(), scans=list(), maxCacheSize=100*10^6,
                            BP=BiocParallel::SerialParam() ){
   #stopifnot(all(sapply(modlists,class2="KdModelList",FUN=is)))
@@ -66,9 +66,12 @@ scanMiR.server <- function(modlists, targetlists=list(), ensdbs=list(),
       summary(allmods())
     })
     
-    observe({ # when the selected collection changes, update the miRNA selection inputs
-      updateSelectizeInput(session, "mirnas", choices=names(allmods()), server=TRUE)
-      updateSelectizeInput(session, "mirna", choices=names(allmods()), server=TRUE)
+    observe({ ## when the selected collection changes, 
+              ## update the miRNA selection inputs
+      updateSelectizeInput(session, "mirnas", choices=names(allmods()), 
+                           server=TRUE)
+      updateSelectizeInput(session, "mirna", choices=names(allmods()), 
+                           server=TRUE)
     })
     
     ##############################    
@@ -108,7 +111,6 @@ scanMiR.server <- function(modlists, targetlists=list(), ensdbs=list(),
       tx <- transcripts(sel_ensdb(), columns=c("tx_id","tx_biotype"),
                         filter=~gene_id==selgene(), return.type="data.frame")
       if(nrow(tx)==0) return(NULL)
-      saveRDS(tx, file="/mnt/plger/TMP.rds")
       txs <- tx$tx_id
       names(txs) <- paste0(tx$tx_id, " (", tx$tx_biotype,")")
       changeFlag()
@@ -317,12 +319,12 @@ scanMiR.server <- function(modlists, targetlists=list(), ensdbs=list(),
       if(input$circular)
         detail <- "'Ribosomal Shadow' is ignored when scanning circRNAs"
       withProgress(message=msg, detail=detail, value=1, max=3, {
-        res$hits = findSeedMatches(target(), selmods(),
-                                   keepMatchSeq=input$keepmatchseq,
-                                   minDist=input$minDist, maxLogKd=input$maxLogKd,
-                                   shadow=ifelse(input$circular,0,input$shadow),
-                                   onlyCanonical=!input$scanNonCanonical,
-                                   p3.extra=TRUE, BP=BP )
+        res$hits = findSeedMatches( target(), selmods(),
+          keepMatchSeq=input$keepmatchseq,
+          minDist=input$minDist, maxLogKd=input$maxLogKd,
+          shadow=ifelse(input$circular,0,input$shadow),
+          onlyCanonical=!input$scanNonCanonical,
+          p3.extra=TRUE, BP=BP )
       })
       if(length(res$hits)>0) res$hits$log_kd <- (res$hits$log_kd/1000)
       res$cs <- cs
