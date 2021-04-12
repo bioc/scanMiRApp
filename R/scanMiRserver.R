@@ -21,8 +21,9 @@
 scanMiRserver <- function(modlists, targetlists=list(), ensdbs=list(), 
                            genomes=list(), scans=list(), maxCacheSize=100*10^6,
                            BP=BiocParallel::SerialParam() ){
-  #stopifnot(all(sapply(modlists,class2="KdModelList",FUN=is)))
-  stopifnot(all(sapply(ensdbs,class2="EnsDb",FUN=is)))
+  # stopifnot(all(vapply(modlists,class2="KdModelList",
+  #                      FUN.VALUE=logical(1),FUN=is)))
+  stopifnot(all(vapply(ensdbs,class2="EnsDb",FUN.VALUE=logical(1),FUN=is)))
   stopifnot(all(names(modlists) %in% names(ensdbs)))
   stopifnot(all(names(modlists) %in% names(genomes)))
 
@@ -254,7 +255,7 @@ scanMiRserver <- function(modlists, targetlists=list(), ensdbs=list(),
     
     cached.checksums <- reactive({
       ch <- reactiveValuesToList(cached.hits)
-      ch <- ch[!sapply(ch, is.null)]
+      ch <- ch[!vapply(ch, FUN.VALUE=logical(1), FUN=is.null)]
       ch <- lapply(ch, FUN=function(x){
         x[c("target","size","time","last","nsel","sel")]
       })
@@ -281,7 +282,7 @@ scanMiRserver <- function(modlists, targetlists=list(), ensdbs=list(),
     cache.size <- reactive({
       ch <- cached.checksums()
       if(is.null(ch) || length(ch)==0) return(0)
-      sum(sapply(ch, FUN=function(x) as.numeric(x$size)))
+      sum(vapply(ch, FUN.VALUE=numeric(1), FUN=function(x) as.numeric(x$size)))
     })
     
     cleanCache <- function(){
@@ -289,7 +290,8 @@ scanMiRserver <- function(modlists, targetlists=list(), ensdbs=list(),
       cs <- isolate(cached.checksums())
       if(length(cs)<3 || as.numeric(cache.size())<maxCacheSize) return(NULL)
       cs <- cs[order(sapply(cs, FUN=function(x) x$last), decreasing=TRUE)]
-      sizes <- sapply(cs, FUN=function(x) as.numeric(x$size))
+      sizes <- vapply(ch, FUN.VALUE=numeric(1), FUN=function(x) 
+                                                            as.numeric(x$size))
       while(length(cs)>2 & sum(sizes)>maxCacheSize){
         cached.hits[[rev(names(cs))[1]]] <- NULL
         cs <- cs[-length(cs)]
@@ -359,7 +361,7 @@ scanMiRserver <- function(modlists, targetlists=list(), ensdbs=list(),
     output$cached.results <- renderUI({
       ch <- cached.checksums()
       ch2 <- names(ch)
-      names(ch2) <- sapply(ch, FUN=function(x){
+      names(ch2) <- vapply(ch, FUN.VALUE=character(1), FUN=function(x){
         paste0(x$time, ": ", x$sel, " on ", x$target, " (",
                format(x$size,units="Kb"),")")
       })
