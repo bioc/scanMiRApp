@@ -5,30 +5,21 @@
 \title{scanMiRserver}
 \usage{
 scanMiRserver(
-  modlists,
-  targetlists = list(),
-  ensdbs = list(),
-  genomes = list(),
-  scans = list(),
+  annotations = list(),
+  modlists = NULL,
   maxCacheSize = 100 * 10^6,
-  BP = BiocParallel::SerialParam()
+  BP = SerialParam()
 )
 }
 \arguments{
-\item{modlists}{A named list of `KdModelList`}
+\item{annotations}{A named list of \code{\link{ScanMiRAnno}} object.}
 
-\item{targetlists}{An optional list of aggregated targets, named as `modlists`}
-
-\item{ensdbs}{A named list of `ensembldb` objects (with names corresponding 
-to those of `modlists`)}
-
-\item{genomes}{A named list of `BSgenome` objects (with names corresponding 
-to those of `modlists`)}
-
-\item{scans}{A named list of scan results (with names corresponding to 
-those of `modlists`)}
+\item{modlists}{A named list of `KdModelList` objects. If omitted, will 
+fetch it from the annotation objects.}
 
 \item{maxCacheSize}{Maximum cache size in bytes.}
+
+\item{BP}{BPPARAM for multithreading}
 }
 \value{
 A shiny server function

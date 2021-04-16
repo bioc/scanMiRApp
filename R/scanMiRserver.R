@@ -2,31 +2,32 @@
 #'
 #' Server function for the scanMiR shiny app.
 #'
-#' @param modlists A named list of `KdModelList`
-#' @param targetlists An optional list of aggregated targets, named as `modlists`
-#' @param ensdbs A named list of `ensembldb` objects (with names corresponding 
-#' to those of `modlists`)
-#' @param genomes A named list of `BSgenome` objects (with names corresponding 
-#' to those of `modlists`)
-#' @param scans A named list of scan results (with names corresponding to 
-#' those of `modlists`)
+#' @param annotations A named list of \code{\link{ScanMiRAnno}} object.
+#' @param modlists A named list of `KdModelList` objects. If omitted, will 
+#' fetch it from the annotation objects.
 #' @param maxCacheSize Maximum cache size in bytes.
+#' @param BP BPPARAM for multithreading
 #'
 #' @return A shiny server function
 #' @importFrom digest digest
 #' @importFrom BiocParallel SerialParam
-#' @importFrom plotly renderPlotly
-#' @import shiny shinydashboard scanMiR ensembldb GenomicRanges IRanges DT
+#' @importFrom plotly renderPlotly ggplotly
+#' @importFrom ensembldb genes transcripts exonsBy threeUTRsByTranscript
+#' @importFrom DT datatable renderDT DTOutput
+#' @importFrom digest digest
+#' @import shiny shinydashboard scanMiR GenomicRanges IRanges
 #' @export
-scanMiRserver <- function(modlists, targetlists=list(), ensdbs=list(), 
-                           genomes=list(), scans=list(), maxCacheSize=100*10^6,
-                           BP=BiocParallel::SerialParam() ){
-  # stopifnot(all(vapply(modlists,class2="KdModelList",
-  #                      FUN.VALUE=logical(1),FUN=is)))
-  stopifnot(all(vapply(ensdbs,class2="EnsDb",FUN.VALUE=logical(1),FUN=is)))
-  stopifnot(all(names(modlists) %in% names(ensdbs)))
-  stopifnot(all(names(modlists) %in% names(genomes)))
-
+scanMiRserver <- function( annotations=list(), modlists=NULL, 
+                           maxCacheSize=100*10^6, BP=SerialParam() ){
+  stopifnot(length(annotations)>0)
+  stopifnot(all(vapply(annotations, class2="ScanMiRAnno",
+                       FUN.VALUE=logical(1), FUN=is)))
+  if(is.null(modlists))
+    modlists <- lapply(annotations, FUN=function(x) x$models)
+  stopifnot(all(vapply(modlists, class2="KdModelList",
+                       FUN.VALUE=logical(1), FUN=is)))
+  stopifnot(all(names(modlists) %in% names(annotations)))
+  
   dtwrapper <- function(d, pageLength=25, ...){
     datatable( d, filter="top", class="compact", 
                extensions=c("Buttons","ColReorder"),
@@ -43,7 +44,7 @@ scanMiRserver <- function(modlists, targetlists=list(), ensdbs=list(),
     ## initialize inputs
     
     updateSelectizeInput(session, "mirlist", choices=names(modlists))
-    updateSelectizeInput(session, "annotation", choices=names(ensdbs))
+    updateSelectizeInput(session, "annotation", choices=names(annotations))
     
     observe({
       # when the choice of collection changes, update the annotation to
@@ -82,8 +83,8 @@ scanMiRserver <- function(modlists, targetlists=list(), ensdbs=list(),
     
     sel_ensdb <- reactive({ # the ensembldb for the selected genome
       if(is.null(input$annotation) || input$annotation=="" || 
-         !(input$annotation %in% names(ensdbs))) return(NULL)
-      ensdbs[[input$annotation]]
+         !(input$annotation %in% names(annotations))) return(NULL)
+      annotations[[input$annotation]]$ensdb
     })
     
     allgenes <- reactive({ # all genes in the selected genome
@@ -137,6 +138,8 @@ scanMiRserver <- function(modlists, targetlists=list(), ensdbs=list(),
       if(is.character(x)){
         x <- library(x, character.only=TRUE)
         x <- get(x)
+      }else if(is(x,"ScanMiRAnno")){
+        x <- x$genome
       }
       seqlevels(x) <- gsub("^chr","",seqlevels(x))
       x
@@ -162,8 +165,9 @@ scanMiRserver <- function(modlists, targetlists=list(), ensdbs=list(),
     
     get_seq <- function(gr){
       if(length(gr)==0) return(NULL)
-      if(is.null(genomes[[input$annotation]])) return(NULL)
-      seqs <- extractTranscriptSeqs(getGenome(genomes[[input$annotation]]), gr)
+      if(is.null(annotations[[input$annotation]]$genome)) return(NULL)
+      g <- getGenome(annotations[[input$annotation]])
+      seqs <- extractTranscriptSeqs(g, gr)
       seqs <- seqs[lengths(seqs)>6]
       if(length(seqs)==0) return(NULL)
       seqs
@@ -488,8 +492,8 @@ scanMiRserver <- function(modlists, targetlists=list(), ensdbs=list(),
     
     txs <- reactive({ # the tx to gene symbol table for the current annotation
       if(is.null(input$mirlist) || input$mirlist=="" || 
-         !(input$mirlist %in% names(ensdbs))) return(NULL)
-      db <- ensdbs[[input$mirlist]]
+         !(input$mirlist %in% names(annotations))) return(NULL)
+      db <- annotations[[input$mirlist]]$ensdb
       if(is.null(db)) return(NULL)
       tx <- mcols(transcripts(db, c("tx_id","gene_id","tx_biotype")))
       tx <- merge(tx,mcols(genes(db, c("gene_id","symbol"))), by="gene_id")
@@ -499,8 +503,8 @@ scanMiRserver <- function(modlists, targetlists=list(), ensdbs=list(),
     mirtargets_prepared <- reactive({
       tl <- paste0(input$mirlist, 
                    ifelse(input$targetlist_utronly, ".utrs", ".full"))
-      if(is.null(targetlists[[tl]]) || is.null(mod())) return(NULL)
-      d <- targetlists[[tl]][[input$mirna]]
+      if(is.null(annotations[[tl]]$aggregated) || is.null(mod())) return(NULL)
+      d <- annotations[[tl]]$aggregated[[input$mirna]]
       d$repression <- d$repression/1000
       if(!is.null(txs())){
         d <- merge(txs(), d, by.x="tx_id", by.y="transcript")
@@ -562,4 +566,20 @@ scanMiRserver <- function(modlists, targetlists=list(), ensdbs=list(),
     )
     
   }
+}
+
+
+#' scanMiRApp
+#' A wrapper for launching the scanMiRApp shiny app
+#' 
+#' @param annotations A named list of \code{\link{ScanMiRAnno}} objects. If 
+#' omitted, will use the base ones.
+#' @param ... Passed to \code{\link{scanMiRserver}}
+#'
+#' @return A shiny app
+#' @export
+scanMiRApp <- function(annotations=NULL, ...){
+  if(is.null(annotations))
+    annotations <- lapply(c("GRCh38","GRCm38","Rnor_6"), FUN=ScanMiRAnno)
+  shinyApp(scanMiRui(), scanMiRserver( annotations = annotations, ... ))
 }

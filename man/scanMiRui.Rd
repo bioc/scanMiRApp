@@ -9,3 +9,6 @@ scanMiRui()
 \description{
 UI for the scanMiR app.
 }
+\examples{
+ui <- scanMiRui()
+}

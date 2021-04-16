@@ -5,18 +5,18 @@
 \title{runFullScan}
 \usage{
 runFullScan(
-  species,
+  annotation,
   mods = NULL,
   UTRonly = TRUE,
   shadow = 15,
-  cores = 8,
+  cores = 1,
   maxLogKd = c(-0.3, -0.3),
   save.path = NULL,
   ...
 )
 }
 \arguments{
-\item{species}{}
+\item{annotation}{}
 
 \item{mods}{}
 

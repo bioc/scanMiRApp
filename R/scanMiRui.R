@@ -6,6 +6,8 @@
 #' @importFrom plotly plotlyOutput ggplotly
 #' @importFrom shinycssloaders withSpinner
 #' @export
+#' @examples
+#' ui <- scanMiRui()
 scanMiRui <- function(){
 
   ui <- dashboardPage( skin="black",

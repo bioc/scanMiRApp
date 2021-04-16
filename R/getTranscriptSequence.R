@@ -4,82 +4,27 @@
 #' CDS+UTR).
 #'
 #' @param tx The ensembl ID of the transcript
-#' @param species The species, either 'hsa', 'rno', or 'mmu'; ignored if 
-#' `ensdbs` is given and is an `EnsDb` object.
-#' @param ensdbs An \code{\link[ensembldb]{EnsDb}} object, or a named list of 
-#' such objects.
-#' @param genome The genome sequence (e.g. 
-#' \code{\link[BSgenome]{BSgenome-class}}). If one of the three pre-defined 
-#' `species`, will attempt to fetch the corresponding packages (if isntalled).
+#' @param annotation A \code{\link{ScanMiRAnno}} object.
 #' @param UTRonly Logical; whether to fetch only the UTR sequences.
 #' @param ... Passed to \code{\link{AnnotationHub}}
 #'
-#' @return A \link{\code{DNAStringSet}}.
+#' @return A \code{\link{DNAStringSet}}.
 #' @export
 #'
 #' @importFrom GenomicFeatures threeUTRsByTranscript cdsBy extractTranscriptSeqs
-#' @importFrom ensembldb metadata organism seqlevelsStyle
-#' @importFrom AnnotationHub AnnotationHub query
+#' @importFrom ensembldb metadata seqlevelsStyle
 #' @import Biostrings
-#' @examples
-#' # too long to run (needs fetching the annotation) :
-#' # getTranscriptSequence("ENST00000641515", species="hsa")
-getTranscriptSequence <- function(tx, species=NULL, ensdbs=NULL, genome=NULL,
-                                  UTRonly=TRUE, ...){
+getTranscriptSequence <- function(tx, annotation, UTRonly=TRUE, ...){
   tx <- gsub("\\.[0-9]+$","",as.character(tx))
-  if(is.null(ensdbs)){
-    species <- match.arg(species, c("hsa","rno","mmu"))
-    ah <- AnnotationHub(...)
-    ahid <- switch(species,
-                   hsa=rev(query(ah, c("EnsDb", "Homo sapiens"))$ah_id)[1],
-                   mmu=rev(query(ah, c("EnsDb", "Mus musculus"))$ah_id)[2],
-                   rno=rev(query(ah, c("EnsDb", "Rattus norvegicus"))$ah_id)[1],
-                   stop("Species not among the pre-defined one, please provide",
-                        " `ensdbs` and `genome` manually.")
-    )
-    ensdb <- ah[[ahid]]
-    em <- metadata(ensdb)
-    em <- setNames(em$value, em$name)
-    message("Using ", em[["genome_build"]], ", Ensembl version ",
-            em[["ensembl_version"]])
-  }else{
-    if(is.null(species) && length(ensdbs)==1){
-      if(is.list(ensdbs)){
-        stopifnot(!is.null(names(ensdbs)))
-        species <- names(ensdbs)
-        ensdb <- ensdbs[[1]]
-      }else if(is(ensdbs,"EnsDb")){
-        species <- organism(ensdbs)
-        ensdb <- ensdbs
-      }else{
-        stop("`ensdbs` should either by a object of class EnsDb or a named ",
-             "list of such objects.")
-      }
-    }else{
-      species <- match.arg(species, names(ensdbs))
-      ensdb <- ensdbs[[species]]
-    }
-  }
-  if(is.null(genome)){
-    em <- metadata(ensdb)
-    em <- setNames(em$value, em$name)
-    gbuild <- em[["genome_build"]]
-    genome <- switch(gbuild,
-      GRCh38=BSgenome.Hsapiens.UCSC.hg38:::BSgenome.Hsapiens.UCSC.hg38,
-      GRCm38=BSgenome.Mmusculus.UCSC.mm10:::BSgenome.Mmusculus.UCSC.mm10,
-      "Rnor_6.0"=BSgenome.Rnorvegicus.UCSC.rn6:::BSgenome.Rnorvegicus.UCSC.rn6,
-      stop("Genome not among the pre-defined one, please provide `genome` ",
-            "manually.")
-    )
-  }
+  gr <- threeUTRsByTranscript(annotation$ensdb, filter=~tx_id %in% tx)
+  if(length(gr)==0) stop("Nothing found!")
+  genome <- annotation$genome
   seqlevelsStyle(genome) <- "Ensembl"
-  
-  gr <- suppressWarnings(threeUTRsByTranscript(ensdb, filter=~tx_id==tx))
   gr <- gr[seqnames(gr) %in% seqlevels(genome)]
-  if(length(gr)==0) stop("Transcript not found!")
+  if(length(gr)==0) stop("Nothing found!")
   seqs <- extractTranscriptSeqs(genome, gr)
   if(!UTRonly){
-    grl_ORF <- cdsBy(ensdb, by="tx", filter=~tx_id==tx)
+    grl_ORF <- cdsBy(annotation$ensdb, by="tx", filter=~tx_id %in% tx)
     seqs_ORF <- extractTranscriptSeqs(genome, grl_ORF)
     orf.len <- setNames(lengths(seqs_ORF), names(seqs_ORF))
     seqs_ORF[names(seqs)] <- xscat(seqs_ORF[names(seqs)],seqs)
@@ -89,3 +34,86 @@ getTranscriptSequence <- function(tx, species=NULL, ensdbs=NULL, genome=NULL,
   }
   seqs
 }
+
+
+
+#' plotSitesOnUTR
+#'
+#' Wrapper function with minimal arguments to plot scanMiR-Binding
+#' sites on 3'UTRs of specified transcripts. The red dashed line indicates the
+#' background threshhold is indicated, the lightblue dashed line shows the
+#' average 8mer dissociation rate of the given miRNA
+#'
+#'
+#' @param tx An ensembl TranscriptID
+#' @param annotation A \code{\link{ScanMiRAnno}} object.
+#' @param miRNA A miRNA name in the mirbase format (eg. "hsa-miR-485-5p"), a
+#' `KdModel`, or a miRNA sequence or target seed.
+#' @param label_6mers Logical whether to label 6mer sites in the plot
+#' @param label_notes Logical whether to label special sites in the plot (as
+#'   TDMD or Slicing)
+#' @param verbose Logical; whether to print updates on the processing
+#'
+#' @return Returns a ggplot.
+#' @import ggplot2
+#' @export
+plotSitesOnUTR <- function(tx, annotation, miRNA=NULL, label_6mers=FALSE,
+                           label_notes=FALSE, verbose=TRUE, ...){
+  # Prepare everything & scan
+  stopifnot(is(annotation,"ScanMiRAnno"))
+  if(verbose) message("Prepare miRNA model")
+  mods <- annotation$models
+  if( (is(miRNA,"character") && length(miRNA)==1 && 
+       nchar(gsub("[ACGTU]","",miRNA))==0) || is(miRNA, "KdModel")){
+    mods <- miRNA
+  }else if(miRNA %in% names(mods)){
+    mods <- mods[[miRNA]]
+  }else if(length(w <- grep(miRNA,names(mods),ignore.case = TRUE))==1){
+    mods <- mods[[w]]
+  }else{
+    stop("The specified microRNA is not listed for this species. Please check",
+         "\nthe spelling (eg. 'hsa-mir-485-5p') and the organism")
+  }
+  if(verbose) message("Get Transcript Sequence")
+  Seq <- getTranscriptSequence(tx=tx, annotation=annotation, UTRonly=TRUE)
+  if(verbose) message("Scan")
+  m <- findSeedMatches(seqs=Seq, seeds=mods, shadow=15L, keepMatchSeq=TRUE,
+                       p3.extra=TRUE, ret="data.frame", ...)
+  
+  # Prepare data.frame
+  m$logKd <- m$log_kd / 1000
+  m$type <- ifelse(m$type == "non-canonical","",as.character(m$type))
+  if(isFALSE(label_6mers)) ifelse(grepl("6mer",m$type),"",as.character(m$type))
+  m <- m[m$logKd < -1,]
+  
+  # get 8mer info
+  mer8 <- getSeed8mers(mods$canonical.seed)
+  wA <- which(substr(mer8,8,8)=="A")
+  mer7 <- substr(mer8,1,7)
+  As <- mods$mer8[wA]
+  names(As) <- mer7[wA]
+  mer.mean <- rowsum(mods$mer8[-wA],mer7[-wA])[,1]/3
+  As <- As-mer.mean[names(As)]
+  d <- data.frame(seed=names(mer.mean), base=mer.mean/-1000, 
+                  "A"=As[names(mer.mean)]/-1000,
+                  type=getMatchTypes(names(mer.mean),mods$canonical.seed),
+                  row.names=NULL)
+  d <- d[head(order(d$base+d$A, decreasing=TRUE),n=1),]
+  mer8 <- d$base + d$A
+  # title
+  title <- paste0(transcriptID," - ",miRNA)
+  
+  p <- ggplot(m, aes(x = start, y = -`logKd`)) + 
+    geom_hline(yintercept=1, linetype="dashed", color = "red", size=1) + 
+    geom_hline(yintercept=mer8, linetype="dashed", color = "gray64", size=1) + 
+    geom_point(size=2) + geom_text(label = m$type,nudge_y = -0.2) +
+    xlab("sequence length") + ylab("-logKd") + xlim(0,width(Seq)) +
+    theme_light() + ggtitle(title)
+  if(label_notes){
+    m$note <- ifelse(m$note == "-","",m$note)
+    p <- p + geom_text(label = m$note,nudge_y = 0.2)
+  } 
+  p
+}
+
+

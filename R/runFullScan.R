@@ -1,6 +1,6 @@
 #' runFullScan
 #' 
-#' @param species 
+#' @param annotation 
 #' @param mods 
 #' @param UTRonly 
 #' @param shadow 
@@ -10,30 +10,18 @@
 #' @param ... 
 #'
 #' @export
-runFullScan <- function(species, mods=NULL, UTRonly=TRUE, shadow=15, cores=8, maxLogKd=c(-0.3,-0.3), save.path=NULL, ...){
+#' @importFrom BiocParallel SerialParam MulticoreParam
+#' @importFrom GenomicFeatures extractTranscriptSeqs threeUTRsByTranscript cdsBy
+#' @import Biostrings scanMiR
+#' @importFrom S4Vectors metadata metadata<-
+runFullScan <- function(annotation, mods=NULL, UTRonly=TRUE, shadow=15, cores=1,
+                        maxLogKd=c(-0.3,-0.3), save.path=NULL, ...){
   message("Loading annotation")
-  suppressPackageStartupMessages({
-    library(ensembldb)
-    library(AnnotationHub)
-    library(BSgenome)
-    library(BiocParallel)
-  })
-  ah <- AnnotationHub()
-  species <- match.arg(species, c("mmu","hsa","rno"))
-  if(species=="hsa"){
-    genome <- BSgenome.Hsapiens.UCSC.hg38::BSgenome.Hsapiens.UCSC.hg38
-    if(is.null(mods)) mods <- readRDS(file = "/mnt/schratt/miRNA_KD/Data_Output/mods_hsa_comp.rds")
-    ahid <- rev(query(ah, c("EnsDb", "Homo sapiens"))$ah_id)[1]
-  }else if(species=="mmu"){
-    genome <- BSgenome.Mmusculus.UCSC.mm10::BSgenome.Mmusculus.UCSC.mm10
-    if(is.null(mods)) mods <- readRDS(file = "/mnt/schratt/miRNA_KD/Data_Output/mods_mmu_comp.rds")
-    ahid <- rev(query(ah, c("EnsDb", "Mus musculus"))$ah_id)[2]
-  }else if(species=="rno"){
-    genome <- BSgenome.Rnorvegicus.UCSC.rn6::BSgenome.Rnorvegicus.UCSC.rn6
-    if(is.null(mods)) mods <- readRDS(file = "/mnt/schratt/miRNA_KD/Data_Output/mods_rno_comp.rds")
-    ahid <- rev(query(ah, c("EnsDb", "Rattus norvegicus"))$ah_id)[1]
-  }
-  ensdb <- ah[[ahid]]
+  stopifnot(is(annotation, "ScanMiRAnno"))
+  if(is.null(mods)) mods <- annotation$models
+  stopifnot(is(mods,"KdModelList"))
+  genome <- annotation$genome
+  ensdb <- annotation$ensdb
   seqlevelsStyle(genome) <- "Ensembl"
   
   # restrict to canonical chromosomes
@@ -77,7 +65,7 @@ runFullScan <- function(species, mods=NULL, UTRonly=TRUE, shadow=15, cores=8, ma
     attr(m, "ah_id") <- ahid
   }
   if(is.null(save.path)) return(m)
-  else saveRDS(m, file=save.path)
+  saveRDS(m, file=save.path)
   rm(m)
   gc()
   message("Saved in: ", save.path)

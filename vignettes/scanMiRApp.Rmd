@@ -1,0 +1,56 @@
+---
+title: "scanMiRApp: shiny app and related convenience functions"
+author: 
+- name: Michael Soutschek
+  affiliation: Lab of Systems Neuroscience, D-HEST Institute for Neuroscience, ETH
+- name: Fridolin Gross
+  affiliation: Lab of Systems Neuroscience, D-HEST Institute for Neuroscience, ETH
+- name: Pierre-Luc Germain
+  affiliation: D-HEST Institute for Neuroscience, ETH & Lab of Statistical Bioinformatics, UZH
+package: scanMiRApp
+output:
+  BiocStyle::html_document
+abstract: |
+  Covers the creation of ScanMiRAnno objects, setting up the shiny app, and using the wrappers.
+vignette: |
+  %\VignetteIndexEntry{scanMiRApp}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+`ScanMiRApp` offers a `r CRANpkg("shiny")` interface to the `scanMiR` package,
+as well as convenience function to simplify its use with common annotations.
+
+# ScanMiRAnno objects
+
+Both the shiny app and the convenience functions rely on objects of the class 
+`ScanMiRAnno`, which contain the different pieces of annotation relating to a 
+species and genome build. Annotations for human, mouse and rat can be obtained 
+as follows:
+
+```{r}
+library(scanMiRApp)
+anno <- ScanMiRAnno("Rnor_6")
+anno
+```
+
+You can also build your own `ScanMiRAnno` object by providing the function with
+the different components (minimally, a `r Biocpkg("BSgenome")` and an 
+`r Biocpkg("ensembldb")` object - see `?ScanMiRAnno` for more information).
+
+In addition, `ScanMiRAnno` objects can contain pre-compiled scans and 
+aggregations, which are especially meant to speed up the shiny application. 
+These should be saved as `IndexedFst` files (see the corresponding vignette of
+the `scanMiR` package), and should be respectively stored in the `scan` and 
+`aggregated` slot of the object.
+
+# Convenience functions
+
+## Obtaining the UTR sequence of a transcript
+
+```{r}
+seq <- getTranscriptSequence("ENSRNOT00000065646", anno)
+seq
+```
+
+## 
