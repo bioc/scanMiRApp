@@ -1,7 +1,7 @@
 Package: scanMiRApp
 Type: Package
 Title: scanMiR shiny application
-Version: 0.99.9
+Version: 0.99.10
 Date: 2021-04-26
 Authors@R: c(
     person("Pierre-Luc", "Germain", email="pierre-luc.germain@hest.ethz.ch", 
@@ -20,6 +20,7 @@ Imports:
     GenomicFeatures,
     GenomicRanges,
     ggplot2,
+    htmlwidgets,
     IRanges,
     Matrix,
     methods,
