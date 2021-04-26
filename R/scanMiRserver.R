@@ -500,7 +500,8 @@ scanMiRserver <- function( annotations=list(), modlists=NULL,
     })
 
     output$alignment_header <- renderText({
-      if(is.null(m <- sel_match())) return(NULL)
+      if(is.null(m <- sel_match()))
+        return("Double-click on a row of the table above to visualize it here")
       miRNA <- ifelse("miRNA" %in% colnames(mcols(m)),mcols(m)$miRNA,hits()$sel)
       paste0(miRNA, " match at ",start(m),"-",end(m)," (", mcols(m)$type, ")")
     })

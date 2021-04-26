@@ -30,7 +30,7 @@ scanMiRui <- function(){
       tags$a(
         href="https://github.com/ETHZ-INS/scanMiR", target="_blank",
         tags$img(src="https://raw.githubusercontent.com/ETHZ-INS/scanMiR/master/inst/docs/sticker.svg"),
-        style="display: block; position: absolute; bottom: 5px; left: 20px;")
+        style="display: block; position: fixed; bottom: 5px; left: 20px;")
     ),
     ## Body Content
     dashboardBody(
