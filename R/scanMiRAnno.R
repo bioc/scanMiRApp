@@ -6,38 +6,38 @@ setClass(
     stopifnot(!is.null(object$genome) && is(object$genome, "BSgenome"))
     stopifnot(!is.null(object$ensdb) && is(object$ensdb, "EnsDb"))
     if(!is.null(object$models))
-      stopifnot(is(object$models, "KdModelList") || 
+      stopifnot(is(object$models, "KdModelList") ||
                   is(object$models, "character"))
     if(!is.null(object$scan))
-      stopifnot(is(object$scan, "GRanges") || 
+      stopifnot(is(object$scan, "GRanges") ||
                   is(object$scan, "IndexedFst"))
     if(!is.null(object$aggregated))
-      stopifnot(is(object$aggregated, "data.frame") || 
+      stopifnot(is(object$aggregated, "data.frame") ||
                   is(object$aggregated, "IndexedFst"))
   }
 )
 
 #' ScanMiRAnno
 #'
-#' @param species The species/build acronym for automatic construction; if 
+#' @param species The species/build acronym for automatic construction; if
 #' omitted, `genome` and `ensdb` should be given. Current possible values are:
 #' GRCh38, GRCm38, Rnor_6.
 #' @param genome A BSgenome
 #' @param ensdb An EnsDb object
 #' @param models An optional KdModelList
 #' @param scan An optional full scan (IndexedFst or GRanges)
-#' @param aggregated An optional per-transcript aggregation (IndexedFst or 
+#' @param aggregated An optional per-transcript aggregation (IndexedFst or
 #' data.frame)
 #' @param ... Arguments passed to `AnnotationHub`
 #'
 #' @return A `ScanMiRAnno` object
 #' @export
 #' @importFrom AnnotationHub AnnotationHub query
-#' @importFrom scanMirData getKdModels
+#' @importFrom scanMiRData getKdModels
 #' @examples
 #' anno <- ScanMiRAnno(species="Rnor_6")
 #' anno
-ScanMiRAnno <- function(species=NULL, genome=NULL, ensdb=NULL, models=NULL, 
+ScanMiRAnno <- function(species=NULL, genome=NULL, ensdb=NULL, models=NULL,
                         scan=NULL, aggregated=NULL, ...){
   if(!is.null(species)){
     stopifnot(is.null(genome) && is.null(ensdb))
@@ -62,6 +62,17 @@ ScanMiRAnno <- function(species=NULL, genome=NULL, ensdb=NULL, models=NULL,
 }
 
 
+#' Methods for the \code{\link{ScanMiRAnno}} class
+#' @name ScanMiRAnno-methods
+#' @rdname ScanMiRAnno-methods
+#' @aliases ScanMiRAnno-methods
+#' @seealso \code{\link{ScanMiRAnno}}
+#' @param object An object of class \code{\link{ScanMiRAnno}}
+#' @return Depends on the method.
+NULL
+
+#' @rdname ScanMiRAnno-methods
+#' @aliases ScanMiRAnno-methods
 #' @export
 setMethod("summary", "ScanMiRAnno", function(object){
   show(object$genome)
@@ -87,15 +98,18 @@ setMethod("summary", "ScanMiRAnno", function(object){
   }
 })
 
+#' @rdname ScanMiRAnno-methods
+#' @aliases ScanMiRAnno-methods
 #' @export
+#' @importFrom methods show
 setMethod("show", "ScanMiRAnno", function(object){
-  gm <- paste0(metadata(object$genome)$organism, " (", 
+  gm <- paste0(metadata(object$genome)$organism, " (",
                metadata(object$genome)$genome, ")")
   em <- setNames(metadata(object$ensdb)$value, metadata(object$ensdb)$name)
-  em <- paste0(em[["Organism"]], " (", em[["genome_build"]],") v", 
+  em <- paste0(em[["Organism"]], " (", em[["genome_build"]],") v",
                em[["ensembl_version"]])
   cat("Genome:", gm, "\nAnnotation:", em)
-  if(!is.null(object$models)) cat("\nModels:", class(object$models), 
+  if(!is.null(object$models)) cat("\nModels:", class(object$models),
                                   "of length", length(object$models))
   if(!is.null(object$scan)) cat("\n + Scan")
   if(!is.null(object$aggregated)) cat("\n + Aggregated")

@@ -40,9 +40,8 @@ the different components (minimally, a `r Biocpkg("BSgenome")` and an
 
 In addition, `ScanMiRAnno` objects can contain pre-compiled scans and 
 aggregations, which are especially meant to speed up the shiny application. 
-These should be saved as `IndexedFst` files (see the corresponding vignette of
-the `scanMiR` package), and should be respectively stored in the `scan` and 
-`aggregated` slot of the object.
+These should be saved as [IndexedFst](IndexedFST.html) files and should be 
+respectively stored in the `scan` and `aggregated` slot of the object.
 
 # Convenience functions
 

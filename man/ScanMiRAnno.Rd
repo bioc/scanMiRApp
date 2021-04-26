@@ -15,7 +15,7 @@ ScanMiRAnno(
 )
 }
 \arguments{
-\item{species}{The species/build acronym for automatic construction; if 
+\item{species}{The species/build acronym for automatic construction; if
 omitted, `genome` and `ensdb` should be given. Current possible values are:
 GRCh38, GRCm38, Rnor_6.}
 
@@ -27,7 +27,7 @@ GRCh38, GRCm38, Rnor_6.}
 
 \item{scan}{An optional full scan (IndexedFst or GRanges)}
 
-\item{aggregated}{An optional per-transcript aggregation (IndexedFst or 
+\item{aggregated}{An optional per-transcript aggregation (IndexedFst or
 data.frame)}
 
 \item{...}{Arguments passed to `AnnotationHub`}
