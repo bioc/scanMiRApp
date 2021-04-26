@@ -15,7 +15,7 @@ scanMiRui <- function(){
     dashboardHeader(title = "scanMiRApp", titleWidth = "300px"),
     
     ## Sidebar content
-    dashboardSidebar( width = "300px",
+    dashboardSidebar( width = "200px",
       sidebarMenu(id="main_tabs",
         menuItem("Species Collection", tabName="tab_collection"),
         menuItem("Search in\ngene/sequence", 
@@ -26,7 +26,11 @@ scanMiRui <- function(){
         ),
         menuItem("miRNA-based", tabName="tab_mirna"),
         menuItem("About", tabName="tab_about")
-      )
+      ),
+      tags$a(
+        href="https://github.com/ETHZ-INS/scanMiR", target="_blank",
+        tags$img(src="https://raw.githubusercontent.com/ETHZ-INS/scanMiR/master/inst/docs/sticker.svg"),
+        style="display: block; position: absolute; bottom: 5px; left: 20px;")
     ),
     ## Body Content
     dashboardBody(
@@ -59,8 +63,12 @@ scanMiRui <- function(){
             tabPanel(
               title="Transcript", value="transcript",
               selectizeInput("annotation", "Genome & Annotation", choices=c()),
-              selectizeInput("gene", "Gene", choices=c()),
+              tags$div(selectizeInput("gene", "Gene", choices=c()), 
+                       style="float: left; padding-right: 10px;"),
+              tags$br(), tags$p(style="text-align: left;", "Type in the first ",
+                            "few letters of a gene name to populate the list"),
               htmlOutput("gene_link"),
+              tags$div(style="clear: left;"),
               selectizeInput("transcript", "Transcript", choices=c()),
               checkboxInput("utr_only", "UTR only", value = TRUE),
               withSpinner(tableOutput("tx_overview"))
@@ -137,17 +145,9 @@ scanMiRui <- function(){
             numericInput("modplot_height", "Plot height (px)", value=400,
                          min=200, max=1000, step=50)
           ),
-          box(width=12, title="Targets", collapsible=TRUE,
-            fluidRow(
-              column(6, checkboxInput("targetlist_utronly", value=TRUE,
-                                      "Show only 3'UTR Binding Sites")),
-              column(6, checkboxInput("targetlist_gene", "Aggregate by gene", 
-                                      value=FALSE))),
-            withSpinner(DTOutput("mirna_targets")),
-            downloadLink('dl_mirTargets', label = "Download all")
-          )
+          box(width=12, title="Targets", collapsible=TRUE, 
+              uiOutput("targets_ui"))
         ),
-        
         tabItem(tabName = "tab_about")
       ),
       tags$head(tags$style(HTML('.content-wrapper { overflow: auto; }')))

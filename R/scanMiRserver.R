@@ -14,7 +14,9 @@
 #' @importFrom plotly renderPlotly ggplotly
 #' @importFrom ensembldb genes transcripts exonsBy threeUTRsByTranscript
 #' @importFrom DT datatable renderDT DTOutput
+#' @importFrom htmlwidgets JS
 #' @importFrom digest digest
+#' @importFrom shinycssloaders withSpinner
 #' @import shiny shinydashboard scanMiR GenomicRanges IRanges
 #' @export
 scanMiRserver <- function( annotations=list(), modlists=NULL, 
@@ -36,6 +38,11 @@ scanMiRserver <- function( annotations=list(), modlists=NULL,
                  colReorder=TRUE, 
                  buttons=c('copy', 'csv', 'excel', 'csvHtml5', 'colvis')
                ), ... )
+  }
+  
+  checkModIdentity <- function(m1,m2){
+    identical(lapply(m1,FUN=function(x) x$mer8),
+              lapply(m2,FUN=function(x) x$mer8))
   }
   
   function(input, output, session){
@@ -303,6 +310,38 @@ scanMiRserver <- function( annotations=list(), modlists=NULL,
       }
     }
     
+    checkPreComputedScan <- function(txid){
+      if(is.null(preScan <- annotations[[input$annotation]]$scan)) return(NULL)
+      if(is.null(origMods <- annotations[[input$annotation]]$models) ||
+         !all(names(selmods()) %in% names(origMods)) ||
+         !checkModIdentity(selmods(), origMods[names(selmods())])){
+        warning("The models are not the same as those present in the ",
+                "annotation; ignoring pre-compiled scans.")
+        return(NULL)
+      }
+      if(is(preScan, "GRanges")){
+        if(!(txid %in% seqlevels(preScan))){
+          warning("Transcript not found in the pre-compiled scan!")
+          return(NULL)
+        }
+        h <- preScan[seqnames(preScan)==txid & 
+                       preScan$miRNA %in% names(selmods())]
+        if(input$utr_only && !is.null(h$ORF)) h <- h[!h$ORF]
+      }else{
+        if(!(txid %in% names(preScan))){
+          warning("Transcript not found in the pre-compiled scan!")
+          return(NULL)
+        }
+        h <- preScan[[txid]]
+        if(input$utr_only && !is.null(h$ORF)) h <- h[!h$ORF]
+        h <- h[h$miRNA %in% names(selmods())]
+      }
+      if(length(h)==0) return(h)
+      if(!input$scanNonCanonical)
+        h <- h[grep("canonical|bulged",h$type,invert=TRUE)]
+      h[h$log_kd < input$maxLogKd]
+    }
+    
     observeEvent(input$scan, { # actual scanning
       if(is.null(selmods()) || is.null(target()) || nchar(target())==0) 
         return(NULL)
@@ -316,22 +355,28 @@ scanMiRserver <- function( annotations=list(), modlists=NULL,
         return(NULL)
       tmp <- changeFlag()
       cs <- checksum()
+      # first check if we already have these results cached:
       if(cs %in% names(cached.checksums())) return(cached.hits[[cs]])
-      res <- list()
-      msg <- paste0("Scanning sequence for ",length(selmods())," miRNAS")
-      message(msg)
-      detail <- NULL
-      if(length(selmods())>4) detail <- "This might take a while..."
-      if(input$circular)
-        detail <- "'Ribosomal Shadow' is ignored when scanning circRNAs"
-      withProgress(message=msg, detail=detail, value=1, max=3, {
-        res$hits = findSeedMatches( target(), selmods(),
-          keepMatchSeq=input$keepmatchseq,
-          minDist=input$minDist, maxLogKd=input$maxLogKd,
-          shadow=ifelse(input$circular,0,input$shadow),
-          onlyCanonical=!input$scanNonCanonical,
-          p3.extra=TRUE, BP=BP )
-      })
+      # then check if the results are pre-computed
+      if(input$subjet_type!="custom" && 
+         !is.null(h <- checkPreComputedScan(seltx()))){
+        res <- list(hits=h)
+      }else{
+        res <- list()
+        msg <- paste0("Scanning sequence for ",length(selmods())," miRNAs")
+        message(msg)
+        detail <- NULL
+        if(length(selmods())>4) detail <- "This might take a while..."
+        if(input$circular)
+          detail <- "'Ribosomal Shadow' is ignored when scanning circRNAs"
+        withProgress(message=msg, detail=detail, value=1, max=3, {
+          res$hits = findSeedMatches(
+              target(), selmods(), keepMatchSeq=input$keepmatchseq,
+              minDist=input$minDist, maxLogKd=input$maxLogKd,
+              shadow=ifelse(input$circular,0,input$shadow),
+              onlyCanonical=!input$scanNonCanonical, p3.extra=TRUE, BP=BP )
+        })
+      }
       if(length(res$hits)>0) res$hits$log_kd <- (res$hits$log_kd/1000)
       res$cs <- cs
       res$last <- res$time <- Sys.time()
@@ -462,9 +507,13 @@ scanMiRserver <- function( annotations=list(), modlists=NULL,
 
     output$alignment <- renderPrint({
       if(is.null(m <- sel_match())) return(NULL)
-      mod <- ifelse("miRNA" %in% colnames(mcols(m)), m$miRNA, hits()$sel)
-      mod <- modlists[[hits()$collection]][[as.character(mod)]]
-      viewTargetAlignment(m, mod, seqs=setNames(hits()$seq, seqnames(m)))
+      mir <- ifelse("miRNA" %in% colnames(mcols(m)), 
+                    as.character(m$miRNA), hits()$sel)
+      mod <- modlists[[hits()$collection]][[as.character(mir)]]
+      seqs <- setNames(as.character(hits()$seq), as.character(seqnames(m)))
+      warning(mir)
+      save(mod, m, mir, seqs, file="/mnt/schratt/TMP.RData")
+      viewTargetAlignment(m, mod, seqs=seqs)
     })
 
     ##############################
@@ -490,6 +539,21 @@ scanMiRserver <- function( annotations=list(), modlists=NULL,
       plotKdModel(mod())
     }, height=reactive(input$modplot_height))
     
+    output$targets_ui <- renderUI({
+      if(is.null(annotations[[input$annotation]]$aggregated)){
+        return(tags$p("Targets not accessible (no pre-compiled scans available"))
+      }
+      list(
+        fluidRow(
+          column(6, checkboxInput("targetlist_utronly", value=TRUE,
+                                  "Show only 3'UTR Binding Sites")),
+          column(6, checkboxInput("targetlist_gene", "Aggregate by gene", 
+                                  value=FALSE))),
+        withSpinner(DTOutput("mirna_targets")),
+        downloadLink('dl_mirTargets', label = "Download all")
+      )
+    })
+    
     txs <- reactive({ # the tx to gene symbol table for the current annotation
       if(is.null(input$mirlist) || input$mirlist=="" || 
          !(input$mirlist %in% names(annotations))) return(NULL)
@@ -501,10 +565,9 @@ scanMiRserver <- function( annotations=list(), modlists=NULL,
     })
     
     mirtargets_prepared <- reactive({
-      tl <- paste0(input$mirlist, 
-                   ifelse(input$targetlist_utronly, ".utrs", ".full"))
-      if(is.null(annotations[[tl]]$aggregated) || is.null(mod())) return(NULL)
-      d <- annotations[[tl]]$aggregated[[input$mirna]]
+      if(is.null(preTargets <- annotations[[input$annotation]]$aggregated) ||
+         !(input$mirna %in% names(preTargets))) return(NULL)
+      d <- preTargets[[input$mirna]]
       d$repression <- d$repression/1000
       if(!is.null(txs())){
         d <- merge(txs(), d, by.x="tx_id", by.y="transcript")
@@ -579,7 +642,10 @@ scanMiRserver <- function( annotations=list(), modlists=NULL,
 #' @return A shiny app
 #' @export
 scanMiRApp <- function(annotations=NULL, ...){
-  if(is.null(annotations))
-    annotations <- lapply(c("GRCh38","GRCm38","Rnor_6"), FUN=ScanMiRAnno)
+  if(is.null(annotations)){
+    an <- c("GRCh38","GRCm38","Rnor_6")
+    message("Loading annotations for ", paste(an, collapse=", "))
+    annotations <- lapply(an, FUN=ScanMiRAnno)
+  }
   shinyApp(scanMiRui(), scanMiRserver( annotations = annotations, ... ))
 }
