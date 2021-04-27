@@ -4,7 +4,7 @@
 #' high number of sites.
 #'
 #' @param m A GRanges of matches, as produced by \link{\code{findSeedMatches}}.
-#' It is recommended to filter this to have only canonical sites.
+#' This will be filtered down to only 8mer and 7mer sites.
 #' @param minSites The minimum number of sites for a given miRNA-target pair to
 #' be considered.
 #' @param max.binom.p The maximum binomial p-value of miRNA-target pairs.
@@ -15,6 +15,12 @@
 #'
 #' @import Matrix
 #' @importFrom stats pbinom
+#' @examples 
+#' # not run
+#' # first we get a full scan:
+#' # anno <- ScanMiRAnno("Rnor_6")
+#' # m <- runFullScan( annotation=anno, UTRonly = TRUE, onlyCanonical=TRUE )
+#' # res <- enrichedMirTxPairs(m)
 enrichedMirTxPairs <- function(m, minSites=5, max.binom.p=0.001){
   m <- m[as.integer(m$type) %in% grep("8mer|7mer",.matchLevels())]
   b <- .matches2sparse(m)

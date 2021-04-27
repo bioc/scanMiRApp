@@ -3,15 +3,16 @@ title: "scanMiRApp: shiny app and related convenience functions"
 author: 
 - name: Michael Soutschek
   affiliation: Lab of Systems Neuroscience, D-HEST Institute for Neuroscience, ETH
-- name: Fridolin Gross
-  affiliation: Lab of Systems Neuroscience, D-HEST Institute for Neuroscience, ETH
 - name: Pierre-Luc Germain
-  affiliation: D-HEST Institute for Neuroscience, ETH & Lab of Statistical Bioinformatics, UZH
+  affiliation:
+    - D-HEST Institute for Neuroscience, ETH
+    - Lab of Statistical Bioinformatics, UZH
 package: scanMiRApp
 output:
   BiocStyle::html_document
 abstract: |
-  Covers the creation of ScanMiRAnno objects, setting up the shiny app, and using the wrappers.
+  Covers the creation of ScanMiRAnno objects, setting up the shiny app, and 
+  using the wrappers.
 vignette: |
   %\VignetteIndexEntry{scanMiRApp}
   %\VignetteEngine{knitr::rmarkdown}
@@ -25,8 +26,8 @@ as well as convenience function to simplify its use with common annotations.
 
 Both the shiny app and the convenience functions rely on objects of the class 
 `ScanMiRAnno`, which contain the different pieces of annotation relating to a 
-species and genome build. Annotations for human, mouse and rat can be obtained 
-as follows:
+species and genome build. Annotations for human (GRCh38), mouse (GRCm38) and 
+rat (Rnor_6) can be obtained as follows:
 
 ```{r}
 library(scanMiRApp)
@@ -36,20 +37,144 @@ anno
 
 You can also build your own `ScanMiRAnno` object by providing the function with
 the different components (minimally, a `r Biocpkg("BSgenome")` and an 
-`r Biocpkg("ensembldb")` object - see `?ScanMiRAnno` for more information).
+`r Biocpkg("ensembldb")` object - see `?ScanMiRAnno` for more information). For
+minimal functioning with the shiny app, the `models` slot additionally needs to
+be populated with a `KdModelList` (see the corresponding vignette of the 
+`scanMiR` package for more information).
 
 In addition, `ScanMiRAnno` objects can contain pre-compiled scans and 
 aggregations, which are especially meant to speed up the shiny application. 
 These should be saved as [IndexedFst](IndexedFST.html) files and should be 
-respectively stored in the `scan` and `aggregated` slot of the object.
+respectively indexed by transcript and by miRNA, and stored in the `scan` and 
+`aggregated` slot of the object.
+
+<br/><br/>
 
 # Convenience functions
 
 ## Obtaining the UTR sequence of a transcript
+
+The transcript (or UTR) sequence for any (set of) transcript(s) in the 
+annotation can be obtained with:
 
 ```{r}
 seq <- getTranscriptSequence("ENSRNOT00000065646", anno)
 seq
 ```
 
-## 
+## Plotting sites on the UTR sequence of a transcript
+
+Binding sites of a given miRNA on a transcript can be visualized with:
+
+```{r}
+plotSitesOnUTR(tx="ENSRNOT00000065646", annotation=anno, miRNA="rno-miR-100-5p")
+```
+
+This will fetch the sequence, perform the scan, and plot the results.
+
+## Running a full-transcriptome scan
+
+The `runFullScan` function can be used to launch a the scan for all miRNAs on 
+all protein-coding transcripts (or their UTRs) of a genome. These scans can then
+be used to speed up the shiny app (see below). They can simply be launched as:
+
+```{r}
+# m <- runFullScan(anno)
+```
+
+See `?runFullScan` for more options.
+
+## Detecting enriched miRNA-target pairs
+
+The `enrichedMirTxPairs` identifies miRNA-target enrichments (which could 
+indicate sponge- or cargo-like behaviors) by means of a binomial model 
+estimating the probability of the given number of binding sites for a given 
+pair given the total number of bindings sites for the miRNA (across all 
+transcripts) and transcript (across all miRNAs) in question. The output is
+a data.frame indicating, for each pair passing some lenient filtering, the 
+transcript, miRNA, the number of 7mer/8mer sites, and the binomial log(p-value)
+of the combination. We strongly recommend further filtering this list by 
+expression of the transcript in the system of interest, otherwise some 
+transcripts with very low expression (and hence biologically irrelevant) might 
+come up as strongly enriched.
+
+<br/><br/>
+
+# Shiny app
+
+The features of the shiny app are organized into two main components:
+
+* transcript (or sequence) -centered features are available in the 
+_search in gene/sequence_ tab. These for instance allow to scan custom 
+sequences or selected transcript sequences for miRNA binding sites, visualize 
+them on the transcript, and visualize the sequence pairing of specific matches.
+
+* the miRNA-centered features are available in the _miRNA-based_ tab. It shows
+the general binding specificity of a given miRNA. If the `scanMiRAnno` object
+contained aggregated data (see below), the tab also shows the top predicted 
+targets for the miRNAs.
+
+
+## Setting up the application
+
+A `ScanMiRAnno` object is the minimal input for the shiny app, and multiple such
+objects can be provided in the form of a named list:
+
+```{
+scanMiRApp( list(Rnor_6=anno) )
+```
+
+Launched with this object, the app will not have access to any pre-compiled 
+scans or to aggregated data. This means that scans will be performed on the fly,
+which also means that they will be slower. In addition, it means that the top
+targets based on aggregated repression estimates (in the _miRNA-based_ tab) 
+will not be available. To provide this additional information, you first need to
+prepare the objects as [IndexedFst](IndexedFST.html) files. Assuming you've 
+saved (or downloaded) the scans as `scan.rds` and the aggregated data as 
+`aggregated.rds`, you can re-save them as `IndexedFst` (here in the folder 
+`out_path`) and add them to the `anno` object as follows:
+
+```{r, eval=FALSE}
+# not run
+saveIndexedFst(readRDS("scan.rds"), "seqnames", file.prefix="out_path/scan")
+saveIndexedFst(readRDS("aggregated.rds"), "miRNA", 
+               file.prefix="out_path/aggregated")
+anno$scan <- loadIndexedFst("out_path/scan")
+anno$aggregated <- loadIndexedFst("out_path/aggregated")
+# then launch the app
+scanMiRApp(list(Rnor_6=anno))
+```
+
+The same could be done for multiple ScanMiRAnno objects. If `scanMiRApp` is 
+launched without any `annotation` argument, it will generate anno objects for
+the three base species (without any pre-compiled data).
+
+## Multi-threading
+
+Multithreading can be enabled in the shiny app by calling `scanMiRApp()` (or 
+the underlying `scanMiRserver()`) with the `BP` argument, e.g.:
+```
+scanMiRApp(..., BP=BiocParallel::MulticoreParam(ncores))
+```
+
+where `ncores` is the number of threads to use. This will enable 
+multi-threading for the scanning functions, which makes a big difference when 
+scanning for many miRNAs at a time. In addition, multi-threading can be
+used to read the `IndexedFst` files, which is enabled by the `nthreads` of the
+`loadIndexedFst` function. However, since reading is quite fast already with a 
+single core, improvements there are typically fairly marginal.
+
+## Caching
+
+By default, the app has a caching system which means that if a user wants to 
+launch the same scan with the same parameters twice, the results will be 
+re-used instead of re-computed. The cache has a maximum size (by default 10MB)
+per user, beyond which older cache items will be removed. The cache size can be
+manipulated through the `maxCacheSize` argument.
+
+
+# Session info {.unnumbered}
+
+```{r sessionInfo, echo=FALSE}
+sessionInfo()
+```

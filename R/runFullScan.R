@@ -14,6 +14,10 @@
 #' @importFrom GenomicFeatures extractTranscriptSeqs threeUTRsByTranscript cdsBy
 #' @import Biostrings scanMiR
 #' @importFrom S4Vectors metadata metadata<-
+#' @examples 
+#' # not run
+#' # anno <- ScanMiRAnno("Rnor_6")
+#' # seq <- runFullScan( annotation=anno )
 runFullScan <- function(annotation, mods=NULL, UTRonly=TRUE, shadow=15, cores=1,
                         maxLogKd=c(-0.3,-0.3), save.path=NULL, ...){
   message("Loading annotation")
@@ -49,7 +53,7 @@ runFullScan <- function(annotation, mods=NULL, UTRonly=TRUE, shadow=15, cores=1,
   }
   tx_info$UTR.length <- utr.len[row.names(tx_info)]
   
-  message("Scanning with ", cores, " cores")
+  message("Scanning with ", cores, " core(s)")
   if(cores>1){
     BP <- MulticoreParam(cores, progress=TRUE)
   }else{
@@ -57,12 +61,17 @@ runFullScan <- function(annotation, mods=NULL, UTRonly=TRUE, shadow=15, cores=1,
   }
   m <- findSeedMatches(seqs, mods, shadow=shadow, maxLogKd=maxLogKd, BP=BP, ...)
   
+  md <- metadata(anno$ensdb)
+  md <- setNames(md$value,md$name)
+
   if(is(m, "GRanges")) {
     metadata(m)$tx_info <- tx_info
-    metadata(m)$ah_id <- ahid
+    metadata(m)$genome_build <- md$genome_build
+    metadata(m)$ensembl_version <- md$ensembl_version
   } else {
     attr(m, "tx_info") <- tx_info
-    attr(m, "ah_id") <- ahid
+    attr(m, "ensembl_version") <- md$ensembl_version
+    attr(m, "genome_build") <- md$genome_build
   }
   if(is.null(save.path)) return(m)
   saveRDS(m, file=save.path)

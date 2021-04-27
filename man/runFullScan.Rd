@@ -35,3 +35,8 @@ runFullScan(
 \description{
 runFullScan
 }
+\examples{
+# not run
+# anno <- ScanMiRAnno("Rnor_6")
+# seq <- runFullScan( annotation=anno )
+}

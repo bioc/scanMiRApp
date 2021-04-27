@@ -7,7 +7,7 @@
 scanMiRserver(
   annotations = list(),
   modlists = NULL,
-  maxCacheSize = 100 * 10^6,
+  maxCacheSize = 10 * 10^6,
   BP = SerialParam()
 )
 }

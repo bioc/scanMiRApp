@@ -14,6 +14,10 @@
 #' @importFrom GenomicFeatures threeUTRsByTranscript cdsBy extractTranscriptSeqs
 #' @importFrom ensembldb metadata seqlevelsStyle
 #' @import Biostrings
+#' @examples
+#' # not run
+#' # anno <- ScanMiRAnno("Rnor_6")
+#' # seq <- getTranscriptSequence( tx="ENSRNOT00000065646", annotation=anno )
 getTranscriptSequence <- function(tx, annotation, UTRonly=TRUE, ...){
   tx <- gsub("\\.[0-9]+$","",as.character(tx))
   gr <- threeUTRsByTranscript(annotation$ensdb, filter=~tx_id %in% tx)
@@ -44,7 +48,6 @@ getTranscriptSequence <- function(tx, annotation, UTRonly=TRUE, ...){
 #' background threshhold is indicated, the lightblue dashed line shows the
 #' average 8mer dissociation rate of the given miRNA
 #'
-#'
 #' @param tx An ensembl TranscriptID
 #' @param annotation A \code{\link{ScanMiRAnno}} object.
 #' @param miRNA A miRNA name in the mirbase format (eg. "hsa-miR-485-5p"), a
@@ -55,8 +58,14 @@ getTranscriptSequence <- function(tx, annotation, UTRonly=TRUE, ...){
 #' @param verbose Logical; whether to print updates on the processing
 #'
 #' @return Returns a ggplot.
-#' @import ggplot2
+#' @importFrom ggplot2 ggplot geom_hline geom_point geom_text labs xlim theme_light
+#' @import scanMiR
 #' @export
+#' @examples
+#' # not run
+#' # anno <- ScanMiRAnno("Rnor_6")
+#' # plotSitesOnUTR( tx="ENSRNOT00000065646", annotation=anno, 
+#' #                 miRNA="rno-miR-100-5p")
 plotSitesOnUTR <- function(tx, annotation, miRNA=NULL, label_6mers=FALSE,
                            label_notes=FALSE, verbose=TRUE, ...){
   # Prepare everything & scan
@@ -100,19 +109,17 @@ plotSitesOnUTR <- function(tx, annotation, miRNA=NULL, label_6mers=FALSE,
                   row.names=NULL)
   d <- d[head(order(d$base+d$A, decreasing=TRUE),n=1),]
   mer8 <- d$base + d$A
-  # title
-  title <- paste0(transcriptID," - ",miRNA)
+
+  title <- paste0(tx," - ",miRNA)
   
   p <- ggplot(m, aes(x = start, y = -`logKd`)) + 
     geom_hline(yintercept=1, linetype="dashed", color = "red", size=1) + 
     geom_hline(yintercept=mer8, linetype="dashed", color = "gray64", size=1) + 
     geom_point(size=2) + geom_text(label = m$type,nudge_y = -0.2) +
-    xlab("sequence length") + ylab("-logKd") + xlim(0,width(Seq)) +
-    theme_light() + ggtitle(title)
-  if(label_notes){
-    m$note <- ifelse(m$note == "-","",m$note)
-    p <- p + geom_text(label = m$note,nudge_y = 0.2)
-  } 
+    labs(x="sequence length", y="-logKd", title=title) + xlim(0,width(Seq)) +
+    theme_light()
+  if(label_notes)
+    p <- p + geom_text(data=m[m$note!="-",], label=aes(note), nudge_y = 0.2)
   p
 }
 

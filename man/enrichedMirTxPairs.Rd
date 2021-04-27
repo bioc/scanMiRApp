@@ -8,7 +8,7 @@ enrichedMirTxPairs(m, minSites = 5, max.binom.p = 0.001)
 }
 \arguments{
 \item{m}{A GRanges of matches, as produced by \link{\code{findSeedMatches}}.
-It is recommended to filter this to have only canonical sites.}
+This will be filtered down to only 8mer and 7mer sites.}
 
 \item{minSites}{The minimum number of sites for a given miRNA-target pair to
 be considered.}
@@ -22,4 +22,11 @@ the log-transformed binomial p-value.
 \description{
 Identifies pairs of miRNA and target transcripts that have an unexpectedly
 high number of sites.
+}
+\examples{
+# not run
+# first we get a full scan:
+# anno <- ScanMiRAnno("Rnor_6")
+# m <- runFullScan( annotation=anno, UTRonly = TRUE, onlyCanonical=TRUE )
+# res <- enrichedMirTxPairs(m)
 }

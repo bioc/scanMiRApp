@@ -22,3 +22,8 @@ A \code{\link{DNAStringSet}}.
 Utility wrapper to extracts the sequence of a given transcript (UTR or 
 CDS+UTR).
 }
+\examples{
+# not run
+# anno <- ScanMiRAnno("Rnor_6")
+# seq <- getTranscriptSequence( tx="ENSRNOT00000065646", annotation=anno )
+}

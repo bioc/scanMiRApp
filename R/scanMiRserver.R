@@ -20,7 +20,7 @@
 #' @import shiny shinydashboard scanMiR GenomicRanges IRanges
 #' @export
 scanMiRserver <- function( annotations=list(), modlists=NULL, 
-                           maxCacheSize=100*10^6, BP=SerialParam() ){
+                           maxCacheSize=10*10^6, BP=SerialParam() ){
   stopifnot(length(annotations)>0)
   stopifnot(all(vapply(annotations, class2="ScanMiRAnno",
                        FUN.VALUE=logical(1), FUN=is)))
