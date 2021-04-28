@@ -8,32 +8,34 @@ runFullScan(
   annotation,
   mods = NULL,
   UTRonly = TRUE,
+  onlyCanonical = TRUE,
   shadow = 15,
   cores = 1,
-  maxLogKd = c(-0.3, -0.3),
+  maxLogKd = c(-0.3, -1),
   save.path = NULL,
   ...
 )
 }
 \arguments{
-\item{annotation}{}
+\item{annotation}{A \code{\link{ScanMiRAnno}} object}
 
-\item{mods}{}
+\item{mods}{An optional `KdModelList` (defaults to the one in `annotation`)}
 
-\item{UTRonly}{}
+\item{UTRonly}{Whether to scan only UTRs}
 
-\item{shadow}{}
+\item{shadow}{The size of the ribosomal shadow at the UTR starts}
 
-\item{cores}{}
+\item{cores}{The number of threads to use}
 
-\item{maxLogKd}{}
+\item{maxLogKd}{The maximum log_kd of sites to report}
 
-\item{save.path}{}
+\item{save.path}{Optional, the path to which to save the results}
 
-\item{...}{}
+\item{...}{Arguments passed to `scanMiR::findSeedMatches`}
 }
 \description{
-runFullScan
+Runs a full miRNA scan on all protein-coding transcripts (or UTRs) of an
+annotation.
 }
 \examples{
 # not run

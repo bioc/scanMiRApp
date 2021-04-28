@@ -1,13 +1,16 @@
 #' runFullScan
+#'
+#' Runs a full miRNA scan on all protein-coding transcripts (or UTRs) of an
+#' annotation.
 #' 
-#' @param annotation 
-#' @param mods 
-#' @param UTRonly 
-#' @param shadow 
-#' @param cores 
-#' @param maxLogKd 
-#' @param save.path 
-#' @param ... 
+#' @param annotation A \code{\link{ScanMiRAnno}} object
+#' @param mods An optional `KdModelList` (defaults to the one in `annotation`)
+#' @param UTRonly Whether to scan only UTRs
+#' @param shadow The size of the ribosomal shadow at the UTR starts
+#' @param cores The number of threads to use
+#' @param maxLogKd The maximum log_kd of sites to report
+#' @param save.path Optional, the path to which to save the results
+#' @param ... Arguments passed to `scanMiR::findSeedMatches`
 #'
 #' @export
 #' @importFrom BiocParallel SerialParam MulticoreParam
@@ -18,8 +21,9 @@
 #' # not run
 #' # anno <- ScanMiRAnno("Rnor_6")
 #' # seq <- runFullScan( annotation=anno )
-runFullScan <- function(annotation, mods=NULL, UTRonly=TRUE, shadow=15, cores=1,
-                        maxLogKd=c(-0.3,-0.3), save.path=NULL, ...){
+runFullScan <- function(annotation, mods=NULL, UTRonly=TRUE, onlyCanonical=TRUE,
+                        shadow=15, cores=1, maxLogKd=c(-0.3,-1), 
+                        save.path=NULL, ...){
   message("Loading annotation")
   stopifnot(is(annotation, "ScanMiRAnno"))
   if(is.null(mods)) mods <- annotation$models
@@ -59,7 +63,8 @@ runFullScan <- function(annotation, mods=NULL, UTRonly=TRUE, shadow=15, cores=1,
   }else{
     BP <- SerialParam()
   }
-  m <- findSeedMatches(seqs, mods, shadow=shadow, maxLogKd=maxLogKd, BP=BP, ...)
+  m <- findSeedMatches(seqs, mods, shadow=shadow, maxLogKd=maxLogKd, 
+                       onlyCanonical=onlyCanonical, BP=BP, ...)
   
   md <- metadata(anno$ensdb)
   md <- setNames(md$value,md$name)
