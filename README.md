@@ -1,4 +1,4 @@
-<img align="right" style="margin-left: 20px; margin-bottom: 10px;" src="https://raw.githubusercontent.com/ETHZ-INS/scanMiR/master/inst/docs/sticker.svg"/>
+<img align="right" style="margin-left: 25px; margin-bottom: 20px;" src="https://raw.githubusercontent.com/ETHZ-INS/scanMiR/master/inst/docs/sticker.svg"/>
 
 # scanMiRApp
 
