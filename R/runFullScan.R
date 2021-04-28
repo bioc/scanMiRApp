@@ -22,7 +22,7 @@
 #' # anno <- ScanMiRAnno("Rnor_6")
 #' # seq <- runFullScan( annotation=anno )
 runFullScan <- function(annotation, mods=NULL, UTRonly=TRUE, onlyCanonical=TRUE,
-                        shadow=15, cores=1, maxLogKd=c(-0.3,-1), 
+                        shadow=15, cores=1, maxLogKd=c(-1,-1.5), 
                         save.path=NULL, ...){
   message("Loading annotation")
   stopifnot(is(annotation, "ScanMiRAnno"))
