@@ -66,12 +66,12 @@ runFullScan <- function(annotation, mods=NULL, UTRonly=TRUE, shadow=15, cores=1,
 
   if(is(m, "GRanges")) {
     metadata(m)$tx_info <- tx_info
-    metadata(m)$genome_build <- md$genome_build
-    metadata(m)$ensembl_version <- md$ensembl_version
+    metadata(m)$genome_build <- md[["genome_build"]]
+    metadata(m)$ensembl_version <- md[["ensembl_version"]]
   } else {
     attr(m, "tx_info") <- tx_info
-    attr(m, "ensembl_version") <- md$ensembl_version
-    attr(m, "genome_build") <- md$genome_build
+    attr(m, "ensembl_version") <- md[["ensembl_version"]]
+    attr(m, "genome_build") <- md[["genome_build"]]
   }
   if(is.null(save.path)) return(m)
   saveRDS(m, file=save.path)
