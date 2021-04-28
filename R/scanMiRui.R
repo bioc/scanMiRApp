@@ -148,7 +148,20 @@ scanMiRui <- function(){
           box(width=12, title="Targets", collapsible=TRUE, 
               uiOutput("targets_ui"))
         ),
-        tabItem(tabName = "tab_about")
+        tabItem(tabName = "tab_about",
+	  box(width=12, tags$p("The scanMiRApp is an interface to the ",
+	      tags$a(href="https://github.com/ETHZ-INS/scanMiR", 
+	             target="_blank", "scanMiR"),
+	      "package. The shiny app was developed by Pierre-Luc Germain and ",
+	      "Michael Soutschek in the context of broader research in the ",
+              tags$a(href="http://schrattlab.ethz.ch", "Schratt lab", 
+                     target="_blank"), ".",
+	      tags$br(), "Bugs reports and feature requests are welcome ",
+              tags$a(href="https://github.com/ETHZ-INS/scanMiRApp/issues", 
+                     target="_blank", "here"),".", tags$br(),
+	      style="font-size: 115%;")
+	  )
+	)
       ),
       tags$head(tags$style(HTML('.content-wrapper { overflow: auto; }')))
     )

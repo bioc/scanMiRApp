@@ -542,7 +542,8 @@ scanMiRserver <- function( annotations=list(), modlists=NULL,
     
     output$targets_ui <- renderUI({
       if(is.null(annotations[[input$annotation]]$aggregated)){
-        return(tags$p("Targets not accessible (no pre-compiled scans available"))
+        return(tags$p("Targets not accessible ",
+                      "(no pre-compiled scan available)"))
       }
       list(
         fluidRow(
