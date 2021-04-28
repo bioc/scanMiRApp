@@ -113,4 +113,5 @@ setMethod("show", "ScanMiRAnno", function(object){
                                   "of length", length(object$models))
   if(!is.null(object$scan)) cat("\n + Scan")
   if(!is.null(object$aggregated)) cat("\n + Aggregated")
+  cat("\n")
 })
