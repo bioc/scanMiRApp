@@ -237,6 +237,7 @@ loadIndexedFst <- function(file, nthreads=1){
 saveIndexedFst <- function(d, index.by, file.prefix, nthreads=1,
                            index.properties=NULL, add.info=list(), ...){
   if(is(d, "GRanges")){
+    add.info <- c(add.info, metadata(d))
     d <- as.data.frame(d)
     d$end <- NULL
     if(all(d$strand=="*")){
@@ -282,6 +283,7 @@ saveIndexedFst <- function(d, index.by, file.prefix, nthreads=1,
 }
 
 #' @importFrom GenomicRanges makeGRangesFromDataFrame
+#' @importFrom S4Vectors metadata metadata<-
 .df2gr <- function(x, add.info=list()){
   if(is.null(x$end)){
     if(is.null(x$width)){
@@ -296,5 +298,9 @@ saveIndexedFst <- function(d, index.by, file.prefix, nthreads=1,
     x$strand <- add.info$strand
   if(is.null(x$seqnames) && !is.null(add.info$seqnames))
     x$seqnames <- add.info$seqnames
-  makeGRangesFromDataFrame(x, keep.extra.columns = TRUE)
+  x <- makeGRangesFromDataFrame(x, keep.extra.columns = TRUE)
+  add.info <- add.info[setdiff(names(add.info), 
+                               c("strand","width","seqnames","isGR"))]
+  metadata(x) <- add.info
+  x
 }
