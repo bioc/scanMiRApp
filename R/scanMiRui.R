@@ -36,12 +36,12 @@ scanMiRui <- function(){
     dashboardBody(
       tabItems(
         tabItem( tabName = "tab_collection",
-          tags$h3("Select or upload a miRNA collection"), tags$br(),
+          tags$h3("Select a miRNA collection"), tags$br(),
           tabBox(id="collection_type", width=12,
                  tabPanel( title="Pre-built", value="prebuilt",
-                   selectInput("mirlist", "miRNA collection", choices=c())),
-                 tabPanel(title="Upload", value="upload", 
-                          tags$p("Not yet implemented."))
+                   selectInput("mirlist", "miRNA collection", choices=c()))#,
+#                 tabPanel(title="Upload", value="upload", 
+#                          tags$p("Not yet implemented."))
           ),
           box(width=12, withSpinner(verbatimTextOutput("collection_summary")))
         ),
