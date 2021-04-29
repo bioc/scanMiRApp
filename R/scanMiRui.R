@@ -149,7 +149,8 @@ scanMiRui <- function(){
               uiOutput("targets_ui"))
         ),
         tabItem(tabName = "tab_about",
-	  box(width=12, tags$p("The scanMiRApp is an interface to the ",
+	  box(width=12, title="About",
+              tags$p("The scanMiRApp is an interface to the ",
 	      tags$a(href="https://github.com/ETHZ-INS/scanMiR", 
 	             target="_blank", "scanMiR"),
 	      "package. The shiny app was developed by Pierre-Luc Germain and ",
