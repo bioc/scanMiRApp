@@ -102,7 +102,7 @@ scanMiRui <- function(){
                           "recommended is 15 NT"), 
               min = 0, max = 20, value = 15, step = 1),
             sliderInput(inputId="maxLogKd", label = "Maximum log_kd to report",
-                        min = -4, max = 0, value = -0.5, step = 0.25)
+                        min = -4, max = 0, value = -1, step = 0.25)
           ),
           box(width=6, checkboxInput("keepmatchseq", "Keep matched sequence"),
               checkboxInput("scanNonCanonical", 
