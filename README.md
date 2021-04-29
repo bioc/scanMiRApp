@@ -10,13 +10,14 @@ enabling the scanning of transcripts (or custom sequences) for miRNA binding sit
 visualization of KdModels and binding results, as well as browsing predicted repression data.
 * The `ScanMiRAnno` class, which encapsulates all the annotation information necessary for the
 app/wrappers in this package for a given species.
-* The `IndexedFst` class for fast indexed reading of large GenomicRanges or data.frames; this is
-used to enable fast random access to pre-compiled scans and aggregations without having to load
-them in memory.
+* The <a href="vignettes/IndexedFST.Rmd">`IndexedFst`</a> class for fast indexed reading of 
+large GenomicRanges or data.frames; this is used to enable fast random access to pre-compiled 
+scans and aggregations without having to load them in memory.
 * A number of convenience wrappers to `scanMiR` functions, for tasks like scanning or
 visualizing sites on the UTR of a given transcript, running transcriptome-wide scans, or 
 finding enriched miRNA-target pairs.
 
+Click [here](http://130.60.24.171:3838/scanMiR/) for a live version of the app.
 For more information, see the package's [vignettes](vignettes/).
 
 ## Installation
