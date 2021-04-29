@@ -327,15 +327,21 @@ scanMiRserver <- function( annotations=list(), modlists=NULL,
         }
         h <- preScan[seqnames(preScan)==txid & 
                        preScan$miRNA %in% names(selmods())]
-        if(input$utr_only && !is.null(h$ORF)) h <- h[!h$ORF]
       }else{
         if(!(txid %in% names(preScan))){
           warning("Transcript not found in the pre-compiled scan!")
           return(NULL)
         }
         h <- preScan[[txid]]
-        if(input$utr_only && !is.null(h$ORF)) h <- h[!h$ORF]
         h <- h[h$miRNA %in% names(selmods())]
+      }
+      if(input$utr_only && !is.null(h$ORF)){
+        h <- h[!h$ORF]
+        h$ORF <- NULL
+        if(!is.null(metadata(h)$tx_info)){
+          s <- metadata(h)$tx_info[as.character(seqnames(h)), "ORF.length"]
+          h <- IRanges::shift(h, -1L * as.integer(s))
+        }
       }
       if(length(h)==0) return(h)
       if(!input$scanNonCanonical)
@@ -370,14 +376,14 @@ scanMiRserver <- function( annotations=list(), modlists=NULL,
         if(length(selmods())>4) detail <- "This might take a while..."
         if(input$circular)
           detail <- "'Ribosomal Shadow' is ignored when scanning circRNAs"
-          scantarget <- target()
-          scanmods <- selmods()
-          keepmatchseq <- input$keepmatchseq
-          shadow <- ifelse(input$circular,0,input$shadow)
-          onlyCanonical <- !input$scanNonCanonical
-          minDist <- input$minDist
-          maxLogKd <- input$maxLogKd
-	withProgress(message=msg, detail=detail, value=1, max=3, {
+        scantarget <- target()
+        scanmods <- selmods()
+        keepmatchseq <- input$keepmatchseq
+        shadow <- ifelse(input$circular,0,input$shadow)
+        onlyCanonical <- !input$scanNonCanonical
+        minDist <- input$minDist
+        maxLogKd <- input$maxLogKd
+      	withProgress(message=msg, detail=detail, value=1, max=3, {
           res$hits = findSeedMatches(
               scantarget, scanmods, keepMatchSeq=keepmatchseq,
               minDist=minDist, maxLogKd=maxLogKd, shadow=shadow, 
