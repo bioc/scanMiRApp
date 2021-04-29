@@ -31,13 +31,13 @@ scanMiRserver <- function( annotations=list(), modlists=NULL,
                        FUN.VALUE=logical(1), FUN=is)))
   stopifnot(all(names(modlists) %in% names(annotations)))
   
-  dtwrapper <- function(d, pageLength=25, ...){
+  dtwrapper <- function(d, pageLength=25, rownames=TRUE, ...){
     datatable( d, filter="top", class="compact", 
                extensions=c("Buttons","ColReorder"),
                options=list(
                  pageLength=pageLength, dom = "fltBip", colReorder=TRUE, 
                  buttons=c('copy', 'csv', 'excel', 'csvHtml5', 'colvis')
-               ), rownames=FALSE, ... )
+               ), rownames=rownames, ... )
   }
   
   checkModIdentity <- function(m1,m2){
@@ -525,8 +525,6 @@ scanMiRserver <- function( annotations=list(), modlists=NULL,
                     as.character(m$miRNA), hits()$sel)
       mod <- modlists[[hits()$collection]][[as.character(mir)]]
       seqs <- setNames(as.character(hits()$seq), as.character(seqnames(m)))
-      warning(mir)
-      save(mod, m, mir, seqs, file="/mnt/schratt/TMP.RData")
       viewTargetAlignment(m, mod, seqs=seqs)
     })
 
