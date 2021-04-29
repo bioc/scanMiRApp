@@ -11,7 +11,7 @@ runFullScan(
   onlyCanonical = TRUE,
   shadow = 15,
   cores = 1,
-  maxLogKd = c(-0.3, -1),
+  maxLogKd = c(-1, -1.5),
   save.path = NULL,
   ...
 )

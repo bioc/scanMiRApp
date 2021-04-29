@@ -17,6 +17,7 @@
 #' @importFrom htmlwidgets JS
 #' @importFrom digest digest
 #' @importFrom shinycssloaders withSpinner
+#' @importFrom ggplot2 ggplot aes_string geom_hline geom_point expand_limits xlab
 #' @import shiny shinydashboard scanMiR GenomicRanges IRanges
 #' @export
 scanMiRserver <- function( annotations=list(), modlists=NULL, 
@@ -220,7 +221,8 @@ scanMiRserver <- function( annotations=list(), modlists=NULL,
     })
     
     observeEvent(input$rndseq, { # generate random sequence
-      updateTextAreaInput(session, "customseq", value=getRandomSeq())
+      updateTextAreaInput(session, "customseq", 
+                          value=as.character(getRandomSeq()))
     })
     
     ## Select miRNAs for scanning
