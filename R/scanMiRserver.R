@@ -35,10 +35,9 @@ scanMiRserver <- function( annotations=list(), modlists=NULL,
     datatable( d, filter="top", class="compact", 
                extensions=c("Buttons","ColReorder"),
                options=list(
-                 pageLength=pageLength, dom = "fltBip", rownames=FALSE,
-                 colReorder=TRUE, 
+                 pageLength=pageLength, dom = "fltBip", colReorder=TRUE, 
                  buttons=c('copy', 'csv', 'excel', 'csvHtml5', 'colvis')
-               ), ... )
+               ), rownames=FALSE, ... )
   }
   
   checkModIdentity <- function(m1,m2){
@@ -371,12 +370,18 @@ scanMiRserver <- function( annotations=list(), modlists=NULL,
         if(length(selmods())>4) detail <- "This might take a while..."
         if(input$circular)
           detail <- "'Ribosomal Shadow' is ignored when scanning circRNAs"
-        withProgress(message=msg, detail=detail, value=1, max=3, {
+          scantarget <- target()
+          scanmods <- selmods()
+          keepmatchseq <- input$keepmatchseq
+          shadow <- ifelse(input$circular,0,input$shadow)
+          onlyCanonical <- !input$scanNonCanonical
+          minDist <- input$minDist
+          maxLogKd <- input$maxLogKd
+	withProgress(message=msg, detail=detail, value=1, max=3, {
           res$hits = findSeedMatches(
-              target(), selmods(), keepMatchSeq=input$keepmatchseq,
-              minDist=input$minDist, maxLogKd=input$maxLogKd,
-              shadow=ifelse(input$circular,0,input$shadow),
-              onlyCanonical=!input$scanNonCanonical, p3.extra=TRUE, BP=BP )
+              scantarget, scanmods, keepMatchSeq=keepmatchseq,
+              minDist=minDist, maxLogKd=maxLogKd, shadow=shadow, 
+              onlyCanonical=onlyCanonical, p3.extra=TRUE, BP=BP )
         })
       }
       if(length(res$hits)>0) res$hits$log_kd <- (res$hits$log_kd/1000)
