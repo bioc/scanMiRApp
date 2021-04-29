@@ -267,9 +267,9 @@ saveIndexedFst <- function(d, index.by, file.prefix, nthreads=1,
   if(!is.null(nthreads)) threads_fst(nthreads)
   d <- d[order(d[[index.by]]),]
   file.prefix <- gsub("\\.fst$","",file.prefix)
-  idx <- range(S4Vectors::splitAsList(seq_len(nrow(d)),
-                                      as.factor(d[[index.by]])))
-  idx <- data.frame( row.names=row.names(idx), start=idx[,1], end=idx[,2])
+  w <- which(!duplicated(d[[index.by]]))
+  idx <- data.frame(row.names=d[[index.by]][w], start=w, 
+                    end=c(w[-1]-1L,nrow(d)))
   if(!is.null(index.properties)){
     idx <- merge(idx, as.data.frame(index.properties),
                  by="row.names", all.x=TRUE)
