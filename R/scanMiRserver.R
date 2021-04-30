@@ -311,7 +311,7 @@ scanMiRserver <- function( annotations=list(), modlists=NULL,
       }
     }
     
-    checkPreComputedScan <- function(txid){
+    checkPreComputedScan <- function(txid, utr_only=FALSE){
       if(is.null(preScan <- annotations[[input$annotation]]$scan)) return(NULL)
       if(is.null(origMods <- annotations[[input$annotation]]$models) ||
          !all(names(selmods()) %in% names(origMods)) ||
@@ -335,7 +335,7 @@ scanMiRserver <- function( annotations=list(), modlists=NULL,
         h <- preScan[[txid]]
         h <- h[h$miRNA %in% names(selmods())]
       }
-      if(input$utr_only && !is.null(h$ORF)){
+      if(utr_only && !is.null(h$ORF)){
         h <- h[!h$ORF]
         h$ORF <- NULL
         if(!is.null(metadata(h)$tx_info)){
@@ -366,7 +366,7 @@ scanMiRserver <- function( annotations=list(), modlists=NULL,
       if(cs %in% names(cached.checksums())) return(cached.hits[[cs]])
       # then check if the results are pre-computed
       if(input$subjet_type!="custom" && 
-         !is.null(h <- checkPreComputedScan(seltx()))){
+         !is.null(h <- checkPreComputedScan(seltx(), input$utr_only))){
         res <- list(hits=h)
       }else{
         res <- list()
@@ -383,7 +383,7 @@ scanMiRserver <- function( annotations=list(), modlists=NULL,
         onlyCanonical <- !input$scanNonCanonical
         minDist <- input$minDist
         maxLogKd <- input$maxLogKd
-      	withProgress(message=msg, detail=detail, value=1, max=3, {
+        withProgress(message=msg, detail=detail, value=1, max=3, {
           res$hits = findSeedMatches(
               scantarget, scanmods, keepMatchSeq=keepmatchseq,
               minDist=minDist, maxLogKd=maxLogKd, shadow=shadow, 
@@ -398,6 +398,7 @@ scanMiRserver <- function( annotations=list(), modlists=NULL,
       res$nsel <- nm <- length(selmods())
       res$sel <- ifelse(nm>1,paste(nm,"models"),input$mirnas)
       res$seq <- target()
+      res$utr_only <- input$utr_only
       res$target_length <- nchar(target())
       if(input$subjet_type=="custom"){
         res$target <- "custom sequence"
@@ -524,7 +525,9 @@ scanMiRserver <- function( annotations=list(), modlists=NULL,
       mir <- ifelse("miRNA" %in% colnames(mcols(m)), 
                     as.character(m$miRNA), hits()$sel)
       mod <- modlists[[hits()$collection]][[as.character(mir)]]
-      seqs <- setNames(as.character(hits()$seq), as.character(seqnames(m)))
+      seqs <- hits()$seq
+      seqs <- setNames(as.character(seqs), as.character(seqnames(m)))
+#save(seqs, m, mod, file="~/TMP.RData")
       viewTargetAlignment(m, mod, seqs=seqs)
     })
 
