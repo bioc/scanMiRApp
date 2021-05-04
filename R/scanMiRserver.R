@@ -155,30 +155,11 @@ scanMiRserver <- function( annotations=list(), modlists=NULL,
     seqs <- reactive({ # returns the selected sequence(s)
       if((is.null(selgene()) || selgene()=="") && 
          (is.null(seltx()) || seltx()=="")) return(NULL)
-      if(is.null(seltx())){
-        gid <- selgene()
-        filt <- ~gene_id==gid
-      }else{
-        txid <- seltx()
-        filt <- ~tx_id==txid
-      }
-      if(input$utr_only){
-        gr <- suppressWarnings(threeUTRsByTranscript(sel_ensdb(), filter=filt))
-      }else{
-        gr <- exonsBy(sel_ensdb(), by="tx", filter=filt)
-      }
-      get_seq(gr)
+      if(is.null(txid <- seltx()))
+        txid <- transcripts(sel_ensdb(), filter=~gene_id==gid)$tx_id
+      getTranscriptSequence( txid, annotations[[input$annotation]], 
+                             UTRonly=input$utr_only )
     })
-    
-    get_seq <- function(gr){
-      if(length(gr)==0) return(NULL)
-      if(is.null(annotations[[input$annotation]]$genome)) return(NULL)
-      g <- getGenome(annotations[[input$annotation]])
-      seqs <- extractTranscriptSeqs(g, gr)
-      seqs <- seqs[lengths(seqs)>6]
-      if(length(seqs)==0) return(NULL)
-      seqs
-    }
     
     output$tx_overview <- renderTable({ # overview of the selected transcript
       if(is.null(seqs()) || length(seqs())==0) return(NULL)
