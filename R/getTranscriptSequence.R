@@ -21,7 +21,10 @@
 getTranscriptSequence <- function(tx, annotation, UTRonly=TRUE, ...){
   tx <- gsub("\\.[0-9]+$","",as.character(tx))
   gr <- threeUTRsByTranscript(annotation$ensdb, filter=~tx_id %in% tx)
-  if(length(gr)==0) stop("Nothing found!")
+  if(length(gr)==0){
+    message("Nothing found!")
+    return(DNAStringSet())
+  }
   genome <- annotation$genome
   seqlevelsStyle(genome) <- "Ensembl"
   gr <- gr[seqnames(gr) %in% seqlevels(genome)]

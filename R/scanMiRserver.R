@@ -18,6 +18,7 @@
 #' @importFrom digest digest
 #' @importFrom shinycssloaders withSpinner
 #' @importFrom ggplot2 ggplot aes_string geom_hline geom_point expand_limits xlab
+#' @importFrom Biostrings DNAStringSet
 #' @import shiny shinydashboard scanMiR GenomicRanges IRanges
 #' @export
 scanMiRserver <- function( annotations=list(), modlists=NULL, 
@@ -154,7 +155,7 @@ scanMiRserver <- function( annotations=list(), modlists=NULL,
     
     seqs <- reactive({ # returns the selected sequence(s)
       if((is.null(selgene()) || selgene()=="") && 
-         (is.null(seltx()) || seltx()=="")) return(NULL)
+         (is.null(seltx()) || seltx()=="")) return(DNAStringSet())
       if(is.null(txid <- seltx()))
         txid <- transcripts(sel_ensdb(), filter=~gene_id==gid)$tx_id
       getTranscriptSequence( txid, annotations[[input$annotation]], 
