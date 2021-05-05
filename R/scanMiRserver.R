@@ -156,6 +156,7 @@ scanMiRserver <- function( annotations=list(), modlists=NULL,
     seqs <- reactive({ # returns the selected sequence(s)
       if((is.null(selgene()) || selgene()=="") && 
          (is.null(seltx()) || seltx()=="")) return(DNAStringSet())
+      gid <- selgene()
       if(is.null(txid <- seltx()))
         txid <- transcripts(sel_ensdb(), filter=~gene_id==gid)$tx_id
       getTranscriptSequence( txid, annotations[[input$annotation]], 
@@ -163,7 +164,8 @@ scanMiRserver <- function( annotations=list(), modlists=NULL,
     })
     
     output$tx_overview <- renderTable({ # overview of the selected transcript
-      if(is.null(seqs()) || length(seqs())==0) return(NULL)
+      if(is.null(seqs()) || length(seqs())==0)
+        return(data.frame(sequence="Empty sequence!"))
       w <- width(seqs())
       ss <- as.character(subseq(seqs(), 1, end=ifelse(w<40,w,40)))
       ss[w>40] <- paste0(ss[w>40],"...")

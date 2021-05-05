@@ -21,17 +21,22 @@
 getTranscriptSequence <- function(tx, annotation, UTRonly=TRUE, ...){
   tx <- gsub("\\.[0-9]+$","",as.character(tx))
   gr <- threeUTRsByTranscript(annotation$ensdb, filter=~tx_id %in% tx)
-  if(length(gr)==0){
-    message("Nothing found!")
-    return(DNAStringSet())
-  }
   genome <- annotation$genome
   seqlevelsStyle(genome) <- "Ensembl"
-  gr <- gr[seqnames(gr) %in% seqlevels(genome)]
-  if(length(gr)==0) stop("Nothing found!")
-  seqs <- extractTranscriptSeqs(genome, gr)
+  seqs <- DNAStringSet()
+  if(length(gr)==0){
+    if(UTRonly){
+      message("Nothing found!")
+      return(DNAStringSet())
+    }
+    if(length(gr)>0){
+      gr <- gr[seqnames(gr) %in% seqlevels(genome)]
+      seqs <- extractTranscriptSeqs(genome, gr)
+    }
+  }
   if(!UTRonly){
     grl_ORF <- cdsBy(annotation$ensdb, by="tx", filter=~tx_id %in% tx)
+    if(length(grl_ORF)==0) return(seqs)
     seqs_ORF <- extractTranscriptSeqs(genome, grl_ORF)
     orf.len <- setNames(lengths(seqs_ORF), names(seqs_ORF))
     seqs_ORF[names(seqs)] <- xscat(seqs_ORF[names(seqs)],seqs)
