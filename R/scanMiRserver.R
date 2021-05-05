@@ -243,6 +243,14 @@ scanMiRserver <- function( annotations=list(), modlists=NULL,
     })
     
     ## Begin scan and results caching
+
+    output$scanBtn <- renderUI({
+      if(is.null(target()) || !isTRUE(nchar(target())>0) || 
+         is.null(selmods()) || length(selmods())==0)
+        return(actionButton("noscan", "Cannot launch scan - check input",
+                            icon("exclamation-triangle"), disabled=TRUE))
+      actionButton("scan", "Scan!", icon = icon("search"))
+   })
     
     # actual and past scanning results are stored in this object
     cached.hits <- reactiveValues()

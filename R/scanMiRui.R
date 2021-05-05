@@ -77,7 +77,7 @@ scanMiRui <- function(){
         ),
         tabItem(tabName="tab_mirnas",
           box( width=12,
-            column(12, selectizeInput("mirnas", label="Selected miRNAs:", 
+            column(12, selectizeInput("mirnas", label="Selected miRNAs: (type in to filter)", 
                                       choices=c(), multiple=TRUE) ),
             column(4, 
               checkboxInput("mirnas_all", "Search for all miRNAs"),
@@ -109,7 +109,7 @@ scanMiRui <- function(){
                             "Search also for non-canonical sites", value=TRUE))
         ),
         tabItem(tabName="tab_hits",
-          column(2, actionButton("scan", "Scan!", icon = icon("search"))),
+          column(2, uiOutput("scanBtn")),
           column(10, tags$h5(textOutput("scan_target"))),
           box( width=12, title="Manhattan Plot", collapsible=TRUE, 
                collapsed=TRUE, withSpinner(plotlyOutput("manhattan")),
