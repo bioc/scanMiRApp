@@ -5,11 +5,12 @@
 #' @import shiny shinydashboard
 #' @importFrom plotly plotlyOutput ggplotly
 #' @importFrom shinycssloaders withSpinner
+#' @importFrom waiter use_waiter waiter_show_on_load
 #' @export
 #' @examples
 #' ui <- scanMiRui()
 scanMiRui <- function(){
-
+  scanMiRlogo <- "https://raw.githubusercontent.com/ETHZ-INS/scanMiR/master/inst/docs/sticker.svg"
   ui <- dashboardPage( skin="black",
     
     dashboardHeader(title = "scanMiRApp", titleWidth = "300px"),
@@ -29,11 +30,17 @@ scanMiRui <- function(){
       ),
       tags$a(
         href="https://github.com/ETHZ-INS/scanMiR", target="_blank",
-        tags$img(src="https://raw.githubusercontent.com/ETHZ-INS/scanMiR/master/inst/docs/sticker.svg"),
+        tags$img(src=scanMiRlogo),
         style="display: block; position: fixed; bottom: 5px; left: 20px;")
     ),
     ## Body Content
     dashboardBody(
+      use_waiter(),
+      waiter_show_on_load(html = tagList(
+        tags$img(src=scanMiRlogo), tags$br(), tags$br(),
+        tags$h3("Please wait while the application is initialized..."),
+        spin_1()
+      )),
       tabItems(
         tabItem( tabName = "tab_collection",
           tags$h3("Select a miRNA collection"), tags$br(),

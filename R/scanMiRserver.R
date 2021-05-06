@@ -19,6 +19,7 @@
 #' @importFrom shinycssloaders withSpinner
 #' @importFrom ggplot2 ggplot aes_string geom_hline geom_point expand_limits xlab
 #' @importFrom Biostrings DNAStringSet
+#' @importFrom waiter waiter_hide
 #' @import shiny shinydashboard scanMiR GenomicRanges IRanges
 #' @export
 scanMiRserver <- function( annotations=list(), modlists=NULL, 
@@ -437,8 +438,7 @@ scanMiRserver <- function( annotations=list(), modlists=NULL,
     output$hits_table <- renderDT({ # prints the current hits
       if(is.null(hits()$hits)) return(NULL)
       h <- as.data.frame(hits()$hits)
-      h <- h[,setdiff(colnames(h), c("seqnames","width","strand") )]
-      if(hits()$nsel == 1) h$miRNA <- NULL
+      h <- h[order(h$log_kd),setdiff(colnames(h), c("seqnames","width","strand") )]
       dtwrapper(h, selection="single", callback=JS('
         table.on("dblclick.dt","tr", function() {
           Shiny.onInputChange("dblClickMatch", table.row(this).data()[0])
@@ -476,8 +476,8 @@ scanMiRserver <- function( annotations=list(), modlists=NULL,
       if(is.null(hits()$hits)) return(NULL)
       h <- as.data.frame(sort(hits()$hits))
       if(!is.null(h$miRNA) && length(unique(h$miRNA))>input$manhattan_n){
-        tt <- sort(table(h$miRNA), decreasing=TRUE)
-        mirs <- names(tt)[seq_len(min(input$manhattan_n, length(tt)))]
+        h <- h[order(h$log_kd),]
+        mirs <- as.character(head(unique(h$miRNA),input$manhattan_n))
         h <- h[h$miRNA %in% mirs,,drop=FALSE]
       }
       if(!is.null(input$manhattan_ordinal) && input$manhattan_ordinal){
@@ -494,6 +494,10 @@ scanMiRserver <- function( annotations=list(), modlists=NULL,
       p <- ggplot(h, do.call(aes_string, ael)) + 
         geom_hline(yintercept=1.5, linetype="dashed", color = "red", size=1) + 
         geom_point(size=2) + xlab(xlab) + expand_limits(x=xlim, y=0)
+      if(!is.null(h$ORF) && !is.null(metadata(h)$tx_info)){
+        orflen <- metadata(h)$tx_info[as.character(seqnames(h)), "ORF.length"]
+        p <- p + geom_vline(xintercept=orflen, color="grey", size=1)
+      }
       ggplotly(p)
     })
 
@@ -519,7 +523,6 @@ scanMiRserver <- function( annotations=list(), modlists=NULL,
       mod <- modlists[[hits()$collection]][[as.character(mir)]]
       seqs <- hits()$seq
       seqs <- setNames(as.character(seqs), as.character(seqnames(m)))
-#save(seqs, m, mod, file="~/TMP.RData")
       viewTargetAlignment(m, mod, seqs=seqs)
     })
 
@@ -635,7 +638,7 @@ scanMiRserver <- function( annotations=list(), modlists=NULL,
         write.csv(mirtargets_prepared(), con, col.names=TRUE)
       }
     )
-    
+    waiter_hide()
   }
 }
 
