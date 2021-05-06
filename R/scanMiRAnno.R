@@ -3,7 +3,8 @@ setClass(
   "ScanMiRAnno",
   contains="list",
   validity=function(object){
-    stopifnot(!is.null(object$genome) && is(object$genome, "BSgenome"))
+    stopifnot(!is.null(object$genome) && 
+              (is(object$genome, "BSgenome") || is(object$genome, "TwoBitFile")))
     stopifnot(!is.null(object$ensdb) && is(object$ensdb, "EnsDb"))
     if(!is.null(object$models))
       stopifnot(is(object$models, "KdModelList") ||
@@ -22,7 +23,7 @@ setClass(
 #' @param species The species/build acronym for automatic construction; if
 #' omitted, `genome` and `ensdb` should be given. Current possible values are:
 #' GRCh38, GRCm38, Rnor_6.
-#' @param genome A BSgenome
+#' @param genome A \link{BSgenome}, or a \code{\link[rtracklayer]{TwoBitFile}}
 #' @param ensdb An EnsDb object
 #' @param models An optional KdModelList
 #' @param scan An optional full scan (IndexedFst or GRanges)
