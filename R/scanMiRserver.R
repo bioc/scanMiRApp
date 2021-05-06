@@ -474,9 +474,11 @@ scanMiRserver <- function( annotations=list(), modlists=NULL,
     
     output$manhattan <- renderPlotly({
       if(is.null(hits()$hits)) return(NULL)
-      h <- as.data.frame(sort(hits()$hits))
+      h <- hits()$hits
+      sn <- as.character(seqnames(h)[1])
+      meta <- metadata(h)
+      h <- as.data.frame(h[order(h$log_kd),])
       if(!is.null(h$miRNA) && length(unique(h$miRNA))>input$manhattan_n){
-        h <- h[order(h$log_kd),]
         mirs <- as.character(head(unique(h$miRNA),input$manhattan_n))
         h <- h[h$miRNA %in% mirs,,drop=FALSE]
       }
@@ -494,8 +496,8 @@ scanMiRserver <- function( annotations=list(), modlists=NULL,
       p <- ggplot(h, do.call(aes_string, ael)) + 
         geom_hline(yintercept=1.5, linetype="dashed", color = "red", size=1) + 
         geom_point(size=2) + xlab(xlab) + expand_limits(x=xlim, y=0)
-      if(!is.null(h$ORF) && !is.null(metadata(h)$tx_info)){
-        orflen <- metadata(h)$tx_info[as.character(seqnames(h)), "ORF.length"]
+      if(!is.null(h$ORF) && !is.null(meta$tx_info)){
+        orflen <- meta$tx_info[sn, "ORF.length"]
         p <- p + geom_vline(xintercept=orflen, color="grey", size=1)
       }
       ggplotly(p)

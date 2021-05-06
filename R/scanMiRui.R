@@ -5,7 +5,7 @@
 #' @import shiny shinydashboard
 #' @importFrom plotly plotlyOutput ggplotly
 #' @importFrom shinycssloaders withSpinner
-#' @importFrom waiter use_waiter waiter_show_on_load
+#' @importFrom waiter use_waiter waiter_show_on_load spin_1
 #' @export
 #' @examples
 #' ui <- scanMiRui()
@@ -35,7 +35,7 @@ scanMiRui <- function(){
     ),
     ## Body Content
     dashboardBody(
-      use_waiter(),
+      use_waiter(spinners = 3),
       waiter_show_on_load(html = tagList(
         tags$img(src=scanMiRlogo), tags$br(), tags$br(),
         tags$h3("Please wait while the application is initialized..."),

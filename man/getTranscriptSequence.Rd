@@ -7,7 +7,7 @@
 getTranscriptSequence(tx, annotation, UTRonly = TRUE, ...)
 }
 \arguments{
-\item{tx}{The ensembl ID of the transcript}
+\item{tx}{The ensembl ID of the transcript(s)}
 
 \item{annotation}{A \code{\link{ScanMiRAnno}} object.}
 
