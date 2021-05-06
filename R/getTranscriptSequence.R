@@ -3,7 +3,7 @@
 #' Utility wrapper to extracts the sequence of a given transcript (UTR or 
 #' CDS+UTR).
 #'
-#' @param tx The ensembl ID of the transcript
+#' @param tx The ensembl ID of the transcript(s)
 #' @param annotation A \code{\link{ScanMiRAnno}} object.
 #' @param UTRonly Logical; whether to fetch only the UTR sequences.
 #' @param ... Passed to \code{\link{AnnotationHub}}
@@ -29,10 +29,10 @@ getTranscriptSequence <- function(tx, annotation, UTRonly=TRUE, ...){
       message("Nothing found!")
       return(DNAStringSet())
     }
-    if(length(gr)>0){
-      gr <- gr[seqnames(gr) %in% seqlevels(genome)]
-      seqs <- extractTranscriptSeqs(genome, gr)
-    }
+    seqs <- DNAStringSet()
+  }else{
+    gr <- gr[seqnames(gr) %in% seqlevels(genome)]
+    seqs <- extractTranscriptSeqs(genome, gr)
   }
   if(!UTRonly){
     grl_ORF <- cdsBy(annotation$ensdb, by="tx", filter=~tx_id %in% tx)
