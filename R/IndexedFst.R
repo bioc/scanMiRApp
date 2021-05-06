@@ -69,7 +69,7 @@ setMethod("initialize", "IndexedFst", function(.Object, ...) {
 #' @importMethodsFrom methods show
 #' @export
 setMethod("show", "IndexedFst", function(object){
-  paste0(ff@fst.file, " (",nrow(ff@index)," sets)")
+  paste0(object@fst.file, " (",nrow(object@index)," sets)")
 })
 
 #' @rdname IndexedFst-class
