@@ -7,6 +7,7 @@
 runFullScan(
   annotation,
   mods = NULL,
+  tx_filter = NULL,
   UTRonly = TRUE,
   onlyCanonical = TRUE,
   shadow = 15,

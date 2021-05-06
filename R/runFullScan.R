@@ -21,7 +21,7 @@
 #' # not run
 #' # anno <- ScanMiRAnno("Rnor_6")
 #' # seq <- runFullScan( annotation=anno )
-runFullScan <- function(annotation, mods=NULL, UTRonly=TRUE, onlyCanonical=TRUE,
+runFullScan <- function(annotation, mods=NULL, annoFilter = NULL, UTRonly=TRUE, onlyCanonical=TRUE,
                         shadow=15, cores=1, maxLogKd=c(-1,-1.5), 
                         save.path=NULL, ...){
   message("Loading annotation")
@@ -36,6 +36,12 @@ runFullScan <- function(annotation, mods=NULL, UTRonly=TRUE, onlyCanonical=TRUE,
   canonical_chroms <- seqlevels(genome)[!grepl('_', seqlevels(genome))]
   filt <- SeqNameFilter(canonical_chroms)
   
+  if(!is.null(annoFilter)) {
+    if(is(annoFilter, "AnnotationFilterList") || is(annoFilter, "AnnotationFilter"))
+      filt <- AnnotationFilterList(filt, annoFilter)
+    else 
+      stop("filter must be either `AnnotationFilter` or `AnnotationFilterList`")
+  }
   message("Extracting transcripts")
   grl_UTR <- suppressWarnings(threeUTRsByTranscript(ensdb, filter=filt))
   seqs <- extractTranscriptSeqs(genome, grl_UTR)
@@ -68,7 +74,7 @@ runFullScan <- function(annotation, mods=NULL, UTRonly=TRUE, onlyCanonical=TRUE,
   
   md <- metadata(anno$ensdb)
   md <- setNames(md$value,md$name)
-
+  
   if(is(m, "GRanges")) {
     metadata(m)$tx_info <- tx_info
     metadata(m)$genome_build <- md[["genome_build"]]
