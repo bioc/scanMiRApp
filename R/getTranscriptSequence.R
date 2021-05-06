@@ -66,7 +66,7 @@ getTranscriptSequence <- function(tx, annotation, UTRonly=TRUE, ...){
 #' @param verbose Logical; whether to print updates on the processing
 #'
 #' @return Returns a ggplot.
-#' @importFrom ggplot2 ggplot geom_hline geom_point geom_text labs xlim theme_light
+#' @importFrom ggplot2 ggplot geom_hline geom_point geom_text labs xlim theme_light aes
 #' @import scanMiR
 #' @export
 #' @examples
