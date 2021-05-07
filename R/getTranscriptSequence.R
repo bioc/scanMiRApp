@@ -5,38 +5,53 @@
 #'
 #' @param tx The ensembl ID of the transcript(s)
 #' @param annotation A \code{\link{ScanMiRAnno}} object.
-#' @param UTRonly Logical; whether to fetch only the UTR sequences.
+#' @param extract Which parts of the transcripts to extract. For `UTRonly` 
+#' (default) only the 3' UTR regions are extracted, `withORF` additionally 
+#' extracts the coding regions, and `exons` extracts all exons
 #' @param ... Passed to \code{\link{AnnotationHub}}
 #'
 #' @return A \code{\link{DNAStringSet}}.
 #' @export
 #'
-#' @importFrom GenomicFeatures threeUTRsByTranscript cdsBy extractTranscriptSeqs
+#' @importFrom GenomicFeatures exonsBy extractTranscriptSeqs cdsBy 
+#' threeUTRsByTranscript
 #' @importFrom ensembldb metadata seqlevelsStyle
 #' @import Biostrings
 #' @examples
 #' # not run
 #' # anno <- ScanMiRAnno("Rnor_6")
 #' # seq <- getTranscriptSequence( tx="ENSRNOT00000065646", annotation=anno )
-getTranscriptSequence <- function(tx, annotation, UTRonly=TRUE, ...){
+getTranscriptSequence <- function(tx, annotation, 
+                                  extract=c("UTRonly", "withORF", "exons"),...){
   tx <- gsub("\\.[0-9]+$","",as.character(tx))
-  gr <- threeUTRsByTranscript(annotation$ensdb, filter=~tx_id %in% tx)
+  ensdb <- annotation$ensdb
+  extract <- match.arg(extract)
+  if(extract=="exons") {
+    gr <- exonsBy(ensdb, by="tx", filter=~tx_id %in% tx)
+  } else {
+    gr <- suppressWarnings(threeUTRsByTranscript(ensdb, filter=~tx_id %in% tx))
+  }
   genome <- annotation$genome
   seqlevelsStyle(genome) <- "Ensembl"
   seqs <- DNAStringSet()
   if(length(gr)==0){
-    if(UTRonly){
+    if(extract=="withORF"){
+      seqs <- DNAStringSet()
+      } else {
       message("Nothing found!")
       return(DNAStringSet())
-    }
-    seqs <- DNAStringSet()
-  }else{
+      }
+    } else {
     gr <- gr[seqnames(gr) %in% seqlevels(genome)]
     seqs <- extractTranscriptSeqs(genome, gr)
   }
-  if(!UTRonly){
-    grl_ORF <- cdsBy(annotation$ensdb, by="tx", filter=~tx_id %in% tx)
-    if(length(grl_ORF)==0) return(seqs)
+  if(extract=="withORF"){
+    grl_ORF <- suppressWarnings(cdsBy(annotation$ensdb, by="tx",
+                                      filter=~tx_id %in% tx))
+    if(length(grl_ORF)==0) {
+      if(length(seqs) ==0) message("Nothing found!")
+      return(seqs)
+    }
     seqs_ORF <- extractTranscriptSeqs(genome, grl_ORF)
     orf.len <- setNames(lengths(seqs_ORF), names(seqs_ORF))
     seqs_ORF[names(seqs)] <- xscat(seqs_ORF[names(seqs)],seqs)
