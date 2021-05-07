@@ -7,8 +7,8 @@
 runFullScan(
   annotation,
   mods = NULL,
-  tx_filter = NULL,
-  UTRonly = TRUE,
+  annoFilter = NULL,
+  extract = c("UTRonly", "withORF", "exons"),
   onlyCanonical = TRUE,
   shadow = 15,
   cores = 1,
@@ -22,7 +22,12 @@ runFullScan(
 
 \item{mods}{An optional `KdModelList` (defaults to the one in `annotation`)}
 
-\item{UTRonly}{Whether to scan only UTRs}
+\item{annoFilter}{An optional `AnnotationFilter` or `AnnotationFilterList` to 
+filter the set of transcripts to be extracted}
+
+\item{extract}{Which parts of the transcripts to extract. For `UTRonly` 
+(default) only the 3' UTR regions are extracted, `withORF` additionally 
+extracts the coding regions, and `exons` extracts all exons}
 
 \item{shadow}{The size of the ribosomal shadow at the UTR starts}
 
