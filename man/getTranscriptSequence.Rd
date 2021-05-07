@@ -4,14 +4,21 @@
 \alias{getTranscriptSequence}
 \title{getTranscriptSequence}
 \usage{
-getTranscriptSequence(tx, annotation, UTRonly = TRUE, ...)
+getTranscriptSequence(
+  tx,
+  annotation,
+  extract = c("UTRonly", "withORF", "exons"),
+  ...
+)
 }
 \arguments{
 \item{tx}{The ensembl ID of the transcript(s)}
 
 \item{annotation}{A \code{\link{ScanMiRAnno}} object.}
 
-\item{UTRonly}{Logical; whether to fetch only the UTR sequences.}
+\item{extract}{Which parts of the transcripts to extract. For `UTRonly` 
+(default) only the 3' UTR regions are extracted, `withORF` additionally 
+extracts the coding regions, and `exons` extracts all exons}
 
 \item{...}{Passed to \code{\link{AnnotationHub}}}
 }
