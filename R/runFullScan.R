@@ -5,7 +5,11 @@
 #' 
 #' @param annotation A \code{\link{ScanMiRAnno}} object
 #' @param mods An optional `KdModelList` (defaults to the one in `annotation`)
-#' @param UTRonly Whether to scan only UTRs
+#' @param annoFilter An optional `AnnotationFilter` or `AnnotationFilterList` to 
+#' filter the set of transcripts to be extracted
+#' @param extract Which parts of the transcripts to extract. For `UTRonly` 
+#' (default) only the 3' UTR regions are extracted, `withORF` additionally 
+#' extracts the coding regions, and `exons` extracts all exons
 #' @param shadow The size of the ribosomal shadow at the UTR starts
 #' @param cores The number of threads to use
 #' @param maxLogKd The maximum log_kd of sites to report
@@ -21,9 +25,10 @@
 #' # not run
 #' # anno <- ScanMiRAnno("Rnor_6")
 #' # seq <- runFullScan( annotation=anno )
-runFullScan <- function(annotation, mods=NULL, annoFilter = NULL, UTRonly=TRUE, onlyCanonical=TRUE,
-                        shadow=15, cores=1, maxLogKd=c(-1,-1.5), 
-                        save.path=NULL, ...){
+runFullScan <- function(annotation, mods=NULL, annoFilter = NULL, 
+                        extract=c("UTRonly", "withORF", "exons"),
+                        onlyCanonical=TRUE, shadow=15, cores=1,
+                        maxLogKd=c(-1,-1.5), save.path=NULL, ...){
   message("Loading annotation")
   stopifnot(is(annotation, "ScanMiRAnno"))
   if(is.null(mods)) mods <- annotation$models
@@ -42,27 +47,32 @@ runFullScan <- function(annotation, mods=NULL, annoFilter = NULL, UTRonly=TRUE, 
     else 
       stop("filter must be either `AnnotationFilter` or `AnnotationFilterList`")
   }
+  extract <- match.arg(extract)
   message("Extracting transcripts")
-  grl_UTR <- suppressWarnings(threeUTRsByTranscript(ensdb, filter=filt))
-  seqs <- extractTranscriptSeqs(genome, grl_UTR)
-  utr.len <- lengths(seqs)
-  names(utr.len) <- names(seqs)
-  if(!UTRonly){
-    grl_ORF <- cdsBy(ensdb, by="tx", filter=filt)
-    seqs_ORF <- extractTranscriptSeqs(genome, grl_ORF)
-    tx_info <- data.frame(strand=unlist(unique(strand(grl_ORF))))
-    orf.len <- lengths(seqs_ORF)
-    names(orf.len) <- names(grl_ORF)
-    tx_info$ORF.length <- orf.len[row.names(tx_info)]
-    seqs_ORF[names(seqs)] <- xscat(seqs_ORF[names(seqs)],seqs)
-    seqs <- seqs_ORF
-    rm(seqs_ORF)
-    mcols(seqs)$ORF.length <- orf.len[names(seqs)]
-  }else{
-    tx_info <- data.frame(strand=unlist(unique(strand(grl_UTR))))
+  if(extract=="exons") {
+    grl <- exonsBy(ensdb, filter=filt)
+    seqs <- extractTranscriptSeqs(genome, grl)
+    len <- lengths(seqs)
+    names(len) <- names(seqs)
+    strand <- unlist(unique(strand(grl)))
+  } else {
+    grl_UTR <- suppressWarnings(threeUTRsByTranscript(ensdb, filter=filt))
+    seqs <- extractTranscriptSeqs(genome, grl_UTR)
+    utr.len <- lengths(seqs)
+    names(utr.len) <- names(seqs)
+    strand <- unlist(unique(strand(grl_UTR)))
+    if(extract=="withORF"){
+      grl_ORF <- cdsBy(ensdb, by="tx", filter=filt)
+      seqs_ORF <- extractTranscriptSeqs(genome, grl_ORF)
+      orf.len <- lengths(seqs_ORF)
+      names(orf.len) <- names(grl_ORF)
+      seqs_ORF[names(seqs)] <- xscat(seqs_ORF[names(seqs)],seqs)
+      seqs <- seqs_ORF
+      rm(seqs_ORF)
+      mcols(seqs)$ORF.length <- orf.len[names(seqs)]
+      strand <- unlist(unique(strand(c(grl_ORF, grl_UTR))))
+    }
   }
-  tx_info$UTR.length <- utr.len[row.names(tx_info)]
-  
   message("Scanning with ", cores, " core(s)")
   if(cores>1){
     BP <- MulticoreParam(cores, progress=TRUE)
@@ -76,11 +86,11 @@ runFullScan <- function(annotation, mods=NULL, annoFilter = NULL, UTRonly=TRUE, 
   md <- setNames(md$value,md$name)
   
   if(is(m, "GRanges")) {
-    metadata(m)$tx_info <- tx_info
+    metadata(m)$tx_info$strand <- strand[rownames(metadata(m)$tx_info)]
     metadata(m)$genome_build <- md[["genome_build"]]
     metadata(m)$ensembl_version <- md[["ensembl_version"]]
   } else {
-    attr(m, "tx_info") <- tx_info
+    attr(m, "tx_info")$strand <- strand[rownames(attr(m, "tx_info"))]
     attr(m, "ensembl_version") <- md[["ensembl_version"]]
     attr(m, "genome_build") <- md[["genome_build"]]
   }
