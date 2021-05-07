@@ -18,7 +18,8 @@
 #'
 #' @export
 #' @importFrom BiocParallel SerialParam MulticoreParam
-#' @importFrom GenomicFeatures extractTranscriptSeqs threeUTRsByTranscript cdsBy
+#' @importFrom GenomicFeatures exonsBy extractTranscriptSeqs cdsBy 
+#' threeUTRsByTranscript
 #' @import Biostrings scanMiR
 #' @importFrom S4Vectors metadata metadata<-
 #' @examples 
@@ -50,7 +51,7 @@ runFullScan <- function(annotation, mods=NULL, annoFilter = NULL,
   extract <- match.arg(extract)
   message("Extracting transcripts")
   if(extract=="exons") {
-    grl <- exonsBy(ensdb, filter=filt)
+    grl <- exonsBy(ensdb, by="tx", filter=filt)
     seqs <- extractTranscriptSeqs(genome, grl)
     len <- lengths(seqs)
     names(len) <- names(seqs)
