@@ -31,7 +31,8 @@ Imports:
     shiny,
     shinycssloaders,
     shinydashboard,
-    stats
+    stats,
+    waiter
 Suggests: knitr, rmarkdown
 Description:
     A shiny interface to the scanMiR package. The application enables the 

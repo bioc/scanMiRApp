@@ -19,7 +19,7 @@ ScanMiRAnno(
 omitted, `genome` and `ensdb` should be given. Current possible values are:
 GRCh38, GRCm38, Rnor_6.}
 
-\item{genome}{A BSgenome}
+\item{genome}{A \link{BSgenome}, or a \code{\link[rtracklayer]{TwoBitFile}}}
 
 \item{ensdb}{An EnsDb object}
 
