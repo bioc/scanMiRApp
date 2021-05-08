@@ -47,7 +47,7 @@ runFullScan <- function(annotation, mods=NULL, annoFilter = NULL,
     }else{
       BP <- SerialParam()
     }
-  }elseif(is(cores,"BiocParallelParam")){
+  }else if(is(cores,"BiocParallelParam")){
     BP <- cores
   }else{
     warning("`cores` argument of unknown type -- will be ignored.")
