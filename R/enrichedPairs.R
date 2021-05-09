@@ -15,14 +15,17 @@
 #'
 #' @import Matrix
 #' @importFrom stats pbinom
-#' @examples 
-#' # not run
-#' # first we get a full scan:
-#' # anno <- ScanMiRAnno("Rnor_6")
-#' # m <- runFullScan( annotation=anno, UTRonly = TRUE, onlyCanonical=TRUE )
-#' # res <- enrichedMirTxPairs(m)
+#' @examples
+#' # we create a dummy scan (see `runFullScan`)
+#' library(scanMiR)
+#' seqs <- getRandomSeq(n=10)
+#' mirs <- c("TTGTATAA","AGCATTAA")
+#' m <- findSeedMatches(seqs,mirs,verbose=FALSE)
+#' # we look for enriched pairs
+#' res <- enrichedMirTxPairs(m)
+#' res
 enrichedMirTxPairs <- function(m, minSites=5, max.binom.p=0.001){
-  m <- m[as.integer(m$type) %in% grep("8mer|7mer",.matchLevels())]
+  m <- m[as.integer(m$type) %in% grep("8mer|7mer",levels(m$type))]
   b <- .matches2sparse(m)
   b <- b[rowSums(b>=minSites)>0,]
   rs <- rowSums(b)
@@ -50,8 +53,10 @@ enrichedMirTxPairs <- function(m, minSites=5, max.binom.p=0.001){
   dimn <- dimnames(x)
   x <- summary(x)
   w <- which(x$x!=ifelse(is.logical(x$x),FALSE,0))
-  xout <- data.frame( feature=factor(x$i[w], levels=seq_len(length(dimn[[1]])), labels=dimn[[1]]),
-                      set=factor(x$j[w], levels=seq_len(length(dimn[[2]])), labels=dimn[[2]]) )
+  xout <- data.frame( feature=factor(x$i[w], levels=seq_len(length(dimn[[1]])),
+                                     labels=dimn[[1]]),
+                      set=factor(x$j[w], levels=seq_len(length(dimn[[2]])),
+                                 labels=dimn[[2]]) )
   if(!is.logical(x$x)) xout[[content]] <- x$x[w]
   xout
 }

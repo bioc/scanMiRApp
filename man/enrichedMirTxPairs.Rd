@@ -24,9 +24,12 @@ Identifies pairs of miRNA and target transcripts that have an unexpectedly
 high number of sites.
 }
 \examples{
-# not run
-# first we get a full scan:
-# anno <- ScanMiRAnno("Rnor_6")
-# m <- runFullScan( annotation=anno, UTRonly = TRUE, onlyCanonical=TRUE )
-# res <- enrichedMirTxPairs(m)
+# we create a dummy scan (see `runFullScan`)
+library(scanMiR)
+seqs <- getRandomSeq(n=10)
+mirs <- c("TTGTATAA","AGCATTAA")
+m <- findSeedMatches(seqs,mirs,verbose=FALSE)
+# we look for enriched pairs
+res <- enrichedMirTxPairs(m)
+res
 }
