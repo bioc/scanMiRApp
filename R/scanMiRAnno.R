@@ -3,9 +3,10 @@ setClass(
   "ScanMiRAnno",
   contains="list",
   validity=function(object){
-    stopifnot(!is.null(object$genome) && 
+    stopifnot(!is.null(object$genome) &&
               (is(object$genome, "BSgenome") || is(object$genome, "TwoBitFile")))
-    stopifnot(!is.null(object$ensdb) && is(object$ensdb, "EnsDb"))
+    stopifnot(!is.null(object$ensdb) &&
+                (is(object$ensdb, "EnsDb") || is(object$ensdb, "TxDb")))
     if(!is.null(object$models))
       stopifnot(is(object$models, "KdModelList") ||
                   is(object$models, "character"))
@@ -36,13 +37,14 @@ setClass(
 #' @importFrom AnnotationHub AnnotationHub query
 #' @importFrom scanMiRData getKdModels
 #' @examples
-#' anno <- ScanMiRAnno(species="Rnor_6")
+#' anno <- ScanMiRAnno(species="fake")
 #' anno
 ScanMiRAnno <- function(species=NULL, genome=NULL, ensdb=NULL, models=NULL,
                         scan=NULL, aggregated=NULL, ...){
   if(!is.null(species)){
     stopifnot(is.null(genome) && is.null(ensdb))
-    species <- match.arg(species, c("GRCh38","GRCm38","Rnor_6"))
+    species <- match.arg(species, c("GRCh38","GRCm38","Rnor_6","fake"))
+    if(species=="fake") return(.fakeAnno())
     ah <- AnnotationHub(...)
     ensdb <- ah[[rev(query(ah, c("EnsDb", species))$ah_id)[1]]]
     genome <- switch(species,
@@ -104,11 +106,19 @@ setMethod("summary", "ScanMiRAnno", function(object){
 #' @export
 #' @importFrom methods show
 setMethod("show", "ScanMiRAnno", function(object){
-  gm <- paste0(metadata(object$genome)$organism, " (",
-               metadata(object$genome)$genome, ")")
+  if(is(object$genome, "BSgenome")){
+    gm <- paste0(metadata(object$genome)$organism, " (",
+                 metadata(object$genome)$genome, ")")
+  }else{
+    gm <- toString(object$genome)
+  }
   em <- setNames(metadata(object$ensdb)$value, metadata(object$ensdb)$name)
-  em <- paste0(em[["Organism"]], " (", em[["genome_build"]],") v",
-               em[["ensembl_version"]])
+  if(is(object$ensdb,"EnsDb")){
+    em <- paste0(em[["Organism"]], " (", em[["genome_build"]],") v",
+                 em[["ensembl_version"]])
+  }else{
+    em <- paste0(em[["Organism"]], " (", em[["Genome"]],")")
+  }
   cat("Genome:", gm, "\nAnnotation:", em)
   if(!is.null(object$models)) cat("\nModels:", class(object$models),
                                   "of length", length(object$models))
@@ -116,3 +126,24 @@ setMethod("show", "ScanMiRAnno", function(object){
   if(!is.null(object$aggregated)) cat("\n + Aggregated")
   cat("\n")
 })
+
+
+#' @importFrom Biostrings DNAStringSet
+#' @importFrom rtracklayer TwoBitFile export.2bit
+#' @importFrom GenomicFeatures makeTxDbFromGRanges
+.fakeAnno <- function(){
+  data("SampleKdModel", package="scanMiR", envir = environment())
+  data("SampleTranscript", package="scanMiR", envir = environment())
+  f <- tempfile()
+  export.2bit(DNAStringSet(SampleTranscript), f)
+  ge <- TwoBitFile(f)
+  gr <- GRanges(seqlevels(ge), IRanges(c(1,1,1,1),c(898,898,898,210)),
+                type=c("gene","transcript","exon","CDS"),
+                exon_id=c(NA,NA,"e1",NA), exon_number=c(NA,NA,1,NA),
+                strand="+", source="fake", gene_biotype="protein_coding")
+  gr$entrezid <- gr$gene_id <- gr$gene_name <- "gene1"
+  gr$transcript_id <- gr$tx_id <- "ENSTFAKE0000056456"
+  md <- data.frame(name=c("Organism","Genome"), value=c("Fake falsus","fake1"))
+  db <- makeTxDbFromGRanges(gr, metadata=md)
+  ScanMiRAnno(genome=ge, ensdb=db, models=c(SampleKdModel))
+}

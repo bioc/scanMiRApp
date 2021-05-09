@@ -1,53 +1,85 @@
 #' getTranscriptSequence
-#' 
-#' Utility wrapper to extracts the sequence of a given transcript (UTR or 
+#'
+#' Utility wrapper to extracts the sequence of a given transcript (UTR or
 #' CDS+UTR).
 #'
 #' @param tx The ensembl ID of the transcript(s)
 #' @param annotation A \code{\link{ScanMiRAnno}} object.
-#' @param extract Which parts of the transcripts to extract. For `UTRonly` 
-#' (default) only the 3' UTR regions are extracted, `withORF` additionally 
+#' @param annoFilter An optional `AnnotationFilter` or `AnnotationFilterList` to
+#' further filter the set of transcripts to be extracted
+#' @param extract Which parts of the transcripts to extract. For `UTRonly`
+#' (default) only the 3' UTR regions are extracted, `withORF` additionally
 #' extracts the coding regions, and `exons` extracts all exons
 #' @param ... Passed to \code{\link{AnnotationHub}}
 #'
 #' @return A \code{\link{DNAStringSet}}.
 #' @export
 #'
-#' @importFrom GenomicFeatures exonsBy extractTranscriptSeqs cdsBy 
-#' threeUTRsByTranscript
-#' @importFrom ensembldb metadata seqlevelsStyle
+#' @importFrom GenomicFeatures exonsBy extractTranscriptSeqs cdsBy
+#' threeUTRsByTranscript seqlevels<-
+#' @importFrom GenomeInfoDb seqlevels
+#' @importFrom ensembldb metadata seqlevelsStyle seqlevelsStyle<-
+#' @importFrom stats setNames
 #' @import Biostrings
 #' @examples
-#' # not run
-#' # anno <- ScanMiRAnno("Rnor_6")
-#' # seq <- getTranscriptSequence( tx="ENSRNOT00000065646", annotation=anno )
-getTranscriptSequence <- function(tx, annotation, 
+#' anno <- ScanMiRAnno("fake")
+#' seq <- getTranscriptSequence( tx="ENSTFAKE0000056456", annotation=anno )
+getTranscriptSequence <- function(tx=NULL, annotation, annoFilter=NULL,
                                   extract=c("UTRonly", "withORF", "exons"),...){
-  tx <- gsub("\\.[0-9]+$","",as.character(tx))
+  if(!is.null(tx)) tx <- gsub("\\.[0-9]+$","",as.character(tx))
+  if(!is.null(annoFilter)){
+    if(!is(annotation$ensdb,"EnsDb")){
+      warning("`annoFilter` is ignored when the annotation is not in ",
+              "`EnsDb` format")
+    }else{
+      if(!is(annoFilter, "AnnotationFilterList") &&
+         !is(annoFilter, "AnnotationFilter"))
+        stop("filter must be either `AnnotationFilter` or `AnnotationFilterList`")
+      if(!is.null(tx))
+        annoFilter <- AnnotationFilterList(annoFilter, ~tx_id %in% tx)
+    }
+  }
   ensdb <- annotation$ensdb
   extract <- match.arg(extract)
-  if(extract=="exons") {
-    gr <- exonsBy(ensdb, by="tx", filter=~tx_id %in% tx)
-  } else {
-    gr <- suppressWarnings(threeUTRsByTranscript(ensdb, filter=~tx_id %in% tx))
+  if(is(ensdb,"EnsDb")){
+    if(extract=="exons") {
+      gr <- exonsBy(ensdb, by="tx", filter=annoFilter)
+    } else {
+      gr <- suppressWarnings(threeUTRsByTranscript(ensdb, filter=annoFilter))
+    }
+  }else{
+    if(extract=="exons") {
+      gr <- exonsBy(ensdb, by="tx", use.names=TRUE)
+    } else {
+      gr <- suppressWarnings(threeUTRsByTranscript(ensdb, use.names=TRUE))
+    }
+    if(!is.null(tx)) gr <- gr[names(gr) %in% tx]
   }
+  tx_strand <- unlist(unique(strand(gr)))
   genome <- annotation$genome
-  seqlevelsStyle(genome) <- "Ensembl"
+  if(is(ensdb,"EnsDb")) seqlevelsStyle(genome) <- "Ensembl"
   seqs <- DNAStringSet()
   if(length(gr)==0){
     if(extract=="withORF"){
       seqs <- DNAStringSet()
-      } else {
+    } else {
       message("Nothing found!")
       return(DNAStringSet())
-      }
-    } else {
+    }
+  } else {
     gr <- gr[seqnames(gr) %in% seqlevels(genome)]
     seqs <- extractTranscriptSeqs(genome, gr)
   }
   if(extract=="withORF"){
-    grl_ORF <- suppressWarnings(cdsBy(annotation$ensdb, by="tx",
-                                      filter=~tx_id %in% tx))
+    if(is(ensdb,"EnsDb")){
+      grl_ORF <- suppressWarnings(cdsBy(annotation$ensdb, by="tx",
+                                        filter=annoFilter))
+    }else{
+      grl_ORF <- suppressWarnings(cdsBy(annotation$ensdb, by="tx",
+                                        use.names=TRUE))
+      if(!is.null(tx)) grl_ORF <- grl_ORF[names(grl_ORF) %in% tx]
+    }
+    tx_strand <- unlist(unique(strand(grl_ORF)))
     if(length(grl_ORF)==0) {
       if(length(seqs) ==0) message("Nothing found!")
       return(seqs)
@@ -59,6 +91,7 @@ getTranscriptSequence <- function(tx, annotation,
     rm(seqs_ORF)
     mcols(seqs)$ORF.length <- orf.len[names(seqs)]
   }
+  mcols(seqs)$strand <- tx_strand[names(seqs)]
   seqs
 }
 
@@ -81,21 +114,21 @@ getTranscriptSequence <- function(tx, annotation,
 #' @param verbose Logical; whether to print updates on the processing
 #'
 #' @return Returns a ggplot.
-#' @importFrom ggplot2 ggplot geom_hline geom_point geom_text labs xlim theme_light aes
+#' @importFrom ggplot2 ggplot geom_hline geom_point geom_text labs xlim aes
+#' theme_light
 #' @import scanMiR
 #' @export
 #' @examples
-#' # not run
-#' # anno <- ScanMiRAnno("Rnor_6")
-#' # plotSitesOnUTR( tx="ENSRNOT00000065646", annotation=anno, 
-#' #                 miRNA="rno-miR-100-5p")
+#' anno <- ScanMiRAnno("fake")
+#' plotSitesOnUTR( tx="ENSTFAKE0000056456", annotation=anno,
+#'                 miRNA="hsa-miR-155-5p" )
 plotSitesOnUTR <- function(tx, annotation, miRNA=NULL, label_6mers=FALSE,
                            label_notes=FALSE, verbose=TRUE, ...){
   # Prepare everything & scan
   stopifnot(is(annotation,"ScanMiRAnno"))
   if(verbose) message("Prepare miRNA model")
   mods <- annotation$models
-  if( (is(miRNA,"character") && length(miRNA)==1 && 
+  if( (is(miRNA,"character") && length(miRNA)==1 &&
        nchar(gsub("[ACGTU]","",miRNA))==0) || is(miRNA, "KdModel")){
     mods <- miRNA
   }else if(miRNA %in% names(mods)){
@@ -107,17 +140,17 @@ plotSitesOnUTR <- function(tx, annotation, miRNA=NULL, label_6mers=FALSE,
          "\nthe spelling (eg. 'hsa-mir-485-5p') and the organism")
   }
   if(verbose) message("Get Transcript Sequence")
-  Seq <- getTranscriptSequence(tx=tx, annotation=annotation, UTRonly=TRUE)
+  Seq <- getTranscriptSequence(tx=tx, annotation=annotation)
   if(verbose) message("Scan")
   m <- findSeedMatches(seqs=Seq, seeds=mods, shadow=15L, keepMatchSeq=TRUE,
-                       p3.extra=TRUE, ret="data.frame", ...)
-  
+                       p3.extra=TRUE, ret="data.frame", verbose=FALSE, ...)
+
   # Prepare data.frame
   m$logKd <- m$log_kd / 1000
   m$type <- ifelse(m$type == "non-canonical","",as.character(m$type))
   if(isFALSE(label_6mers)) ifelse(grepl("6mer",m$type),"",as.character(m$type))
-  m <- m[m$logKd < -1,]
-  
+  m <- as.data.frame(m[m$logKd < -1,])
+
   # get 8mer info
   mer8 <- getSeed8mers(mods$canonical.seed)
   wA <- which(substr(mer8,8,8)=="A")
@@ -126,7 +159,7 @@ plotSitesOnUTR <- function(tx, annotation, miRNA=NULL, label_6mers=FALSE,
   names(As) <- mer7[wA]
   mer.mean <- rowsum(mods$mer8[-wA],mer7[-wA])[,1]/3
   As <- As-mer.mean[names(As)]
-  d <- data.frame(seed=names(mer.mean), base=mer.mean/-1000, 
+  d <- data.frame(seed=names(mer.mean), base=mer.mean/-1000,
                   "A"=As[names(mer.mean)]/-1000,
                   type=getMatchTypes(names(mer.mean),mods$canonical.seed),
                   row.names=NULL)
@@ -134,10 +167,10 @@ plotSitesOnUTR <- function(tx, annotation, miRNA=NULL, label_6mers=FALSE,
   mer8 <- d$base + d$A
 
   title <- paste0(tx," - ",miRNA)
-  
-  p <- ggplot(m, aes(x = start, y = -`logKd`)) + 
-    geom_hline(yintercept=1, linetype="dashed", color = "red", size=1) + 
-    geom_hline(yintercept=mer8, linetype="dashed", color = "gray64", size=1) + 
+
+  p <- ggplot(m, aes(x = start, y = -`logKd`)) +
+    geom_hline(yintercept=1, linetype="dashed", color = "red", size=1) +
+    geom_hline(yintercept=mer8, linetype="dashed", color = "gray64", size=1) +
     geom_point(size=2) + geom_text(label = m$type,nudge_y = -0.2) +
     labs(x="sequence length", y="-logKd", title=title) + xlim(0,width(Seq)) +
     theme_light()

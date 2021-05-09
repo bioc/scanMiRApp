@@ -14,7 +14,7 @@ scanMiRserver(
 \arguments{
 \item{annotations}{A named list of \code{\link{ScanMiRAnno}} object.}
 
-\item{modlists}{A named list of `KdModelList` objects. If omitted, will 
+\item{modlists}{A named list of `KdModelList` objects. If omitted, will
 fetch it from the annotation objects.}
 
 \item{maxCacheSize}{Maximum cache size in bytes.}
@@ -26,4 +26,11 @@ A shiny server function
 }
 \description{
 Server function for the scanMiR shiny app.
+}
+\examples{
+# we'd normally fetch a real annotation:
+# anno <- ScanMiRAnno("Rnor_6")
+# here we'll use a fake one:
+anno <- ScanMiRAnno("fake")
+srv <- scanMiRserver(list(fake=anno))
 }

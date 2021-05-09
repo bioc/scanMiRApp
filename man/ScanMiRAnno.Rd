@@ -39,6 +39,6 @@ A `ScanMiRAnno` object
 ScanMiRAnno
 }
 \examples{
-anno <- ScanMiRAnno(species="Rnor_6")
+anno <- ScanMiRAnno(species="fake")
 anno
 }

@@ -17,11 +17,18 @@
 #' @importFrom htmlwidgets JS
 #' @importFrom digest digest
 #' @importFrom shinycssloaders withSpinner
-#' @importFrom ggplot2 ggplot aes_string geom_hline geom_point expand_limits xlab
+#' @importFrom ggplot2 ggplot aes_string geom_hline geom_point expand_limits
+#' xlab geom_vline
 #' @importFrom Biostrings DNAStringSet
 #' @importFrom waiter waiter_hide
 #' @import shiny shinydashboard scanMiR GenomicRanges IRanges
 #' @export
+#' @examples
+#' # we'd normally fetch a real annotation:
+#' # anno <- ScanMiRAnno("Rnor_6")
+#' # here we'll use a fake one:
+#' anno <- ScanMiRAnno("fake")
+#' srv <- scanMiRserver(list(fake=anno))
 scanMiRserver <- function( annotations=list(), modlists=NULL,
                            maxCacheSize=10*10^6, BP=SerialParam() ){
   stopifnot(length(annotations)>0)
@@ -294,7 +301,7 @@ scanMiRserver <- function( annotations=list(), modlists=NULL,
       # remove last-used results when over the cache size limit
       cs <- isolate(cached.checksums())
       if(length(cs)<3 || as.numeric(cache.size())<maxCacheSize) return(NULL)
-      cs <- cs[order(sapply(cs, FUN=function(x) x$last), decreasing=TRUE)]
+      cs <- cs[order(unlist(lapply(cs,FUN=function(x) x$last)),decreasing=TRUE)]
       sizes <- vapply(ch, FUN.VALUE=numeric(1), FUN=function(x)
                                                             as.numeric(x$size))
       while(length(cs)>2 & sum(sizes)>maxCacheSize){
@@ -438,7 +445,8 @@ scanMiRserver <- function( annotations=list(), modlists=NULL,
     output$hits_table <- renderDT({ # prints the current hits
       if(is.null(hits()$hits)) return(NULL)
       h <- as.data.frame(hits()$hits)
-      h <- h[order(h$log_kd),setdiff(colnames(h), c("seqnames","width","strand") )]
+      h <- h[order(h$log_kd),setdiff(colnames(h),
+                                     c("seqnames","width","strand") )]
       dtwrapper(h, selection="single", callback=JS('
         table.on("dblclick.dt","tr", function() {
           Shiny.onInputChange("dblClickMatch", table.row(this).data()[0])
@@ -655,6 +663,11 @@ scanMiRserver <- function( annotations=list(), modlists=NULL,
 #'
 #' @return A shiny app
 #' @export
+#' @examples
+#' if(interactive()){
+#'   anno <- ScanMiRAnno("Rnor_6")
+#'   scanMiRApp(list(rat=anno))
+#' }
 scanMiRApp <- function(annotations=NULL, ...){
   if(is.null(annotations)){
     an <- c("GRCh38","GRCm38","Rnor_6")

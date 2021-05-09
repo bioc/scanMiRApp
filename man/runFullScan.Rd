@@ -22,16 +22,18 @@ runFullScan(
 
 \item{mods}{An optional `KdModelList` (defaults to the one in `annotation`)}
 
-\item{annoFilter}{An optional `AnnotationFilter` or `AnnotationFilterList` to 
+\item{annoFilter}{An optional `AnnotationFilter` or `AnnotationFilterList` to
 filter the set of transcripts to be extracted}
 
-\item{extract}{Which parts of the transcripts to extract. For `UTRonly` 
-(default) only the 3' UTR regions are extracted, `withORF` additionally 
+\item{extract}{Which parts of the transcripts to extract. For `UTRonly`
+(default) only the 3' UTR regions are extracted, `withORF` additionally
 extracts the coding regions, and `exons` extracts all exons}
 
 \item{shadow}{The size of the ribosomal shadow at the UTR starts}
 
-\item{cores}{The number of threads to use}
+\item{cores}{The number of threads to use. Alternatively accepts a
+\code{\link[BiocParallel]{BiocParallelParam-class}}, as for instance produced
+by \code{\link[BiocParallel]{MulticoreParam}}.}
 
 \item{maxLogKd}{The maximum log_kd of sites to report}
 
@@ -39,12 +41,15 @@ extracts the coding regions, and `exons` extracts all exons}
 
 \item{...}{Arguments passed to `scanMiR::findSeedMatches`}
 }
+\value{
+A `GRanges` object
+}
 \description{
 Runs a full miRNA scan on all protein-coding transcripts (or UTRs) of an
 annotation.
 }
 \examples{
-# not run
-# anno <- ScanMiRAnno("Rnor_6")
-# seq <- runFullScan( annotation=anno )
+anno <- ScanMiRAnno("fake")
+m <- runFullScan( annotation=anno )
+m
 }

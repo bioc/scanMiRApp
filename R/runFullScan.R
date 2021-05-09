@@ -18,19 +18,21 @@
 #' @param save.path Optional, the path to which to save the results
 #' @param ... Arguments passed to `scanMiR::findSeedMatches`
 #'
+#' @return A `GRanges` object
+#'
 #' @export
 #' @import Biostrings scanMiR
 #' @importFrom BiocParallel SerialParam MulticoreParam bpnworkers
 #' @importFrom GenomicFeatures extractTranscriptSeqs threeUTRsByTranscript
-#' @importFrom GenomicFeatures exonsBy cdsBy
+#' exonsBy cdsBy
 #' @importFrom GenomicRanges strand
 #' @importFrom S4Vectors metadata metadata<-
 #' @importFrom stats setNames
 #' @importFrom AnnotationFilter AnnotationFilterList SeqNameFilter
 #' @examples
-#' # not run
-#' # anno <- ScanMiRAnno("Rnor_6")
-#' # seq <- runFullScan( annotation=anno )
+#' anno <- ScanMiRAnno("fake")
+#' m <- runFullScan( annotation=anno )
+#' m
 runFullScan <- function(annotation, mods=NULL, annoFilter = NULL,
                         extract=c("UTRonly", "withORF", "exons"),
                         onlyCanonical=TRUE, shadow=15, cores=1,
@@ -57,59 +59,40 @@ runFullScan <- function(annotation, mods=NULL, annoFilter = NULL,
   message("Loading annotation")
   genome <- annotation$genome
   ensdb <- annotation$ensdb
-  seqlevelsStyle(genome) <- "Ensembl"
+  if(is(ensdb,"EnsDb")) seqlevelsStyle(genome) <- "Ensembl"
 
   # restrict to canonical chromosomes
   canonical_chroms <- seqlevels(genome)[!grepl('_', seqlevels(genome))]
   filt <- SeqNameFilter(canonical_chroms)
 
-  if(!is.null(annoFilter)) {
+  if(!is.null(annoFilter)){
     if(is(annoFilter, "AnnotationFilterList") ||
        is(annoFilter, "AnnotationFilter"))
       filt <- AnnotationFilterList(filt, annoFilter)
     else
       stop("filter must be either `AnnotationFilter` or `AnnotationFilterList`")
+    if(!is(ensdb,"EnsDb"))
+      warning("`annoFilter` is ignored when the annotation is not in ",
+              "`EnsDb` format", immediate.=TRUE)
   }
-  extract <- match.arg(extract)
   message("Extracting transcripts")
-  if(extract=="exons") {
-    grl <- exonsBy(ensdb, by="tx", filter=filt)
-    seqs <- extractTranscriptSeqs(genome, grl)
-    len <- lengths(seqs)
-    names(len) <- names(seqs)
-    strand <- unlist(unique(strand(grl)))
-  } else {
-    grl_UTR <- suppressWarnings(threeUTRsByTranscript(ensdb, filter=filt))
-    seqs <- extractTranscriptSeqs(genome, grl_UTR)
-    utr.len <- lengths(seqs)
-    names(utr.len) <- names(seqs)
-    strand <- unlist(unique(strand(grl_UTR)))
-    if(extract=="withORF"){
-      grl_ORF <- cdsBy(ensdb, by="tx", filter=filt)
-      seqs_ORF <- extractTranscriptSeqs(genome, grl_ORF)
-      orf.len <- lengths(seqs_ORF)
-      names(orf.len) <- names(grl_ORF)
-      seqs_ORF[names(seqs)] <- xscat(seqs_ORF[names(seqs)],seqs)
-      seqs <- seqs_ORF
-      rm(seqs_ORF)
-      mcols(seqs)$ORF.length <- orf.len[names(seqs)]
-      strand <- unlist(unique(strand(c(grl_ORF, grl_UTR))))
-    }
-  }
+  seqs <- getTranscriptSequence(tx=NULL, annotation, annoFilter=annoFilter,
+                                extract=extract)
 
   message("Scanning with ", bpnworkers(BP), " thread(s)")
   m <- findSeedMatches(seqs, mods, shadow=shadow, maxLogKd=maxLogKd,
-                       onlyCanonical=onlyCanonical, BP=BP, ...)
+                       onlyCanonical=onlyCanonical, BP=BP, verbose=FALSE, ...)
 
   md <- metadata(anno$ensdb)
   md <- setNames(md$value,md$name)
+  if(!("genome_build" %in% names(md)))
+    md[["genome_build"]] <- md[["Genome"]]
+  if(!("ensembl_version" %in% names(md))) md[["ensembl_version"]] <- NA
 
   if(is(m, "GRanges")) {
-    metadata(m)$tx_info$strand <- strand[rownames(metadata(m)$tx_info)]
     metadata(m)$genome_build <- md[["genome_build"]]
     metadata(m)$ensembl_version <- md[["ensembl_version"]]
   } else {
-    attr(m, "tx_info")$strand <- strand[rownames(attr(m, "tx_info"))]
     attr(m, "ensembl_version") <- md[["ensembl_version"]]
     attr(m, "genome_build") <- md[["genome_build"]]
   }
