@@ -38,6 +38,8 @@ getTranscriptSequence <- function(tx=NULL, annotation, annoFilter=NULL,
       if(!is.null(tx))
         annoFilter <- AnnotationFilterList(annoFilter, ~tx_id %in% tx)
     }
+  } else {
+    annoFilter <- AnnotationFilterList()
   }
   ensdb <- annotation$ensdb
   extract <- match.arg(extract)
