@@ -438,7 +438,8 @@ scanMiRserver <- function( annotations=list(), modlists=NULL,
     output$hits_table <- renderDT({ # prints the current hits
       if(is.null(hits()$hits)) return(NULL)
       h <- as.data.frame(hits()$hits)
-      h <- h[order(h$log_kd),setdiff(colnames(h), c("seqnames","width","strand") )]
+      h <- h[,setdiff(colnames(h), c("seqnames","width","strand") )]
+      h <- tryCatch(h[order(h$log_kd),], error=function(e) return(h))
       dtwrapper(h, selection="single", callback=JS('
         table.on("dblclick.dt","tr", function() {
           Shiny.onInputChange("dblClickMatch", table.row(this).data()[0])
@@ -475,6 +476,7 @@ scanMiRserver <- function( annotations=list(), modlists=NULL,
     output$manhattan <- renderPlotly({
       if(is.null(hits()$hits)) return(NULL)
       h <- hits()$hits
+      if(length(h)==0) return(NULL)
       sn <- as.character(seqnames(h)[1])
       meta <- metadata(h)
       h <- as.data.frame(h[order(h$log_kd),])
