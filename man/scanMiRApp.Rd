@@ -8,7 +8,7 @@ A wrapper for launching the scanMiRApp shiny app}
 scanMiRApp(annotations = NULL, ...)
 }
 \arguments{
-\item{annotations}{A named list of \code{\link{ScanMiRAnno}} objects. If 
+\item{annotations}{A named list of \code{\link{ScanMiRAnno}} objects. If
 omitted, will use the base ones.}
 
 \item{...}{Passed to \code{\link{scanMiRserver}}}
@@ -19,4 +19,10 @@ A shiny app
 \description{
 scanMiRApp
 A wrapper for launching the scanMiRApp shiny app
+}
+\examples{
+if(interactive()){
+  anno <- ScanMiRAnno("Rnor_6")
+  scanMiRApp(list(rat=anno))
+}
 }

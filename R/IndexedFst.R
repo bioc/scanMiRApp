@@ -26,6 +26,7 @@
 #' @exportClass IndexedFst
 #' @author Pierre-Luc Germain, \email{pierre-luc.germain@@hest.ethz.ch}
 #' @aliases IndexedFst-class IndexedFst
+#' @return Depends on the method
 #' @rdname IndexedFst-class
 #' @name IndexedFst-class
 setClass(
@@ -197,18 +198,32 @@ setMethod("as.data.frame", "IndexedFst", definition=function(x, name) {
   f
 }
 
-#' loadIndexedFst
+#' Saving and loading IndexedFst
 #'
-#' Loads the index of an FST file, for fast random access.
+#' Functions to save or load and indexed \code{\link[fst]{fst}} file
 #'
 #' @param file Path to the fst file, it's index (.idx), or their prefix.
 #' @param nthreads Number of threads to use for reading (default 1). This does
 #' not affect the loading of the index itself, but will affect all downstream
-#' reading operations performed on the object.
+#' reading operations performed on the object. If NULL, will use
+#' `fst::threads_fst()`.
 #'
-#' @return An object of class IndexedFst
+#' @return `loadIndexedFst` returns an object of class
+#' \code{\link{IndexedFst-class}}, and `saveIndexedFst` returns nothing.
 #' @seealso \code{\link{IndexedFst-class}}
+#' @rdname save-load-IndexedFst
+#' @aliases loadIndexedFst
 #' @export
+#' @examples
+#' # we first create and save an indexed FST file
+#' tmp <- tempdir()
+#' f <- system.file(tmp, "test")
+#' d <- data.frame( category=sample(LETTERS[1:4], 10000, replace=TRUE),
+#'                  var2=sample(LETTERS, 10000, replace=TRUE),
+#'                  var3=runif(10000) )
+#' saveIndexedFst(d, "category", f)
+#' # we then load the index, and can use category names for random access:
+#' d <- loadIndexedFst(f)
 loadIndexedFst <- function(file, nthreads=1){
   if(grepl("\\.fst$",file)) return(new("IndexedFst", fst.file=file))
   if(grepl("\\.idx\\.rds$",file))
@@ -220,17 +235,15 @@ loadIndexedFst <- function(file, nthreads=1){
 #'
 #' Saves a data.frame (or GRanges object) into an indexed FST file.
 #'
-#' @param d A data.frame or GRanges object
+#' @param d A data.frame or \code{\link[GenomicRanges]{GRanges}} object
 #' @param index.by A column of `d` by which it should be indexed.
 #' @param file.prefix Path and prefix of the output files.
-#' @param nthreads Number of threads to use when writing (default 1). If NULL,
-#' will use `threads_fst()`
 #' @param index.properties An optional data.frame of properties, with the levels
 #' of `index.by` as row names.
 #' @param add.info An optional list of additional information to save.
 #' @param ... Passed to `write.fst`
-#'
-#' @return Nothing.
+#' @rdname save-load-IndexedFst
+#' @aliases saveIndexedFst
 #' @seealso \code{\link{IndexedFst-class}}
 #' @importFrom fst write.fst threads_fst
 #' @export
@@ -269,7 +282,7 @@ saveIndexedFst <- function(d, index.by, file.prefix, nthreads=1,
   d <- d[order(d[[index.by]]),]
   file.prefix <- gsub("\\.fst$","",file.prefix)
   w <- which(!duplicated(d[[index.by]]))
-  idx <- data.frame(row.names=d[[index.by]][w], start=w, 
+  idx <- data.frame(row.names=d[[index.by]][w], start=w,
                     end=c(w[-1]-1L,nrow(d)))
   if(!is.null(index.properties)){
     idx <- merge(idx, as.data.frame(index.properties),
@@ -299,7 +312,7 @@ saveIndexedFst <- function(d, index.by, file.prefix, nthreads=1,
   if(is.null(x$seqnames) && !is.null(add.info$seqnames))
     x$seqnames <- add.info$seqnames
   x <- makeGRangesFromDataFrame(x, keep.extra.columns = TRUE)
-  add.info <- add.info[setdiff(names(add.info), 
+  add.info <- add.info[setdiff(names(add.info),
                                c("strand","width","seqnames","isGR"))]
   metadata(x) <- add.info
   x

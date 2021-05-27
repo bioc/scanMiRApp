@@ -6,6 +6,9 @@
 \usage{
 scanMiRui()
 }
+\value{
+A shiny ui
+}
 \description{
 UI for the scanMiR app.
 }

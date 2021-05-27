@@ -9,6 +9,7 @@ Authors@R: c(
     person("Michael", "Soutschek", email="michael.soutschek@hest.ethz.ch", role="aut"),
     person("Fridolin", "Gross", email="fridolin.gross@hest.ethz.ch", role="ctb"))
 Imports:
+    AnnotationFilter,
     AnnotationHub,
     BiocParallel,
     Biostrings,
@@ -17,6 +18,7 @@ Imports:
     DT,
     ensembldb,
     fst,
+    GenomeInfoDb,
     GenomicFeatures,
     GenomicRanges,
     ggplot2,
@@ -25,6 +27,7 @@ Imports:
     Matrix,
     methods,
     plotly,
+    rtracklayer,
     S4Vectors,
     scanMiR,
     scanMiRData,
@@ -33,7 +36,7 @@ Imports:
     shinydashboard,
     stats,
     waiter
-Suggests: knitr, rmarkdown
+Suggests: knitr, rmarkdown, BSgenome.Rnorvegicus.UCSC.rn6
 Description:
     A shiny interface to the scanMiR package. The application enables the 
     scanning of transcripts and custom sequences for miRNA binding sites, the 
@@ -44,3 +47,4 @@ Description:
 License: GPL
 VignetteBuilder: knitr
 RoxygenNote: 7.1.1
+biocViews: miRNA, SequenceMatching

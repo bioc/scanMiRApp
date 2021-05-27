@@ -1,12 +1,14 @@
 ---
 title: "scanMiRApp: shiny app and related convenience functions"
 author: 
-- name: Michael Soutschek
-  affiliation: Lab of Systems Neuroscience, D-HEST Institute for Neuroscience, ETH
 - name: Pierre-Luc Germain
   affiliation:
     - D-HEST Institute for Neuroscience, ETH
     - Lab of Statistical Bioinformatics, UZH
+- name: Michael Soutschek
+  affiliation: Lab of Systems Neuroscience, D-HEST Institute for Neuroscience, ETH
+- name: Fridolin Groß
+  affiliation: Lab of Systems Neuroscience, D-HEST Institute for Neuroscience, ETH
 package: scanMiRApp
 output:
   BiocStyle::html_document
@@ -31,7 +33,9 @@ rat (Rnor_6) can be obtained as follows:
 
 ```{r}
 library(scanMiRApp)
-anno <- ScanMiRAnno("Rnor_6")
+# anno <- ScanMiRAnno("Rnor_6")
+# for this vignette, we'll work with a lightweight fake annotation:
+anno <- ScanMiRAnno("fake")
 anno
 ```
 
@@ -58,7 +62,7 @@ The transcript (or UTR) sequence for any (set of) transcript(s) in the
 annotation can be obtained with:
 
 ```{r}
-seq <- getTranscriptSequence("ENSRNOT00000065646", anno)
+seq <- getTranscriptSequence("ENSTFAKE0000056456", anno)
 seq
 ```
 
@@ -67,7 +71,7 @@ seq
 Binding sites of a given miRNA on a transcript can be visualized with:
 
 ```{r}
-plotSitesOnUTR(tx="ENSRNOT00000065646", annotation=anno, miRNA="rno-miR-100-5p")
+plotSitesOnUTR(tx="ENSTFAKE0000056456", annotation=anno, miRNA="hsa-miR-155-5p")
 ```
 
 This will fetch the sequence, perform the scan, and plot the results.
@@ -79,10 +83,12 @@ all protein-coding transcripts (or their UTRs) of a genome. These scans can then
 be used to speed up the shiny app (see below). They can simply be launched as:
 
 ```{r}
-# m <- runFullScan(anno)
+m <- runFullScan(anno)
+m
 ```
 
-See `?runFullScan` for more options.
+Multi-threading can be enabled through the `ncores` argument. See `?runFullScan`
+for more options.
 
 ## Detecting enriched miRNA-target pairs
 
@@ -120,7 +126,7 @@ targets for the miRNAs.
 A `ScanMiRAnno` object is the minimal input for the shiny app, and multiple such
 objects can be provided in the form of a named list:
 
-```{
+```{r, eval=FALSE}
 scanMiRApp( list(Rnor_6=anno) )
 ```
 
@@ -136,6 +142,7 @@ saved (or downloaded) the scans as `scan.rds` and the aggregated data as
 
 ```{r, eval=FALSE}
 # not run
+anno <- ScanMiRAnno("Rnor_6")
 saveIndexedFst(readRDS("scan.rds"), "seqnames", file.prefix="out_path/scan")
 saveIndexedFst(readRDS("aggregated.rds"), "miRNA", 
                file.prefix="out_path/aggregated")

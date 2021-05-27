@@ -4,14 +4,25 @@
 \alias{getTranscriptSequence}
 \title{getTranscriptSequence}
 \usage{
-getTranscriptSequence(tx, annotation, UTRonly = TRUE, ...)
+getTranscriptSequence(
+  tx = NULL,
+  annotation,
+  annoFilter = NULL,
+  extract = c("UTRonly", "withORF", "exons"),
+  ...
+)
 }
 \arguments{
 \item{tx}{The ensembl ID of the transcript(s)}
 
 \item{annotation}{A \code{\link{ScanMiRAnno}} object.}
 
-\item{UTRonly}{Logical; whether to fetch only the UTR sequences.}
+\item{annoFilter}{An optional `AnnotationFilter` or `AnnotationFilterList` to
+further filter the set of transcripts to be extracted}
+
+\item{extract}{Which parts of the transcripts to extract. For `UTRonly`
+(default) only the 3' UTR regions are extracted, `withORF` additionally
+extracts the coding regions, and `exons` extracts all exons}
 
 \item{...}{Passed to \code{\link{AnnotationHub}}}
 }
@@ -19,11 +30,10 @@ getTranscriptSequence(tx, annotation, UTRonly = TRUE, ...)
 A \code{\link{DNAStringSet}}.
 }
 \description{
-Utility wrapper to extracts the sequence of a given transcript (UTR or 
+Utility wrapper to extracts the sequence of a given transcript (UTR or
 CDS+UTR).
 }
 \examples{
-# not run
-# anno <- ScanMiRAnno("Rnor_6")
-# seq <- getTranscriptSequence( tx="ENSRNOT00000065646", annotation=anno )
+anno <- ScanMiRAnno("fake")
+seq <- getTranscriptSequence( tx="ENSTFAKE0000056456", annotation=anno )
 }

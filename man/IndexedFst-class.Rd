@@ -45,6 +45,9 @@
 
 \S4method{as.data.frame}{IndexedFst}(x, name)
 }
+\value{
+Depends on the method
+}
 \description{
 Objects of the IndexedFst class enable fast named random access to FST files.
 This is particularly appropriate for large data.frames which often need to

@@ -39,8 +39,7 @@ background threshhold is indicated, the lightblue dashed line shows the
 average 8mer dissociation rate of the given miRNA
 }
 \examples{
-# not run
-# anno <- ScanMiRAnno("Rnor_6")
-# plotSitesOnUTR( tx="ENSRNOT00000065646", annotation=anno, 
-#                 miRNA="rno-miR-100-5p")
+anno <- ScanMiRAnno("fake")
+plotSitesOnUTR( tx="ENSTFAKE0000056456", annotation=anno,
+                miRNA="hsa-miR-155-5p" )
 }
