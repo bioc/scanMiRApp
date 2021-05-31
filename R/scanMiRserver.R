@@ -520,15 +520,47 @@ scanMiRserver <- function( annotations=list(), modlists=NULL,
       ggplotly(p + expand_limits(x=xlim, y=unique(c(1,ymax))))
     })
 
-    sel_match <- reactive({ # match currently selected for alignment view
+    selectedMatch <- reactiveVal()
+
+    observeEvent(input$dblClickMatch, {
       if(is.null(hits()$hits)) return(NULL)
       if(is.null(input$dblClickMatch)) return(NULL)
       rid <- as.integer(input$dblClickMatch)
-      if(!(rid)>0) return(NULL)
+      if(is.null(rid)) return(NULL)
+      selectedMatch(rid)
+      showModal(modalDialog(
+        title = "Target alignment",
+        textOutput("alignment_header"),
+        verbatimTextOutput("alignment"),
+        easyClose = TRUE,
+        footer = NULL
+      ))
+    })
+
+    observeEvent(event_data("plotly_doubleclick"), {
+      if(is.null(hits()$hits)) return(NULL)
+      rid <- as.integer(event_data$pointNumber)
+      if(is.null(rid)) return(NULL)
+      selectedMatch(rid)
+      showModal(modalDialog(
+        title = "Target alignment",
+        textOutput("alignment_header"),
+        verbatimTextOutput("alignment"),
+        easyClose = TRUE,
+        footer = NULL
+      ))
+    })
+
+    sel_match <- reactive({ # match currently selected for alignment view
+      if(is.null(hits()$hits)) return(NULL)
+      if(is.null(selectedMatch()) || !(selectedMatch()>0)) return(NULL)
       hits()$hits[rid]
     })
 
     output$alignment_header <- renderText({
+      if(is.null())
+      if(!(rid)>0) return(NULL)
+      hits()$hits[rid]
       if(is.null(m <- sel_match()))
         return("Double-click on a row of the table above to visualize it here")
       miRNA <- ifelse("miRNA" %in% colnames(mcols(m)),
