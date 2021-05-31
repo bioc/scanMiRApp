@@ -120,7 +120,8 @@ scanMiRserver <- function( annotations=list(), modlists=NULL,
 
     output$gene_link <- renderUI({
       if(is.null(selgene()) || selgene()=="") return(NULL)
-      base <- "https://www.ensembl.org/Mus_musculus/Gene/Summary?db=core;g="
+      base <- annotations[[input$annotation]]$ensembl_gene_baselink
+      if(is.null(base)) return(NULL)
       tags$a(href=paste0(base, selgene()), "view on ensembl", target="_blank")
     })
 
@@ -562,7 +563,7 @@ scanMiRserver <- function( annotations=list(), modlists=NULL,
     }, height=reactive(input$modplot_height))
 
     output$targets_ui <- renderUI({
-      if(is.null(annotations[[input$annotation]]$aggregated)){
+      if(is.null(annotations[[input$mirlist]]$aggregated)){
         return(tags$p("Targets not accessible ",
                       "(no pre-compiled scan available)"))
       }
@@ -588,10 +589,19 @@ scanMiRserver <- function( annotations=list(), modlists=NULL,
     })
 
     mirtargets_prepared <- reactive({
-      if(is.null(preTargets <- annotations[[input$annotation]]$aggregated) ||
+      if(is.null(preTargets <- annotations[[input$mirlist]]$aggregated) ||
          !(input$mirna %in% names(preTargets))) return(NULL)
       d <- preTargets[[input$mirna]]
       d$repression <- d$repression/1000
+      if(!is.null(annotations[[input$mirlist]]$addDBs)){
+        for(f in names(annotations[[input$mirlist]]$addDBs)){
+          x <- annotations[[input$mirlist]]$addDBs[[f]]
+          x <- x[x$miRNA==input$mirna,]
+          row.names(x) <- x$transcript
+          x <- x[levels(d$transcript),"score"]
+          d[[f]] <- x[as.integer(d$transcript)]
+        }
+      }
       if(!is.null(txs())){
         d <- merge(txs(), d, by.x="tx_id", by.y="transcript")
         if(input$targetlist_gene){

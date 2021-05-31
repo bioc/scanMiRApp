@@ -30,6 +30,8 @@ setClass(
 #' @param scan An optional full scan (IndexedFst or GRanges)
 #' @param aggregated An optional per-transcript aggregation (IndexedFst or
 #' data.frame)
+#' @param addDBs A named list of additional tx-miRNA databases, each of which
+#' should be a data.frame with the columns 'transcript', 'miRNA', and 'score'.
 #' @param ... Arguments passed to `AnnotationHub`
 #'
 #' @return A `ScanMiRAnno` object
@@ -40,7 +42,8 @@ setClass(
 #' anno <- ScanMiRAnno(species="fake")
 #' anno
 ScanMiRAnno <- function(species=NULL, genome=NULL, ensdb=NULL, models=NULL,
-                        scan=NULL, aggregated=NULL, ...){
+                        scan=NULL, aggregated=NULL, addDBs=list(), ...){
+  blink <- NULL
   if(!is.null(species)){
     stopifnot(is.null(genome) && is.null(ensdb))
     species <- match.arg(species, c("GRCh38","GRCm38","Rnor_6","fake"))
@@ -54,13 +57,20 @@ ScanMiRAnno <- function(species=NULL, genome=NULL, ensdb=NULL, models=NULL,
       stop("Genome not among the pre-defined one, please provide `genome` ",
           "manually.")
     )
+    blink <- switch( species,
+      GRCh38="https://www.ensembl.org/Homo_sapiens/Gene/Summary?db=core;g=",
+      GRCm38="https://www.ensembl.org/Mus_musculus/Gene/Summary?db=core;g=",
+      "Rnor_6"="https://www.ensembl.org/Rattus_norvegicus/Gene/Summary?db=core;g=",
+      NULL )
+
     if(is.null(models)) models <- switch(species,
       GRCh38=scanMiRData::getKdModels("hsa"),
       GRCm38=scanMiRData::getKdModels("mmu"),
       "Rnor_6"=scanMiRData::getKdModels("rno"))
   }
   new("ScanMiRAnno", list(
-    genome=genome, ensdb=ensdb, models=models, scan=scan, aggregated=aggregated
+    genome=genome, ensdb=ensdb, models=models, scan=scan, aggregated=aggregated,
+    addDBs=addDBs, ensembl_gene_baselink=blink
   ))
 }
 
@@ -98,6 +108,9 @@ setMethod("summary", "ScanMiRAnno", function(object){
     cat("None\n")
   }else{
     summary(object$aggregated)
+  }
+  if(!is.null(object$addDBs) && length(object$addDBs)>0){
+    cat("\nAdditional DBs: ", paste(names(object$addDBs),collapse=", "), "\n")
   }
 })
 
