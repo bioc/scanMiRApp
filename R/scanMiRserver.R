@@ -517,7 +517,7 @@ scanMiRserver <- function( annotations=list(), modlists=NULL,
         p <- p + geom_rect(xmin=xlim[1], xmax=xlim[2], ymin=min(mer8),
                            ymax=max(mer8), alpha=0.2, fill="green")
       }
-      ggplotly(p + expand_limits(x=xlim, y=unique(c(0,ymax))))
+      ggplotly(p + expand_limits(x=xlim, y=unique(c(1,ymax))))
     })
 
     sel_match <- reactive({ # match currently selected for alignment view
