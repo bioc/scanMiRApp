@@ -510,7 +510,14 @@ scanMiRserver <- function( annotations=list(), modlists=NULL,
         orflen <- meta$tx_info[sn, "ORF.length"]
         p <- p + geom_vline(xintercept=orflen, color="grey", size=1)
       }
-      ggplotly(p)
+      ymax <- 0
+      if(selmods()==1){
+        mer8 <- .get8merRange(selmods()[[1]])/-1000
+        ymax <- max(mer8)
+        p <- p + geom_rect(xmin=xlim[1], xmax=xlim[2], ymin=min(mer8),
+                           ymax=max(mer8), alpha=0.2, fill="green")
+      }
+      ggplotly(p + expand_limits(x=xlim, y=unique(c(0,ymax))))
     })
 
     sel_match <- reactive({ # match currently selected for alignment view
