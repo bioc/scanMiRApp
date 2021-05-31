@@ -515,7 +515,7 @@ scanMiRserver <- function( annotations=list(), modlists=NULL,
       p <- ggplot(h, do.call(aes_string, ael))
       ymax <- max(-h$log_kd)
       if(length(selmods())==1){
-        mer8 <- .get8merRange(selmods()[[1]])/-1000
+        mer8 <- get8merRange(selmods()[[1]])/-1000
         ymax <- max(mer8)
         p <- p + geom_rect(
           data=data.frame(type="8mer range", log_kd=0, position=1), 
