@@ -119,10 +119,11 @@ scanMiRui <- function(){
         tabItem(tabName="tab_hits",
           column(2, uiOutput("scanBtn")),
           column(10, tags$h5(textOutput("scan_target"))),
-          box( width=12, title="Manhattan Plot", collapsible=TRUE,
-               collapsed=TRUE, withSpinner(plotlyOutput("manhattan")),
-               tags$p("Hover on points to view details, and double click to ",
+          box( width=12, collapsible=TRUE, collapsed=TRUE, 
+               title="Manhattan Plot", 
+               tags$p("Hover on points to view details, and click to ",
                       "visualize the alignment on the target sequence."),
+               withSpinner(plotlyOutput("manhattan")),
             column(6, numericInput("manhattan_n", "Max number of miRNAs",
                                    value=10, min=1, max=50)),
             column(6, checkboxInput("manhattan_ordinal", "Ordinal position",
@@ -166,8 +167,34 @@ scanMiRui <- function(){
                      target="_blank"), ".",
 	      tags$br(), "Bugs reports and feature requests are welcome ",
               tags$a(href="https://github.com/ETHZ-INS/scanMiRApp/issues",
-                     target="_blank", "here"),".", tags$br(),
-	      style="font-size: 115%;")
+                     target="_blank", "here"),".", tags$br(), 
+	      style="font-size: 110%;")
+	  ),
+	  box(width=12, title="Getting started",
+	      tags$div(style="font-size: 110%;",
+	         tags$p("There are two main ways to use scanMiRApp:"),
+	         tags$br(), tags$h4("Transcript-centered:"),
+	         tags$p("In the 'Search in gene/sequence' menu, you'll be able to ",
+	                "scan the sequence of a given transcript for binding sites ",
+	                "of (sets of) miRNA(s). To do so:"),
+	         tags$ol(
+	           tags$li("Click on 'Search in gene/sequence' to toggle the ",
+	                   "visibility of sub-menu items"),
+             tags$li("In the 'Subject' tab, first select the sequence you want",
+                     " to scan. This can either be a custom sequence (using ",
+                     "the 'custom sequence' button on the top-right of the ",
+                     "'Subject' tab), or selected from ensembl transcripts."),
+	           tags$li("In the 'miRNAs' tab, select the miRNAs for which you ",
+	                   "want to find binding sites."),
+	           tags$li("When ready, go to the 'hits' tab, and click the 'Scan'",
+	                   "button at the top to launch the search!")
+	         ),
+	         tags$br(), tags$h4("miRNA-centered:"),
+	         tags$p("In the 'miRNA-based' tab on the left, you'll be able to ",
+	                "visualize information relative to a selected miRNA, ",
+	                "including for instance it's general binding profile and its",
+	                "top targets.")
+	      )
 	  )
 	)
       ),

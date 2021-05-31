@@ -11,7 +11,7 @@
 #' @return A shiny server function
 #' @importFrom digest digest
 #' @importFrom BiocParallel SerialParam
-#' @importFrom plotly renderPlotly ggplotly
+#' @importFrom plotly renderPlotly ggplotly event_data event_register
 #' @importFrom ensembldb genes transcripts exonsBy threeUTRsByTranscript
 #' @importFrom DT datatable renderDT DTOutput
 #' @importFrom htmlwidgets JS
@@ -400,6 +400,7 @@ scanMiRserver <- function( annotations=list(), modlists=NULL,
       res$sel <- ifelse(nm>1,paste(nm,"models"),input$mirnas)
       res$seq <- target()
       res$utr_only <- input$utr_only
+      res$maxLogKd <- input$maxLogKd
       res$target_length <- nchar(target())
       if(input$subjet_type=="custom"){
         res$target <- "custom sequence"
@@ -481,43 +482,57 @@ scanMiRserver <- function( annotations=list(), modlists=NULL,
 
     ## end scan hits and cache
 
-    output$manhattan <- renderPlotly({
+    manhattan_data <- reactive({
       if(is.null(hits()$hits)) return(NULL)
       h <- hits()$hits
       if(length(h)==0) return(NULL)
-      sn <- as.character(seqnames(h)[1])
-      meta <- metadata(h)
-      h <- as.data.frame(h[order(h$log_kd),])
+      h <- h[order(h$log_kd)]
       if(!is.null(h$miRNA) && length(unique(h$miRNA))>input$manhattan_n){
         mirs <- as.character(head(unique(h$miRNA),input$manhattan_n))
-        h <- h[h$miRNA %in% mirs,,drop=FALSE]
+        h <- h[h$miRNA %in% mirs]
       }
+      if(length(h)==0) return(NULL)
+      h
+    })
+    
+    output$manhattan <- renderPlotly({
+      if(is.null(h <- manhattan_data())) return(NULL)
+      sn <- as.character(seqnames(h)[1])
+      meta <- metadata(h)
+      h <- as.data.frame(h)
       if(!is.null(input$manhattan_ordinal) && input$manhattan_ordinal){
-        h$position <- seq_len(nrow(h))
+        h$position <- order(h$start)
         xlab <- "Position (ordinal)"
+        xlim <- c(1,length(h))
       }else{
         h$position <- round(rowMeans(h[,2:3]))
         xlab <- "Position (nt) in sequence"
+        xlim <- c(1,hits()$target_length)
       }
-      xlim <- c(0,nchar(hits()$target_length))
       ael <- list(x="position", y="-log_kd", type="type")
       if("sequence" %in% colnames(h)) ael$seq="sequence"
       if("miRNA" %in% colnames(h)) ael$colour="miRNA"
-      p <- ggplot(h, do.call(aes_string, ael)) +
-        geom_hline(yintercept=1.5, linetype="dashed", color = "red", size=1) +
-        geom_point(size=2) + xlab(xlab) + expand_limits(x=xlim, y=0)
+      p <- ggplot(h, do.call(aes_string, ael))
+      ymax <- max(-h$log_kd)
+      if(length(selmods())==1){
+        mer8 <- .get8merRange(selmods()[[1]])/-1000
+        ymax <- max(mer8)
+        p <- p + geom_rect(
+          data=data.frame(type="8mer range", log_kd=0, position=1), 
+          xmin=xlim[1], xmax=xlim[2], ymin=min(mer8), ymax=max(mer8), 
+          alpha=0.2, fill="green")
+      }
+      p <- p + theme_minimal() + theme(axis.line.x=element_line()) +
+        geom_hline(yintercept=-hits()$maxLogKd, linetype="dashed", 
+                   color="red", size=1) + 
+        geom_point(size=2) + xlab(xlab) + expand_limits(x=xlim, y=c(0,ymax))
       if(!is.null(h$ORF) && !is.null(meta$tx_info)){
         orflen <- meta$tx_info[sn, "ORF.length"]
         p <- p + geom_vline(xintercept=orflen, color="grey", size=1)
       }
-      ymax <- 0
-      if(selmods()==1){
-        mer8 <- .get8merRange(selmods()[[1]])/-1000
-        ymax <- max(mer8)
-        p <- p + geom_rect(xmin=xlim[1], xmax=xlim[2], ymin=min(mer8),
-                           ymax=max(mer8), alpha=0.2, fill="green")
-      }
-      ggplotly(p + expand_limits(x=xlim, y=unique(c(1,ymax))))
+      p <- p + scale_x_continuous(limits=c(0,xlim[2]), expand=c(0,0)) +
+        scale_y_continuous(limits=c(0,ymax), expand=c(0,0.1))
+      ggplotly(p, source="manhattan")
     })
 
     selectedMatch <- reactiveVal()
@@ -526,8 +541,9 @@ scanMiRserver <- function( annotations=list(), modlists=NULL,
       if(is.null(hits()$hits)) return(NULL)
       if(is.null(input$dblClickMatch)) return(NULL)
       rid <- as.integer(input$dblClickMatch)
-      if(is.null(rid)) return(NULL)
-      selectedMatch(rid)
+      if(is.null(rid) || !(rid>0)) return(NULL)
+      h <- hits()$hits
+      selectedMatch(h[order(h$log_kd)[rid]])
       showModal(modalDialog(
         title = "Target alignment",
         textOutput("alignment_header"),
@@ -537,11 +553,17 @@ scanMiRserver <- function( annotations=list(), modlists=NULL,
       ))
     })
 
-    observeEvent(event_data("plotly_doubleclick"), {
-      if(is.null(hits()$hits)) return(NULL)
-      rid <- as.integer(event_data$pointNumber)
-      if(is.null(rid)) return(NULL)
-      selectedMatch(rid)
+    observeEvent(suppressWarnings(event_data("plotly_click", "manhattan", 
+                                             priority="event")), {
+      if(is.null(h <- manhattan_data())) return(NULL)
+      event <- event_data("plotly_click", "manhattan")
+      print(event)
+      if(!is.list(event) || is.null(event$pointNumber)) return(NULL)
+      rid <- as.integer(event$pointNumber+1)
+      if(is.null(rid) || !(rid>0)) return(NULL)
+      if(!is.null(h$miRNA) && !is.null(event$curveNumber))
+        h <- h[h$miRNA==levels(as.factor(h$miRNA))[event$curveNumber]]
+      selectedMatch(h[rid])
       showModal(modalDialog(
         title = "Target alignment",
         textOutput("alignment_header"),
@@ -549,19 +571,10 @@ scanMiRserver <- function( annotations=list(), modlists=NULL,
         easyClose = TRUE,
         footer = NULL
       ))
-    })
-
-    sel_match <- reactive({ # match currently selected for alignment view
-      if(is.null(hits()$hits)) return(NULL)
-      if(is.null(selectedMatch()) || !(selectedMatch()>0)) return(NULL)
-      hits()$hits[rid]
     })
 
     output$alignment_header <- renderText({
-      if(is.null())
-      if(!(rid)>0) return(NULL)
-      hits()$hits[rid]
-      if(is.null(m <- sel_match()))
+      if(is.null(m <- selectedMatch()))
         return("Double-click on a row of the table above to visualize it here")
       miRNA <- ifelse("miRNA" %in% colnames(mcols(m)),
                       as.character(mcols(m)$miRNA),hits()$sel)
@@ -569,7 +582,7 @@ scanMiRserver <- function( annotations=list(), modlists=NULL,
     })
 
     output$alignment <- renderPrint({
-      if(is.null(m <- sel_match())) return(NULL)
+      if(is.null(m <- selectedMatch())) return(NULL)
       mir <- ifelse("miRNA" %in% colnames(mcols(m)),
                     as.character(m$miRNA), hits()$sel)
       mod <- modlists[[hits()$collection]][[as.character(mir)]]
@@ -637,12 +650,12 @@ scanMiRserver <- function( annotations=list(), modlists=NULL,
           x <- annotations[[input$mirlist]]$addDBs[[f]]
           x <- x[x$miRNA==input$mirna,]
           row.names(x) <- x$transcript
-          x <- x[levels(d$transcript),"score"]
-          d[[f]] <- x[as.integer(d$transcript)]
+          d[[f]] <- x[d$transcript,"score"]
         }
       }
       if(!is.null(txs())){
         d <- merge(txs(), d, by.x="tx_id", by.y="transcript")
+        colnames(d) <- gsub("tx_id", "transcript", colnames(d))
         if(input$targetlist_gene){
           d <- d[order(d$repression),]
           d <- d[!duplicated(d$symbol),]
