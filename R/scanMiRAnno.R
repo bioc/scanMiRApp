@@ -29,6 +29,7 @@ setClass(
 #' @param models An optional KdModelList
 #' @param scan An optional full scan (IndexedFst or GRanges)
 #' @param aggregated An optional per-transcript aggregation (IndexedFst or
+#' @param version optional ensembl version
 #' data.frame)
 #' @param ... Arguments passed to `AnnotationHub`
 #'
@@ -40,13 +41,13 @@ setClass(
 #' anno <- ScanMiRAnno(species="fake")
 #' anno
 ScanMiRAnno <- function(species=NULL, genome=NULL, ensdb=NULL, models=NULL,
-                        scan=NULL, aggregated=NULL, ...){
+                        scan=NULL, aggregated=NULL, version=NULL, ...){
   if(!is.null(species)){
     stopifnot(is.null(genome) && is.null(ensdb))
     species <- match.arg(species, c("GRCh38","GRCm38","Rnor_6","fake"))
     if(species=="fake") return(.fakeAnno())
     ah <- AnnotationHub(...)
-    ensdb <- ah[[rev(query(ah, c("EnsDb", species))$ah_id)[1]]]
+    ensdb <- ah[[rev(query(ah, c("EnsDb", species, version))$ah_id)[1]]]
     genome <- switch(species,
       GRCh38=BSgenome.Hsapiens.UCSC.hg38:::BSgenome.Hsapiens.UCSC.hg38,
       GRCm38=BSgenome.Mmusculus.UCSC.mm10:::BSgenome.Mmusculus.UCSC.mm10,
