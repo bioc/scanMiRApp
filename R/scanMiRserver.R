@@ -650,7 +650,7 @@ scanMiRserver <- function( annotations=list(), modlists=NULL,
           x <- annotations[[input$mirlist]]$addDBs[[f]]
           x <- x[x$miRNA==input$mirna,]
           row.names(x) <- x$transcript
-          d[[f]] <- x[d$transcript,"score"]
+          d[[f]] <- x[as.character(d$transcript),"score"]
         }
       }
       if(!is.null(txs())){
@@ -659,7 +659,6 @@ scanMiRserver <- function( annotations=list(), modlists=NULL,
         if(input$targetlist_gene){
           d <- d[order(d$repression),]
           d <- d[!duplicated(d$symbol),]
-          ff <- c("symbol","miRNA","repression")
         }
       }
       d[order(d$repression),]
