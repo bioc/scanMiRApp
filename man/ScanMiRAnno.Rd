@@ -11,6 +11,7 @@ ScanMiRAnno(
   models = NULL,
   scan = NULL,
   aggregated = NULL,
+  addDBs = list(),
   ...
 )
 }
@@ -29,6 +30,9 @@ GRCh38, GRCm38, Rnor_6.}
 
 \item{aggregated}{An optional per-transcript aggregation (IndexedFst or
 data.frame)}
+
+\item{addDBs}{A named list of additional tx-miRNA databases, each of which
+should be a data.frame with the columns 'transcript', 'miRNA', and 'score'.}
 
 \item{...}{Arguments passed to `AnnotationHub`}
 }

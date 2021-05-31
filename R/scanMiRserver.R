@@ -120,7 +120,8 @@ scanMiRserver <- function( annotations=list(), modlists=NULL,
 
     output$gene_link <- renderUI({
       if(is.null(selgene()) || selgene()=="") return(NULL)
-      base <- "https://www.ensembl.org/Mus_musculus/Gene/Summary?db=core;g="
+      base <- annotations[[input$annotation]]$ensembl_gene_baselink
+      if(is.null(base)) return(NULL)
       tags$a(href=paste0(base, selgene()), "view on ensembl", target="_blank")
     })
 
@@ -445,8 +446,8 @@ scanMiRserver <- function( annotations=list(), modlists=NULL,
     output$hits_table <- renderDT({ # prints the current hits
       if(is.null(hits()$hits)) return(NULL)
       h <- as.data.frame(hits()$hits)
-      h <- h[order(h$log_kd),setdiff(colnames(h),
-                                     c("seqnames","width","strand") )]
+      h <- h[,setdiff(colnames(h), c("seqnames","width","strand") )]
+      h <- tryCatch(h[order(h$log_kd),], error=function(e) return(h))
       dtwrapper(h, selection="single", callback=JS('
         table.on("dblclick.dt","tr", function() {
           Shiny.onInputChange("dblClickMatch", table.row(this).data()[0])
@@ -483,6 +484,7 @@ scanMiRserver <- function( annotations=list(), modlists=NULL,
     output$manhattan <- renderPlotly({
       if(is.null(hits()$hits)) return(NULL)
       h <- hits()$hits
+      if(length(h)==0) return(NULL)
       sn <- as.character(seqnames(h)[1])
       meta <- metadata(h)
       h <- as.data.frame(h[order(h$log_kd),])
@@ -508,18 +510,57 @@ scanMiRserver <- function( annotations=list(), modlists=NULL,
         orflen <- meta$tx_info[sn, "ORF.length"]
         p <- p + geom_vline(xintercept=orflen, color="grey", size=1)
       }
-      ggplotly(p)
+      ymax <- 0
+      if(selmods()==1){
+        mer8 <- .get8merRange(selmods()[[1]])/-1000
+        ymax <- max(mer8)
+        p <- p + geom_rect(xmin=xlim[1], xmax=xlim[2], ymin=min(mer8),
+                           ymax=max(mer8), alpha=0.2, fill="green")
+      }
+      ggplotly(p + expand_limits(x=xlim, y=unique(c(1,ymax))))
+    })
+
+    selectedMatch <- reactiveVal()
+
+    observeEvent(input$dblClickMatch, {
+      if(is.null(hits()$hits)) return(NULL)
+      if(is.null(input$dblClickMatch)) return(NULL)
+      rid <- as.integer(input$dblClickMatch)
+      if(is.null(rid)) return(NULL)
+      selectedMatch(rid)
+      showModal(modalDialog(
+        title = "Target alignment",
+        textOutput("alignment_header"),
+        verbatimTextOutput("alignment"),
+        easyClose = TRUE,
+        footer = NULL
+      ))
+    })
+
+    observeEvent(event_data("plotly_doubleclick"), {
+      if(is.null(hits()$hits)) return(NULL)
+      rid <- as.integer(event_data$pointNumber)
+      if(is.null(rid)) return(NULL)
+      selectedMatch(rid)
+      showModal(modalDialog(
+        title = "Target alignment",
+        textOutput("alignment_header"),
+        verbatimTextOutput("alignment"),
+        easyClose = TRUE,
+        footer = NULL
+      ))
     })
 
     sel_match <- reactive({ # match currently selected for alignment view
       if(is.null(hits()$hits)) return(NULL)
-      if(is.null(input$dblClickMatch)) return(NULL)
-      rid <- as.integer(input$dblClickMatch)
-      if(!(rid)>0) return(NULL)
+      if(is.null(selectedMatch()) || !(selectedMatch()>0)) return(NULL)
       hits()$hits[rid]
     })
 
     output$alignment_header <- renderText({
+      if(is.null())
+      if(!(rid)>0) return(NULL)
+      hits()$hits[rid]
       if(is.null(m <- sel_match()))
         return("Double-click on a row of the table above to visualize it here")
       miRNA <- ifelse("miRNA" %in% colnames(mcols(m)),
@@ -561,7 +602,7 @@ scanMiRserver <- function( annotations=list(), modlists=NULL,
     }, height=reactive(input$modplot_height))
 
     output$targets_ui <- renderUI({
-      if(is.null(annotations[[input$annotation]]$aggregated)){
+      if(is.null(annotations[[input$mirlist]]$aggregated)){
         return(tags$p("Targets not accessible ",
                       "(no pre-compiled scan available)"))
       }
@@ -587,10 +628,19 @@ scanMiRserver <- function( annotations=list(), modlists=NULL,
     })
 
     mirtargets_prepared <- reactive({
-      if(is.null(preTargets <- annotations[[input$annotation]]$aggregated) ||
+      if(is.null(preTargets <- annotations[[input$mirlist]]$aggregated) ||
          !(input$mirna %in% names(preTargets))) return(NULL)
       d <- preTargets[[input$mirna]]
       d$repression <- d$repression/1000
+      if(!is.null(annotations[[input$mirlist]]$addDBs)){
+        for(f in names(annotations[[input$mirlist]]$addDBs)){
+          x <- annotations[[input$mirlist]]$addDBs[[f]]
+          x <- x[x$miRNA==input$mirna,]
+          row.names(x) <- x$transcript
+          x <- x[levels(d$transcript),"score"]
+          d[[f]] <- x[as.integer(d$transcript)]
+        }
+      }
       if(!is.null(txs())){
         d <- merge(txs(), d, by.x="tx_id", by.y="transcript")
         if(input$targetlist_gene){
