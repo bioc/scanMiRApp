@@ -31,6 +31,7 @@ getTranscriptSequence <- function(tx=NULL, annotation, annoFilter=NULL,
     if(!is(annotation$ensdb,"EnsDb")){
       warning("`annoFilter` is ignored when the annotation is not in ",
               "`EnsDb` format")
+      annoFilter <- NULL
     }else{
       if(!is(annoFilter, "AnnotationFilterList") &&
          !is(annoFilter, "AnnotationFilter"))
@@ -38,8 +39,13 @@ getTranscriptSequence <- function(tx=NULL, annotation, annoFilter=NULL,
       if(!is.null(tx))
         annoFilter <- AnnotationFilterList(annoFilter, ~tx_id %in% tx)
     }
-  } else {
-    annoFilter <- AnnotationFilterList()
+  }
+  if(is.null(annoFilter)){
+    if(!is.null(tx)){
+      annoFilter <- AnnotationFilter(~tx_id %in% tx)
+    } else {
+      annoFilter <- AnnotationFilterList()
+    }
   }
   ensdb <- annotation$ensdb
   extract <- match.arg(extract)
