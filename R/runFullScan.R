@@ -66,24 +66,23 @@ runFullScan <- function(annotation, mods=NULL, annoFilter = NULL,
   filt <- SeqNameFilter(canonical_chroms)
 
   if(!is.null(annoFilter)){
-    if(is(annoFilter, "AnnotationFilterList") ||
-       is(annoFilter, "AnnotationFilter"))
-      filt <- AnnotationFilterList(filt, annoFilter)
-    else
+    if(!is(annoFilter, "AnnotationFilterList") && 
+       !is(annoFilter, "AnnotationFilter"))
       stop("filter must be either `AnnotationFilter` or `AnnotationFilterList`")
+    filt <- AnnotationFilterList(filt, annoFilter)
     if(!is(ensdb,"EnsDb"))
       warning("`annoFilter` is ignored when the annotation is not in ",
               "`EnsDb` format", immediate.=TRUE)
   }
   message("Extracting transcripts")
-  seqs <- getTranscriptSequence(tx=NULL, annotation, annoFilter=annoFilter,
+  seqs <- getTranscriptSequence(tx=NULL, annotation, annoFilter=filt,
                                 extract=extract)
 
   message("Scanning with ", bpnworkers(BP), " thread(s)")
   m <- findSeedMatches(seqs, mods, shadow=shadow, maxLogKd=maxLogKd,
                        onlyCanonical=onlyCanonical, BP=BP, verbose=FALSE, ...)
 
-  md <- metadata(anno$ensdb)
+  md <- metadata(annotation$ensdb)
   md <- setNames(md$value,md$name)
   if(!("genome_build" %in% names(md)))
     md[["genome_build"]] <- md[["Genome"]]
