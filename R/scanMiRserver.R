@@ -359,7 +359,8 @@ scanMiRserver <- function( annotations=list(), modlists=NULL,
     })
 
     do.scan <- reactive({
-      if(is.null(selmods()) || is.null(target()) || nchar(target())==0)
+      if(is.null(selmods()) || is.null(target()) || length(target())==0 ||
+        nchar(target())==0)
         return(NULL)
       tmp <- changeFlag()
       cs <- checksum()
