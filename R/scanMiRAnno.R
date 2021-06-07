@@ -38,6 +38,7 @@ setClass(
 #' @return A `ScanMiRAnno` object
 #' @export
 #' @importFrom AnnotationHub AnnotationHub query
+#' @importFrom ensembldb getGenomeTwoBitFile
 #' @importFrom scanMiRData getKdModels
 #' @examples
 #' anno <- ScanMiRAnno(species="fake")
@@ -50,25 +51,28 @@ ScanMiRAnno <- function(species=NULL, genome=NULL, ensdb=NULL, models=NULL,
     stopifnot(is.null(genome) && is.null(ensdb))
     species <- match.arg(species, c("GRCh38","GRCm38","Rnor_6","fake"))
     if(species=="fake") return(.fakeAnno())
+    if(is.null(models))
+      models <- switch(species,
+                       GRCh38=scanMiRData::getKdModels("hsa"),
+                       GRCm38=scanMiRData::getKdModels("mmu"),
+                       GRCm39=scanMiRData::getKdModels("mmu"),
+                       "Rnor_6"=scanMiRData::getKdModels("rno"),
+                       stop("Species not among the pre-defined one, please",
+                            "provide `models` manually.")
+                      )
     ah <- AnnotationHub(...)
     ensdb <- ah[[rev(query(ah, c("EnsDb", species, version))$ah_id)[1]]]
     genome <- switch(species,
       GRCh38=BSgenome.Hsapiens.UCSC.hg38:::BSgenome.Hsapiens.UCSC.hg38,
       GRCm38=BSgenome.Mmusculus.UCSC.mm10:::BSgenome.Mmusculus.UCSC.mm10,
       "Rnor_6"=BSgenome.Rnorvegicus.UCSC.rn6:::BSgenome.Rnorvegicus.UCSC.rn6,
-      stop("Genome not among the pre-defined one, please provide `genome` ",
-          "manually.")
+      getGenomeTwoBitFile(ensdb)
     )
     blink <- switch( species,
       GRCh38="https://www.ensembl.org/Homo_sapiens/Gene/Summary?db=core;g=",
       GRCm38="https://www.ensembl.org/Mus_musculus/Gene/Summary?db=core;g=",
       "Rnor_6"="https://www.ensembl.org/Rattus_norvegicus/Gene/Summary?db=core;g=",
       NULL )
-
-    if(is.null(models)) models <- switch(species,
-      GRCh38=scanMiRData::getKdModels("hsa"),
-      GRCm38=scanMiRData::getKdModels("mmu"),
-      "Rnor_6"=scanMiRData::getKdModels("rno"))
   }
   new("ScanMiRAnno", list(
     genome=genome, ensdb=ensdb, models=models, scan=scan, aggregated=aggregated,
