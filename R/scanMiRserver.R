@@ -626,6 +626,7 @@ scanMiRserver <- function( annotations=list(), modlists=NULL,
                                   "Show only 3'UTR Binding Sites")),
           column(6, checkboxInput("targetlist_gene", "Aggregate by gene",
                                   value=FALSE))),
+        tags$p("Double-click on a row to visualize hits."),
         withSpinner(DTOutput("mirna_targets")),
         downloadLink('dl_mirTargets', label = "Download all")
       )
