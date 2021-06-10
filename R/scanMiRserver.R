@@ -567,8 +567,10 @@ scanMiRserver <- function( annotations=list(), modlists=NULL,
       if(!is.list(event) || is.null(event$pointNumber)) return(NULL)
       rid <- as.integer(event$pointNumber+1)
       if(is.null(rid) || !(rid>0)) return(NULL)
-      if(!is.null(h$miRNA) && !is.null(event$curveNumber))
-        h <- h[h$miRNA==levels(as.factor(h$miRNA))[event$curveNumber]]
+      if(!is.null(h$miRNA) && length(unique(h$miRNA))>1 && 
+         !is.null(event$curveNumber)){
+        h <- h[as.integer(droplevels(h$miRNA))==as.integer(event$curveNumber)]
+      }
       selectedMatch(h[rid])
       showModal(modalDialog(
         title = "Target alignment",
