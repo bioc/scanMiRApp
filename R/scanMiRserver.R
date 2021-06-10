@@ -20,7 +20,7 @@
 #' @importFrom ggplot2 ggplot aes_string geom_hline geom_point expand_limits
 #' xlab geom_vline
 #' @importFrom Biostrings DNAStringSet
-#' @importFrom waiter waiter_hide
+#' @importFrom waiter waiter_hide waiter_show
 #' @import shiny shinydashboard scanMiR GenomicRanges IRanges
 #' @export
 #' @examples
@@ -347,7 +347,8 @@ scanMiRserver <- function( annotations=list(), modlists=NULL,
       if(length(h)==0) return(h)
       if(!input$scanNonCanonical)
         h <- h[grep("canonical|bulged",h$type,invert=TRUE)]
-      h[h$log_kd < input$maxLogKd]
+      h <- h[h$log_kd < input$maxLogKd]
+      h[order(h$log_kd)]
     }
 
     observeEvent(input$scan, { # actual scanning
@@ -360,12 +361,15 @@ scanMiRserver <- function( annotations=list(), modlists=NULL,
 
     do.scan <- reactive({
       if(is.null(selmods()) || is.null(target()) || length(target())==0 ||
-        nchar(target())==0)
+        nchar(target())==0){
+        waiter_hide()
         return(NULL)
+      }
       tmp <- changeFlag()
       cs <- checksum()
       # first check if we already have these results cached:
       if(cs %in% names(cached.checksums())) return(cached.hits[[cs]])
+      waiter_show(color = "#333E4850")
       # then check if the results are pre-computed
       if(input$subjet_type!="custom" &&
          !is.null(h <- checkPreComputedScan(seltx(), input$utr_only))){
@@ -409,6 +413,7 @@ scanMiRserver <- function( annotations=list(), modlists=NULL,
         res$target <- paste(input$gene,"-", seltx(),
                             ifelse(input$utr_only, "(UTR)",""))
       }
+      waiter_hide()
       return(res)
     })
 
@@ -452,7 +457,7 @@ scanMiRserver <- function( annotations=list(), modlists=NULL,
       h <- tryCatch(h[order(h$log_kd),], error=function(e) return(h))
       dtwrapper(h, selection="single", callback=JS('
         table.on("dblclick.dt","tr", function() {
-          Shiny.onInputChange("dblClickMatch", table.row(this).data()[0])
+          Shiny.onInputChange("dblClickMatch", table.row(this).data()[0]+"/"+Math.random())
           var box = $("#box_match").closest(".box")
           if (box.hasClass("collapsed-box")){
             box.find("[data-widget=collapse]").click();
@@ -518,7 +523,7 @@ scanMiRserver <- function( annotations=list(), modlists=NULL,
       if(length(selmods())==1){
         mer8 <- get8merRange(selmods()[[1]])/-1000
         ymax <- max(mer8)
-        p <- p + geom_rect(
+        p <- p + geom_rect(aes(colour=NULL), 
           data=data.frame(type="8mer range", log_kd=0, position=1), 
           xmin=xlim[1], xmax=xlim[2], ymin=min(mer8), ymax=max(mer8), 
           alpha=0.2, fill="green")
@@ -541,7 +546,7 @@ scanMiRserver <- function( annotations=list(), modlists=NULL,
     observeEvent(input$dblClickMatch, {
       if(is.null(hits()$hits)) return(NULL)
       if(is.null(input$dblClickMatch)) return(NULL)
-      rid <- as.integer(input$dblClickMatch)
+      rid <- as.integer(strsplit(input$dblClickMatch, "/", fixed=TRUE)[[1]][[1]])
       if(is.null(rid) || !(rid>0)) return(NULL)
       h <- hits()$hits
       selectedMatch(h[order(h$log_kd)[rid]])
