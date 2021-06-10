@@ -17,7 +17,7 @@ scans and aggregations without having to load them in memory.
 visualizing sites on the UTR of a given transcript, running transcriptome-wide scans, or 
 finding enriched miRNA-target pairs.
 
-Click [here](http://130.60.24.171:3838/scanMiR/) for a live version of the app.
+Click [here](https://ethz-ins.org/scanMiR/) for a live version of the app.
 For more information, see the package's [vignettes](vignettes/).
 
 ## Installation
