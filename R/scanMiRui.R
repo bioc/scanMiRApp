@@ -70,6 +70,13 @@ scanMiRui <- function(){
             ),
             tabPanel(
               title="Transcript", value="transcript",
+              tags$div(style="float: right; padding: 20px; width: 30%; min-width: 300px;",
+                       "At the moment, only the sequences from protein-coding
+                       transcripts can be queried in that way. For non-coding
+                       transcripts, you'll have to enter the sequence yourself
+                       (see 'custom sequence' tab above).", tags$br(), 
+                       "The next scanMiRApp release in the coming weeks will 
+                       include also non-coding transcripts!"),
               selectizeInput("annotation", "Genome & Annotation", choices=c()),
               tags$div(selectizeInput("gene", "Gene", choices=c()),
                        style="float: left; padding-right: 10px;"),
@@ -122,7 +129,8 @@ scanMiRui <- function(){
           box( width=12, collapsible=TRUE, collapsed=TRUE, 
                title="Manhattan Plot", 
                tags$p("Hover on points to view details, and click to ",
-                      "visualize the alignment on the target sequence."),
+                      "visualize the alignment on the target sequence. You may
+                      also select miRNAs to show/hide by clicking on the legend."),
                withSpinner(plotlyOutput("manhattan")),
             column(6, numericInput("manhattan_n", "Max number of miRNAs",
                                    value=10, min=1, max=50)),
