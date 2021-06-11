@@ -396,7 +396,11 @@ scanMiRserver <- function( annotations=list(), modlists=NULL,
               onlyCanonical=onlyCanonical, p3.extra=TRUE, BP=BP )
         })
       }
-      if(length(res$hits)>0) res$hits$log_kd <- (res$hits$log_kd/1000)
+      if(length(res$hits)>0){
+        res$hits$log_kd <- (res$hits$log_kd/1000)
+        res$hits <- res$hits[order(res$hits$log_kd)]
+        names(res$hits) <- NULL
+      }
       res$cs <- cs
       res$last <- res$time <- Sys.time()
       res$size <- object.size(res$hits)
@@ -692,6 +696,7 @@ scanMiRserver <- function( annotations=list(), modlists=NULL,
                            selected=as.character(tx$gene_id[1]),
                            choices=allgenes(), server=TRUE)
       #updateCheckboxInput(session, "utr_only", value=input$targetlist_utronly)
+      updateTabItems(session, "main_tabs", "tab_hits")
       updateSelectizeInput(session, "transcript", selected=sub,
                            choices=alltxs())
       updateSelectizeInput(session, "mirnas", selected=input$mirna)
@@ -705,7 +710,6 @@ scanMiRserver <- function( annotations=list(), modlists=NULL,
         cached.hits[[cs]] <- do.scan()
         current.cs(cs)
       })
-      updateTabItems(session, "main_tabs", "tab_hits")
     })
 
     output$dl_mirTargets <- downloadHandler(
