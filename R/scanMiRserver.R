@@ -629,11 +629,9 @@ scanMiRserver <- function( annotations=list(), modlists=NULL,
       }
       list(
         fluidRow(
-          column(6, checkboxInput("targetlist_utronly", value=TRUE,
-                                  "Show only 3'UTR Binding Sites")),
-          column(6, checkboxInput("targetlist_gene", "Aggregate by gene",
-                                  value=FALSE))),
-        tags$p("Double-click on a row to visualize hits."),
+          column(6, tags$p("Double-click on a row to visualize hits.")),
+          column(6, checkboxInput("targetlist_gene", 
+                                  "Only top transcript per gene",value=FALSE))),
         withSpinner(DTOutput("mirna_targets")),
         downloadLink('dl_mirTargets', label = "Download all")
       )
@@ -693,7 +691,7 @@ scanMiRserver <- function( annotations=list(), modlists=NULL,
       updateSelectizeInput(session, "gene",
                            selected=as.character(tx$gene_id[1]),
                            choices=allgenes(), server=TRUE)
-      updateCheckboxInput(session, "utr_only", value=input$targetlist_utronly)
+      #updateCheckboxInput(session, "utr_only", value=input$targetlist_utronly)
       updateSelectizeInput(session, "transcript", selected=sub,
                            choices=alltxs())
       updateSelectizeInput(session, "mirnas", selected=input$mirna)
@@ -713,8 +711,7 @@ scanMiRserver <- function( annotations=list(), modlists=NULL,
     output$dl_mirTargets <- downloadHandler(
       filename = function() {
         if(is.null(input$mirna)) return(NULL)
-        paste0(input$mirna, ifelse(input$targetlist_utronly,"-utr-","-"),
-               "targets.csv")
+        paste0(input$mirna, "targets.csv")
       },
       content = function(con) {
         write.csv(mirtargets_prepared(), con, col.names=TRUE)
