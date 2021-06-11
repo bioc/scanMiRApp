@@ -127,7 +127,7 @@ scanMiRui <- function(){
           column(2, uiOutput("scanBtn")),
           column(10, tags$h5(textOutput("scan_target"))),
           box( width=12, collapsible=TRUE, collapsed=TRUE, 
-               title="Manhattan Plot", 
+               title="Plot along transcript", 
                tags$p("Hover on points to view details, and click to ",
                       "visualize the alignment on the target sequence. You may
                       also select miRNAs to show/hide by clicking on the legend."),
