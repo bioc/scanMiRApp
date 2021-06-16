@@ -18,7 +18,8 @@
 #' @importFrom digest digest
 #' @importFrom shinycssloaders withSpinner
 #' @importFrom ggplot2 ggplot aes_string geom_hline geom_point expand_limits
-#' xlab geom_vline
+#' xlab geom_vline geom_rect theme_minimal theme element_line scale_x_continuous
+#' scale_y_continuous
 #' @importFrom Biostrings DNAStringSet
 #' @importFrom waiter waiter_hide waiter_show
 #' @import shiny shinydashboard scanMiR GenomicRanges IRanges
@@ -504,7 +505,7 @@ scanMiRserver <- function( annotations=list(), modlists=NULL,
       if(length(h)==0) return(NULL)
       h
     })
-    
+
     output$manhattan <- renderPlotly({
       if(is.null(h <- manhattan_data())) return(NULL)
       sn <- as.character(seqnames(h)[1])
@@ -527,14 +528,14 @@ scanMiRserver <- function( annotations=list(), modlists=NULL,
       if(length(selmods())==1){
         mer8 <- get8merRange(selmods()[[1]])/-1000
         ymax <- max(mer8)
-        p <- p + geom_rect(aes(colour=NULL), 
-          data=data.frame(type="8mer range", log_kd=0, position=1), 
-          xmin=xlim[1], xmax=xlim[2], ymin=min(mer8), ymax=max(mer8), 
+        p <- p + geom_rect(aes(colour=NULL),
+          data=data.frame(type="8mer range", log_kd=0, position=1),
+          xmin=xlim[1], xmax=xlim[2], ymin=min(mer8), ymax=max(mer8),
           alpha=0.2, fill="green")
       }
       p <- p + theme_minimal() + theme(axis.line.x=element_line()) +
-        geom_hline(yintercept=-hits()$maxLogKd, linetype="dashed", 
-                   color="red", size=1) + 
+        geom_hline(yintercept=-hits()$maxLogKd, linetype="dashed",
+                   color="red", size=1) +
         geom_point(size=2) + xlab(xlab) + expand_limits(x=xlim, y=c(0,ymax))
       if(!is.null(h$ORF) && !is.null(meta$tx_info)){
         orflen <- meta$tx_info[sn, "ORF.length"]
@@ -563,7 +564,7 @@ scanMiRserver <- function( annotations=list(), modlists=NULL,
       ))
     })
 
-    observeEvent(suppressWarnings(event_data("plotly_click", "manhattan", 
+    observeEvent(suppressWarnings(event_data("plotly_click", "manhattan",
                                              priority="event")), {
       if(is.null(h <- manhattan_data())) return(NULL)
       event <- event_data("plotly_click", "manhattan")
@@ -571,7 +572,7 @@ scanMiRserver <- function( annotations=list(), modlists=NULL,
       if(!is.list(event) || is.null(event$pointNumber)) return(NULL)
       rid <- as.integer(event$pointNumber+1)
       if(is.null(rid) || !(rid>0)) return(NULL)
-      if(!is.null(h$miRNA) && length(unique(h$miRNA))>1 && 
+      if(!is.null(h$miRNA) && length(unique(h$miRNA))>1 &&
          !is.null(event$curveNumber)){
         h <- h[as.integer(droplevels(h$miRNA))==as.integer(event$curveNumber)]
       }
@@ -634,7 +635,7 @@ scanMiRserver <- function( annotations=list(), modlists=NULL,
       list(
         fluidRow(
           column(6, tags$p("Double-click on a row to visualize hits.")),
-          column(6, checkboxInput("targetlist_gene", 
+          column(6, checkboxInput("targetlist_gene",
                                   "Only top transcript per gene",value=FALSE))),
         withSpinner(DTOutput("mirna_targets")),
         downloadLink('dl_mirTargets', label = "Download all")

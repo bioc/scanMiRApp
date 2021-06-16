@@ -14,7 +14,6 @@ vignette: |
 
 ```{r, include=FALSE}
 library(BiocStyle)
-library(scanMiR)
 ```
 
 # IndexedFst
@@ -24,6 +23,7 @@ The `IndexedFst` class provides fast named random access to indexed `fst` files.
 Creating an indexed fst file from a data.frame is very simple:
 
 ```{r}
+library(scanMiRApp)
 # we create a temporary directory in which the files will be saved
 tmp <- tempdir()
 f <- file.path(tmp, "test")
@@ -77,6 +77,7 @@ head(catB)
 In addition to data.frames, [GRanges](https://bioconductor.org/packages/release/bioc/html/GenomicRanges.html) can be saved as indexed Fst. To demonstrate this, we first create a dummy GRanges object:
 
 ```{r}
+library(GenomicRanges)
 gr <- GRanges(sample(LETTERS[1:3],200,replace=TRUE), IRanges(seq_len(200), width=2))
 gr$propertyA <- factor(sample(letters[1:5],200,replace=TRUE))
 gr
