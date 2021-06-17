@@ -44,7 +44,7 @@ Description:
     repression data. In addition contains the IndexedFst class for fast indexed
     reading of large GenomicRanges or data.frames, and some utilities for 
     facilitating scans and identifying enriched miRNA-target pairs.
-License: GPL
+License: GPL-3
 VignetteBuilder: knitr
 RoxygenNote: 7.1.1
 biocViews: miRNA, SequenceMatching

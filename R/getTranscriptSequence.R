@@ -19,6 +19,7 @@
 #' threeUTRsByTranscript seqlevels<-
 #' @importFrom GenomeInfoDb seqlevels
 #' @importFrom ensembldb metadata seqlevelsStyle seqlevelsStyle<-
+#' @importFrom AnnotationFilter AnnotationFilterList AnnotationFilter
 #' @importFrom stats setNames
 #' @import Biostrings
 #' @examples

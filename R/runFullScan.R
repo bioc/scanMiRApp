@@ -28,7 +28,7 @@
 #' @importFrom GenomicRanges strand
 #' @importFrom S4Vectors metadata metadata<-
 #' @importFrom stats setNames
-#' @importFrom AnnotationFilter AnnotationFilterList SeqNameFilter
+#' @importFrom AnnotationFilter AnnotationFilterList SeqNameFilter AnnotationFilter
 #' @examples
 #' anno <- ScanMiRAnno("fake")
 #' m <- runFullScan( annotation=anno )
@@ -66,7 +66,7 @@ runFullScan <- function(annotation, mods=NULL, annoFilter = NULL,
   filt <- SeqNameFilter(canonical_chroms)
 
   if(!is.null(annoFilter)){
-    if(!is(annoFilter, "AnnotationFilterList") && 
+    if(!is(annoFilter, "AnnotationFilterList") &&
        !is(annoFilter, "AnnotationFilter"))
       stop("filter must be either `AnnotationFilter` or `AnnotationFilterList`")
     filt <- AnnotationFilterList(filt, annoFilter)
