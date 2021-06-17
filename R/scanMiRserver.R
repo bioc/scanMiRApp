@@ -114,7 +114,6 @@ scanMiRserver <- function( annotations=list(), modlists=NULL,
 
     selgene <- reactive({ # selected gene id
       if(is.null(input$gene) || input$gene=="") return(NULL)
-      changeFlag()
       input$gene
     })
 
@@ -132,7 +131,6 @@ scanMiRserver <- function( annotations=list(), modlists=NULL,
       if(nrow(tx)==0) return(NULL)
       txs <- tx$tx_id
       names(txs) <- paste0(tx$tx_id, " (", tx$tx_biotype,")")
-      changeFlag()
       txs
     })
 
@@ -148,7 +146,11 @@ scanMiRserver <- function( annotations=list(), modlists=NULL,
     observe(updateSelectizeInput(session, "gene", choices=allgenes(),
                                  server=TRUE))
     # when the gene selection is updated, update the transcript input
-    observe(updateSelectizeInput(session, "transcript", choices=alltxs()))
+    observe({
+      prev_seltx <- input$transcript
+      if(!(prev_seltx %in% alltxs())) prev_seltx <- NULL
+      updateSelectizeInput(session, "transcript", choices=alltxs(), selected=prev_seltx)
+    })
 
     # takes a genome package name as input, and returns the genome
     getGenome <- function(x){
@@ -567,7 +569,6 @@ scanMiRserver <- function( annotations=list(), modlists=NULL,
                                              priority="event")), {
       if(is.null(h <- manhattan_data())) return(NULL)
       event <- event_data("plotly_click", "manhattan")
-      print(event)
       if(!is.list(event) || is.null(event$pointNumber)) return(NULL)
       rid <- as.integer(event$pointNumber+1)
       if(is.null(rid) || !(rid>0)) return(NULL)
@@ -692,15 +693,17 @@ scanMiRserver <- function( annotations=list(), modlists=NULL,
       if(input$targetlist_gene) return(NULL)
       tx <- transcripts(sel_ensdb(), columns=c("tx_id", "gene_id"),
                           filter=~tx_id==sub, return.type="data.frame")
-      updateSelectizeInput(session, "gene",
-                           selected=as.character(tx$gene_id[1]),
-                           choices=allgenes(), server=TRUE)
-      #updateCheckboxInput(session, "utr_only", value=input$targetlist_utronly)
-      updateTabItems(session, "main_tabs", "tab_hits")
-      updateSelectizeInput(session, "transcript", selected=sub,
-                           choices=alltxs())
-      updateSelectizeInput(session, "mirnas", selected=input$mirna)
+      gene <- as.character(tx$gene_id[1])
+      isolate(updateSelectizeInput(session, "gene", selected=gene,
+                           choices=allgenes(), server=TRUE))
       updateTabItems(session, "subject_type", "transcript")
+      tx <- transcripts(sel_ensdb(), columns=c("tx_id","tx_biotype"),
+                        filter=~gene_id==gene, return.type="data.frame")
+      txs <- tx$tx_id
+      names(txs) <- paste0(tx$tx_id, " (", tx$tx_biotype,")")
+      #updateCheckboxInput(session, "utr_only", value=input$targetlist_utronly)
+      updateSelectizeInput(session, "transcript", selected=sub, choices=txs)
+      updateSelectizeInput(session, "mirnas", selected=input$mirna)
       updateTabItems(session, "main_tabs", "tab_subject")
       newflag <- changeFlag()+1
       changeFlag(newflag)
@@ -710,6 +713,7 @@ scanMiRserver <- function( annotations=list(), modlists=NULL,
         cached.hits[[cs]] <- do.scan()
         current.cs(cs)
       })
+      updateTabItems(session, "main_tabs", "tab_hits")
     })
 
     output$dl_mirTargets <- downloadHandler(
