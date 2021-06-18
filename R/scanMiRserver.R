@@ -612,7 +612,6 @@ scanMiRserver <- function( annotations=list(), modlists=NULL,
       mod <- modlists[[hits()$collection]][[as.character(mir)]]
       seqs <- hits()$seq
       seqs <- setNames(as.character(seqs), as.character(seqnames(m)))
-      save(m, mod, seqs, file="/tmp/TMP.RData")
       viewTargetAlignment(m, mod, seqs=seqs)
     })
 
