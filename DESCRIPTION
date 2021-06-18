@@ -1,7 +1,7 @@
 Package: scanMiRApp
 Type: Package
 Title: scanMiR shiny application
-Version: 0.99.11
+Version: 0.99.12
 Date: 2021-04-26
 Authors@R: c(
     person("Pierre-Luc", "Germain", email="pierre-luc.germain@hest.ethz.ch", 
@@ -35,7 +35,8 @@ Imports:
     shinycssloaders,
     shinydashboard,
     stats,
-    waiter
+    waiter,
+    rintrojs
 Suggests: knitr, rmarkdown, BSgenome.Rnorvegicus.UCSC.rn6
 Description:
     A shiny interface to the scanMiR package. The application enables the 
