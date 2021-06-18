@@ -168,7 +168,7 @@ Well, that's about it for the basic functions!",
                tags$p("Hover on points to view details, and click to ",
                       "visualize the alignment on the target sequence. You may
                       also select miRNAs to show/hide by clicking on the legend."),
-               shinyjqui::jqui_resizable(withSpinner(plotlyOutput("manhattan"))),
+               withSpinner(plotlyOutput("manhattan")),
             column(6, numericInput("manhattan_n", "Max number of miRNAs",
                                    value=10, min=1, max=50)),
             column(6, checkboxInput("manhattan_ordinal", "Ordinal position",
@@ -201,7 +201,7 @@ type the beginning of the miRNA name, and see the matching options."),
 This box contains a plot summarizing the binding profile of the miRNA, plotting the dissociation rate (i.e. affinity) of the top 7mers sequences (with or without the 'A' at position 1).<br/><br/>
 If it's not showing, it's because the box is collapsed - you can open it by clicking the 'plus' button on the right.",
             box(width=12, title="Affinity plot", collapsible=TRUE, collapsed=TRUE,
-              shinyjqui::jqui_resizable(withSpinner(plotOutput("modplot"))),
+              withSpinner(plotOutput("modplot")),
               numericInput("modplot_height", "Plot height (px)", value=400,
                            min=200, max=1000, step=50)
             )
