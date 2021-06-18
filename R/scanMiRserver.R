@@ -705,7 +705,7 @@ scanMiRserver <- function( annotations=list(), modlists=NULL,
       #updateCheckboxInput(session, "utr_only", value=input$targetlist_utronly)
       updateSelectizeInput(session, "transcript", selected=sub, choices=txs)
       updateSelectizeInput(session, "mirnas", selected=input$mirna)
-      updateTabItems(session, "main_tabs", "tab_subject")
+      #updateTabItems(session, "main_tabs", "tab_subject")
       newflag <- changeFlag()+1
       changeFlag(newflag)
       observe({
