@@ -22,6 +22,7 @@
 #' scale_y_continuous
 #' @importFrom Biostrings DNAStringSet
 #' @importFrom waiter waiter_hide waiter_show
+#' @importFrom rintrojs hintjs introjs
 #' @import shiny shinydashboard scanMiR GenomicRanges IRanges
 #' @export
 #' @examples
@@ -57,6 +58,14 @@ scanMiRserver <- function( annotations=list(), modlists=NULL,
 
   function(input, output, session){
 
+    #############################
+    ## intro
+    
+    hintjs(session)
+    
+    observeEvent(input$helpBtn, introjs(session,  events=list(onbeforechange=readCallback("switchTabs"))))
+    observeEvent(input$helpLink, introjs(session,  events=list(onbeforechange=readCallback("switchTabs"))))
+    
     ##############################
     ## initialize inputs
 
@@ -122,7 +131,8 @@ scanMiRserver <- function( annotations=list(), modlists=NULL,
       if(is.null(selgene()) || selgene()=="") return(NULL)
       base <- annotations[[input$annotation]]$ensembl_gene_baselink
       if(is.null(base)) return(NULL)
-      tags$a(href=paste0(base, selgene()), "view on ensembl", target="_blank")
+      tags$a(href=paste0(base, selgene()), icon("external-link"), 
+             "view on ensembl", target="_blank")
     })
 
     alltxs <- reactive({ # all tx from selected gene
@@ -602,6 +612,7 @@ scanMiRserver <- function( annotations=list(), modlists=NULL,
       mod <- modlists[[hits()$collection]][[as.character(mir)]]
       seqs <- hits()$seq
       seqs <- setNames(as.character(seqs), as.character(seqnames(m)))
+      save(m, mod, seqs, file="/tmp/TMP.RData")
       viewTargetAlignment(m, mod, seqs=seqs)
     })
 
@@ -620,13 +631,14 @@ scanMiRserver <- function( annotations=list(), modlists=NULL,
 
     output$mirbase_link <- renderUI({
       tags$a(href=paste0("http://www.mirbase.org/textsearch.shtml?q=",
-                         input$mirna), "miRBase", target="_blank")
+                         input$mirna),
+             icon("external-link"), "miRBase", target="_blank")
     })
 
     output$modplot <- renderPlot({ # affinity plot
       if(is.null(mod())) return(NULL)
       plotKdModel(mod())
-    }, height=reactive(input$modplot_height))
+    }, height=reactive(max(100,input$modplot_height)))
 
     output$targets_ui <- renderUI({
       if(is.null(annotations[[input$mirlist]]$aggregated)){
@@ -705,7 +717,7 @@ scanMiRserver <- function( annotations=list(), modlists=NULL,
       #updateCheckboxInput(session, "utr_only", value=input$targetlist_utronly)
       updateSelectizeInput(session, "transcript", selected=sub, choices=txs)
       updateSelectizeInput(session, "mirnas", selected=input$mirna)
-      updateTabItems(session, "main_tabs", "tab_subject")
+      #updateTabItems(session, "main_tabs", "tab_subject")
       newflag <- changeFlag()+1
       changeFlag(newflag)
       observe({

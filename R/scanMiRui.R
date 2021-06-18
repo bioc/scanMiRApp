@@ -5,6 +5,7 @@
 #' @import shiny shinydashboard
 #' @importFrom plotly plotlyOutput ggplotly
 #' @importFrom shinycssloaders withSpinner
+#' @importFrom rintrojs introjsUI introBox
 #' @importFrom waiter use_waiter waiter_show_on_load spin_1
 #' @return A shiny ui
 #' @export
@@ -14,21 +15,29 @@ scanMiRui <- function(){
   scanMiRlogo <- paste0("https://raw.git",
                         "hubusercontent.com/ETHZ-INS/scanMiR/",
                         "master/inst/docs/sticker.svg")
-  ui <- dashboardPage( skin="black",
+  dashboardPage( skin="black",
 
-    dashboardHeader(title = "scanMiRApp", titleWidth = "300px"),
+    dashboardHeader(title = "scanMiRApp", titleWidth = "300px",
+                    tags$li(class="dropdown",actionLink("helpBtn", label="Help", 
+                                                      icon=icon("question")))),
 
     ## Sidebar content
     dashboardSidebar( width = "200px",
       sidebarMenu(id="main_tabs",
-        menuItem("Species Collection", tabName="tab_collection"),
-        menuItem("Search in\ngene/sequence",
+        menuItem(introBox("Species Collection", data.step = 1,
+                 data.intro = "First, use this tab to select the miRNA collection
+                                 relative to your species of interest"),
+                 tabName="tab_collection"),
+        menuItem(introBox("Search in\ngene/sequence", data.step=2,
+                          data.intro="In this section, you can scan and visualize specific transcripts or sequence for miRNA binding sites"),
           menuSubItem("subject", "tab_subject"),
           menuSubItem("miRNAs", "tab_mirnas"),
           menuSubItem("options", "tab_options"),
-          menuSubItem("hits", "tab_hits")
+          menuSubItem("hits", "tab_hits"),
+          startExpanded=TRUE
         ),
-        menuItem("miRNA-based", tabName="tab_mirna"),
+        menuItem(introBox("miRNA-based", data.step=3, data.intro="In this section, you can instead start from a specific miRNA, visualize its binding profile, and get its top predicted targets.<br/>
+                          <br/>We'll start by looking at that part."), tabName="tab_mirna"),
         menuItem("About", tabName="tab_about")
       ),
       tags$a(
@@ -38,6 +47,7 @@ scanMiRui <- function(){
     ),
     ## Body Content
     dashboardBody(
+      introjsUI(),
       use_waiter(spinners = 3),
       waiter_show_on_load(html = tagList(
         tags$img(src=scanMiRlogo), tags$br(), tags$br(),
@@ -56,6 +66,13 @@ scanMiRui <- function(){
           box(width=12, withSpinner(verbatimTextOutput("collection_summary")))
         ),
         tabItem(tabName = "tab_subject",
+          introBox(data.step=7, data.intro="
+Moving on to the <b>transcript-centered</b> section!<br/><br/>
+Opening the '<i>Search in gene/sequence</i>' menu provides access to sub-sections,
+the first of which is about selecting the sequence we want to scan.<br/><br/>
+There are two options here, available through the tabs on the top right:<br>
+you can either scan an annotated transcript, or a custom sequence that you'll copy-paste.
+We'll look at the former.",
           tabBox(
             title="Search bindings in", side="right",
             id="subjet_type", width=12, selected = "transcript",
@@ -80,6 +97,11 @@ scanMiRui <- function(){
                        "The next scanMiRApp release in the coming weeks will
                        include also non-coding transcripts!"),
               selectizeInput("annotation", "Genome & Annotation", choices=c()),
+              introBox(data.step=7, data.intro="
+In this sub-tab, you can first select the gene and then 
+select the transcript.<br/>Again, you can delete the content 
+of the box and type the first few words to get the matching options.<br/>
+An overview of the selected sequence is then shown at the bottom.",
               tags$div(selectizeInput("gene", "Gene", choices=c()),
                        style="float: left; padding-right: 10px;"),
               tags$br(), tags$p(style="text-align: left;", "Type in the first ",
@@ -87,24 +109,28 @@ scanMiRui <- function(){
               htmlOutput("gene_link"),
               tags$div(style="clear: left;"),
               selectizeInput("transcript", "Transcript", choices=c()),
-              checkboxInput("utr_only", "UTR only", value = TRUE),
-              withSpinner(tableOutput("tx_overview"))
+              introBox(checkboxInput("utr_only", "UTR only", value = TRUE),
+                       data.hint="You can decide here whether you want to scan just the 3' UTR or also include the coding sequence."),
+              withSpinner(tableOutput("tx_overview")))
             )
           )
-        ),
+        )),
         tabItem(tabName="tab_mirnas",
-          box( width=12,
-            column(12, selectizeInput("mirnas", choices=c(), multiple=TRUE,
-                          label="Selected miRNAs: (type in to filter)")),
-            column(4,
-              checkboxInput("mirnas_all", "Search for all miRNAs"),
-              actionButton("mirnas_confident",
-                           "Select confidently annotated miRNAs"),
-              actionButton("mirnas_mammals",
-                           "Select miRNAs conserved across mammals"),
-              actionButton("mirnas_vert",
-                           "Select miRNAs conserved across vertebrates"),
-              actionButton("mirnas_clear", "Clear all selected miRNAs")
+          introBox(data.step=8, data.intro="
+The next step is to select the miRNA(s) for which you want to scan binding sites.",
+            box( width=12,
+              column(12, selectizeInput("mirnas", choices=c(), multiple=TRUE,
+                            label="Selected miRNAs: (type in to filter)")),
+              column(4,
+                checkboxInput("mirnas_all", "Search for all miRNAs"),
+                actionButton("mirnas_confident",
+                             "Select confidently annotated miRNAs"),
+                actionButton("mirnas_mammals",
+                             "Select miRNAs conserved across mammals"),
+                actionButton("mirnas_vert",
+                             "Select miRNAs conserved across vertebrates"),
+                actionButton("mirnas_clear", "Clear all selected miRNAs")
+              )
             )
           )
         ),
@@ -126,14 +152,23 @@ scanMiRui <- function(){
                             "Search also for non-canonical sites", value=TRUE))
         ),
         tabItem(tabName="tab_hits",
-          column(2, uiOutput("scanBtn")),
+          column(2, introBox(data.step=8, uiOutput("scanBtn"), data.intro="
+Finally, you can click on the scan button to launch it!<br/>
+If it's disabled, it's most likely because you didn't select any miRNA and/or sequence.")),
           column(10, tags$h5(textOutput("scan_target"))),
+          introBox(data.step=9, data.intro="
+The putative binding sites are shown in the <i>'hits'</i> tab.<br/>
+You've got two ways to browse sites: you can either visualize
+them on a plot along the length of the sequence, or through the table.<br/>
+In both cases, you can <i>double click</i> on a given match to view the supplementary
+3' alignment on the target sequence.<br/><br/>
+Well, that's about it for the basic functions!",
           box( width=12, collapsible=TRUE, collapsed=TRUE,
                title="Plot along transcript",
                tags$p("Hover on points to view details, and click to ",
                       "visualize the alignment on the target sequence. You may
                       also select miRNAs to show/hide by clicking on the legend."),
-               withSpinner(plotlyOutput("manhattan")),
+               shinyjqui::jqui_resizable(withSpinner(plotlyOutput("manhattan"))),
             column(6, numericInput("manhattan_n", "Max number of miRNAs",
                                    value=10, min=1, max=50)),
             column(6, checkboxInput("manhattan_ordinal", "Ordinal position",
@@ -144,7 +179,7 @@ scanMiRui <- function(){
             downloadLink('dl_hits', label = "Download all"),
             tags$p("Double click on a row to visualize the alignment on the ",
                    "target sequence."),
-          ),
+          )),
           box(width=12, title="Cached hits", collapsible=TRUE, collapsed=TRUE,
             textOutput("cache.info"),
             uiOutput("cached.results"),
@@ -155,16 +190,27 @@ scanMiRui <- function(){
 
         # miRNA-based
         tabItem(tabName="tab_mirna",
-          column(5, selectizeInput("mirna", "miRNA", choices=c())),
+          introBox(column(5, selectizeInput("mirna", "miRNA", choices=c()),
+                             data.step=4, data.intro="
+Use this dropdown to select the miRNA you're interested in.<br/><br/>
+Note that you don't have to scroll down until you find it - you can simply erase what's written in the box,
+type the beginning of the miRNA name, and see the matching options."),
           column(4, tags$strong("Status"), textOutput("modconservation")),
-          column(3, htmlOutput("mirbase_link")),
-          box(width=12, title="Affinity plot", collapsible=TRUE, collapsed=TRUE,
-            withSpinner(plotOutput("modplot")),
-            numericInput("modplot_height", "Plot height (px)", value=400,
-                         min=200, max=1000, step=50)
+          column(3, htmlOutput("mirbase_link"))),
+          introBox(data.step=5, data.intro="
+This box contains a plot summarizing the binding profile of the miRNA, plotting the dissociation rate (i.e. affinity) of the top 7mers sequences (with or without the 'A' at position 1).<br/><br/>
+If it's not showing, it's because the box is collapsed - you can open it by clicking the 'plus' button on the right.",
+            box(width=12, title="Affinity plot", collapsible=TRUE, collapsed=TRUE,
+              shinyjqui::jqui_resizable(withSpinner(plotOutput("modplot"))),
+              numericInput("modplot_height", "Plot height (px)", value=400,
+                           min=200, max=1000, step=50)
+            )
           ),
-          box(width=12, title="Targets", collapsible=TRUE,
-              uiOutput("targets_ui"))
+          introBox(data.step=6, data.intro="
+This box contains the predicted repression and number of binding sites for all transcripts. You can reorder it anyway you like, and filter or remove any column.<br/><br/>
+You can also double-click on one of the row to get the details and visualize the individual binding sites - this would automatically move us to the transcript-centered section of the app.",
+                   box(width=12, title="Targets", collapsible=TRUE,
+              uiOutput("targets_ui")))
         ),
         tabItem(tabName = "tab_about",
 ## TAB ABOUT
@@ -183,27 +229,16 @@ scanMiRui <- function(){
     ),
     box(width=12, title="Getting started",
         tags$div( style="font-size: 110%;",
+           tags$p("For a quick tour of the app, ", actionLink("helpLink", "click here")),
            tags$p("There are two main ways to use scanMiRApp:"),
            tags$br(), tags$h4("Transcript-centered:"),
            tags$p("In the 'Search in gene/sequence' menu, you'll be able to ",
                   "scan the sequence of a given transcript for binding sites ",
-                  "of (sets of) miRNA(s). To do so:"),
-           tags$ol(
-             tags$li("Click on 'Search in gene/sequence' to toggle the ",
-                     "visibility of sub-menu items"),
-             tags$li("In the 'Subject' tab, first select the sequence you want",
-                     " to scan. This can either be a custom sequence (using ",
-                     "the 'custom sequence' button on the top-right of the ",
-                     "'Subject' tab), or selected from ensembl transcripts."),
-             tags$li("In the 'miRNAs' tab, select the miRNAs for which you ",
-                     "want to find binding sites."),
-             tags$li("When ready, go to the 'hits' tab, and click the 'Scan'",
-                     "button at the top to launch the search!")
-           ),
+                  "of (sets of) miRNA(s)."),
            tags$br(), tags$h4("miRNA-centered:"),
            tags$p("In the 'miRNA-based' tab on the left, you'll be able to ",
                   "visualize information relative to a selected miRNA, ",
-                  "including for instance it's general binding profile and its",
+                  "including for instance its general binding profile and its",
                   "top targets.")
         )
     )
