@@ -90,9 +90,18 @@ scanMiRserver <- function( annotations=list(), modlists=NULL,
 
     # prints a summary of the model collection
     output$collection_summary <- renderPrint({
-      if(is.null(allmods())) return(NULL)
-      summary(allmods())
+      if(is.null(input$mirlist) || is.null(annotations[[input$mirlist]]))
+        return(NULL)
+      summary(annotations[[input$mirlist]])
     })
+    output$selected_collection <- renderValueBox({
+      if(is.null(input$mirlist) || is.null(annotations[[input$mirlist]]))
+        return(NULL)
+      valueBox(input$mirlist, color = "light-blue", 
+        lapply(capture.output(print(anno)),FUN=function(x) tags$p(x))
+      )
+    })
+    
 
     observe({ ## when the selected collection changes,
               ## update the miRNA selection inputs

@@ -57,13 +57,16 @@ scanMiRui <- function(){
       tabItems(
         tabItem( tabName = "tab_collection",
           tags$h3("Select a miRNA collection"), tags$br(),
-          tabBox(id="collection_type", width=12,
-                 tabPanel( title="Pre-built", value="prebuilt",
-                   selectInput("mirlist", "miRNA collection", choices=c()))#,
-#                 tabPanel(title="Upload", value="upload",
-#                          tags$p("Not yet implemented."))
-          ),
-          box(width=12, withSpinner(verbatimTextOutput("collection_summary")))
+          column(6, 
+            tabBox(id="collection_type", width=12,
+                   tabPanel( title="Pre-built", value="prebuilt",
+                     selectInput("mirlist", "miRNA collection", choices=c()))#,
+  #                 tabPanel(title="Upload", value="upload",
+  #                          tags$p("Not yet implemented."))
+            )),
+          column(6, valueBoxOutput("selected_collection", width=12)),
+          box(width=12, title="Details", collapsible=TRUE, collapsed=TRUE,
+              withSpinner(verbatimTextOutput("collection_summary")))
         ),
         tabItem(tabName = "tab_subject",
           introBox(data.step=7, data.intro="
@@ -97,7 +100,7 @@ We'll look at the former.",
                        "The next scanMiRApp release in the coming weeks will
                        include also non-coding transcripts!"),
               selectizeInput("annotation", "Genome & Annotation", choices=c()),
-              introBox(data.step=7, data.intro="
+              introBox(data.step=8, data.intro="
 In this sub-tab, you can first select the gene and then 
 select the transcript.<br/>Again, you can delete the content 
 of the box and type the first few words to get the matching options.<br/>
@@ -116,7 +119,7 @@ An overview of the selected sequence is then shown at the bottom.",
           )
         )),
         tabItem(tabName="tab_mirnas",
-          introBox(data.step=8, data.intro="
+          introBox(data.step=9, data.intro="
 The next step is to select the miRNA(s) for which you want to scan binding sites.",
             box( width=12,
               column(12, selectizeInput("mirnas", choices=c(), multiple=TRUE,
@@ -152,11 +155,11 @@ The next step is to select the miRNA(s) for which you want to scan binding sites
                             "Search also for non-canonical sites", value=TRUE))
         ),
         tabItem(tabName="tab_hits",
-          column(2, introBox(data.step=8, uiOutput("scanBtn"), data.intro="
+          column(2, introBox(data.step=10, uiOutput("scanBtn"), data.intro="
 Finally, you can click on the scan button to launch it!<br/>
 If it's disabled, it's most likely because you didn't select any miRNA and/or sequence.")),
           column(10, tags$h5(textOutput("scan_target"))),
-          introBox(data.step=9, data.intro="
+          introBox(data.step=11, data.intro="
 The putative binding sites are shown in the <i>'hits'</i> tab.<br/>
 You've got two ways to browse sites: you can either visualize
 them on a plot along the length of the sequence, or through the table.<br/>
@@ -190,13 +193,13 @@ Well, that's about it for the basic functions!",
 
         # miRNA-based
         tabItem(tabName="tab_mirna",
-          introBox(column(5, selectizeInput("mirna", "miRNA", choices=c()),
+          column(5, introBox(selectizeInput("mirna", "miRNA", choices=c()),
                              data.step=4, data.intro="
 Use this dropdown to select the miRNA you're interested in.<br/><br/>
 Note that you don't have to scroll down until you find it - you can simply erase what's written in the box,
-type the beginning of the miRNA name, and see the matching options."),
+type the beginning of the miRNA name, and see the matching options.")),
           column(4, tags$strong("Status"), textOutput("modconservation")),
-          column(3, htmlOutput("mirbase_link"))),
+          column(3, htmlOutput("mirbase_link")),
           introBox(data.step=5, data.intro="
 This box contains a plot summarizing the binding profile of the miRNA, plotting the dissociation rate (i.e. affinity) of the top 7mers sequences (with or without the 'A' at position 1).<br/><br/>
 If it's not showing, it's because the box is collapsed - you can open it by clicking the 'plus' button on the right.",
