@@ -1,6 +1,7 @@
 #' scanMiRserver
 #'
-#' Server function for the scanMiR shiny app.
+#' Server function for the scanMiR shiny app. Most users are expected to use
+#' \code{\link{scanMiRApp}} instead.
 #'
 #' @param annotations A named list of \code{\link{ScanMiRAnno}} object.
 #' @param modlists A named list of `KdModelList` objects. If omitted, will
@@ -21,10 +22,10 @@
 #' xlab geom_vline geom_rect theme_minimal theme element_line scale_x_continuous
 #' scale_y_continuous
 #' @importFrom AnnotationDbi select
-#' @importFrom Biostrings DNAStringSet
+#' @importFrom Biostrings DNAStringSet RNAString DNAString
 #' @importFrom waiter waiter_hide waiter_show
 #' @importFrom rintrojs hintjs introjs
-#' @importFrom utils capture.output object.size write.csv
+#' @importFrom utils capture.output object.size write.csv packageVersion
 #' @import shiny shinydashboard scanMiR GenomicRanges IRanges
 #' @export
 #' @examples
@@ -115,7 +116,8 @@ scanMiRserver <- function( annotations=list(), modlists=NULL,
       if(is.null(input$mirlist) || is.null(annotations[[input$mirlist]]))
         return(NULL)
       valueBox(input$mirlist, color = "light-blue",
-        lapply(capture.output(print(anno)),FUN=function(x) tags$p(x))
+        lapply(capture.output(print(annotations[[input$mirlist]])),
+               FUN=function(x) tags$p(x))
       )
     })
 
@@ -226,11 +228,11 @@ scanMiRserver <- function( annotations=list(), modlists=NULL,
 
     customTarget <- reactive({
       if(is.null(input$customseq) || input$customseq=="") return(NULL)
-      seqtype <- suppressWarnings(scanMiR:::.guessSeqType(input$customseq))
+      isRNA <- grepl("U", input$customseq, fixed=TRUE)
       seq <- gsub("[^ACGTUN]","", toupper(input$customseq))
       if(input$circular) seq <- paste0(seq,substr(seq,1,min(nchar(seq),11)))
-      if(seqtype=="DNA") return(DNAString(seq))
-      return(RNAString(seq))
+      if(isRNA) seq <- RNAString(seq)
+      DNAString(seq)
     })
 
     output$custom_info <- renderPrint({ # overview of the custom sequence
@@ -763,6 +765,14 @@ scanMiRserver <- function( annotations=list(), modlists=NULL,
         write.csv(mirtargets_prepared(), con, col.names=TRUE)
       }
     )
+
+    output$pkgVersions <- renderText({
+      paste(
+        "Running on scanMiR", packageVersion("scanMiR"), "and scanMiRApp",
+        packageVersion("scanMiRApp")
+      )
+    })
+
     waiter_hide()
   }
 }
@@ -779,8 +789,8 @@ scanMiRserver <- function( annotations=list(), modlists=NULL,
 #' @export
 #' @examples
 #' if(interactive()){
-#'   anno <- ScanMiRAnno("Rnor_6")
-#'   scanMiRApp(list(rat=anno))
+#'   anno <- ScanMiRAnno("fake")
+#'   scanMiRApp(list(fakeAnno=anno))
 #' }
 scanMiRApp <- function(annotations=NULL, ...){
   if(is.null(annotations)){

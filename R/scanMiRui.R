@@ -18,7 +18,7 @@ scanMiRui <- function(){
   dashboardPage( skin="black",
 
     dashboardHeader(title = "scanMiRApp", titleWidth = "300px",
-                    tags$li(class="dropdown",actionLink("helpBtn", label="Help", 
+                    tags$li(class="dropdown",actionLink("helpBtn", label="Help",
                                                       icon=icon("question")))),
 
     ## Sidebar content
@@ -57,7 +57,7 @@ scanMiRui <- function(){
       tabItems(
         tabItem( tabName = "tab_collection",
           tags$h3("Select a miRNA collection"), tags$br(),
-          column(6, 
+          column(6,
             tabBox(id="collection_type", width=12,
                    tabPanel( title="Pre-built", value="prebuilt",
                      selectInput("mirlist", "miRNA collection", choices=c()))#,
@@ -101,8 +101,8 @@ We'll look at the former.",
                        include also non-coding transcripts!"),
               selectizeInput("annotation", "Genome & Annotation", choices=c()),
               introBox(data.step=8, data.intro="
-In this sub-tab, you can first select the gene and then 
-select the transcript.<br/>Again, you can delete the content 
+In this sub-tab, you can first select the gene and then
+select the transcript.<br/>Again, you can delete the content
 of the box and type the first few words to get the matching options.<br/>
 An overview of the selected sequence is then shown at the bottom.",
               tags$div(selectizeInput("gene", "Gene", choices=c()),
@@ -228,7 +228,8 @@ You can also double-click on one of the row to get the details and visualize the
         tags$br(), "Bugs reports and feature requests are welcome ",
         tags$a( href=paste0("https://git","hub.com/ETHZ-INS/scanMiRApp/issues"),
                 target="_blank", "here"),".", tags$br(),
-        style="font-size: 110%;")
+        style="font-size: 110%;"),
+        tags$p(textOutput("pkgVersions"))
     ),
     box(width=12, title="Getting started",
         tags$div( style="font-size: 110%;",

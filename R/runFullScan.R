@@ -16,7 +16,8 @@
 #' by \code{\link[BiocParallel]{MulticoreParam}}.
 #' @param maxLogKd The maximum log_kd of sites to report
 #' @param save.path Optional, the path to which to save the results
-#' @param ... Arguments passed to `scanMiR::findSeedMatches`
+#' @param onlyCanonical passed to \code{\link[scanMiR]{findSeedMatches}}
+#' @param ... Arguments passed to \code{\link[scanMiR]{findSeedMatches}}
 #'
 #' @return A `GRanges` object
 #'

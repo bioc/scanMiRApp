@@ -45,6 +45,21 @@
 
 \S4method{as.data.frame}{IndexedFst}(x, name)
 }
+\arguments{
+\item{object}{an IndexedFst object}
+
+\item{x}{an IndexedFst object}
+
+\item{i}{the desired index (either numeric or name)}
+
+\item{j}{ignored}
+
+\item{...}{ignored}
+
+\item{name}{the indexed name to fetch}
+
+\item{n}{the desired number of rows}
+}
 \value{
 Depends on the method
 }
@@ -60,7 +75,7 @@ f <- system.file(tmp, "test")
 d <- data.frame( category=sample(LETTERS[1:4], 10000, replace=TRUE),
                  var2=sample(LETTERS, 10000, replace=TRUE),
                  var3=runif(10000) )
-format(object.size(d1),units="Kb")
+format(object.size(d),units="Kb")
 saveIndexedFst(d, "category", f)
 rm(d)
 # we then load the index, and can use category names for random access:
@@ -68,7 +83,7 @@ d <- loadIndexedFst(f)
 format(object.size(d),units="Kb")
 nrow(d)
 names(d)
-d$A
+head(d$A)
 }
 \seealso{
 \code{\link{saveIndexedFst}}, \code{\link{loadIndexedFst}}

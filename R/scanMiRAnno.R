@@ -1,4 +1,5 @@
 #' @exportClass ScanMiRAnno
+#' @rdname ScanMiRAnno
 setClass(
   "ScanMiRAnno",
   contains="list",
@@ -24,13 +25,15 @@ setClass(
 #' @param species The species/build acronym for automatic construction; if
 #' omitted, `genome` and `ensdb` should be given. Current possible values are:
 #' GRCh38, GRCm38, Rnor_6.
-#' @param genome A \link{BSgenome}, or a \code{\link[rtracklayer]{TwoBitFile}}
-#' @param ensdb An EnsDb object
+#' @param genome A \link[BSgenome]{BSgenome-class}, or a
+#' \code{\link[rtracklayer]{TwoBitFile}}
+#' @param ensdb An \link[ensembldb]{EnsDb-class} (or a
+#' \link[GenomicFeatures]{TxDb-class}) object
 #' @param models An optional KdModelList
 #' @param scan An optional full scan (IndexedFst or GRanges)
 #' @param aggregated An optional per-transcript aggregation (IndexedFst or
-#' @param version optional ensembl version
 #' data.frame)
+#' @param version optional ensembl version
 #' @param addDBs A named list of additional tx-miRNA databases, each of which
 #' should be a data.frame with the columns 'transcript', 'miRNA', and 'score'.
 #' @param ... Arguments passed to `AnnotationHub`

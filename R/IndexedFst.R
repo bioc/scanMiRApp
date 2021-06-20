@@ -11,7 +11,7 @@
 #' d <- data.frame( category=sample(LETTERS[1:4], 10000, replace=TRUE),
 #'                  var2=sample(LETTERS, 10000, replace=TRUE),
 #'                  var3=runif(10000) )
-#' format(object.size(d1),units="Kb")
+#' format(object.size(d),units="Kb")
 #' saveIndexedFst(d, "category", f)
 #' rm(d)
 #' # we then load the index, and can use category names for random access:
@@ -19,7 +19,7 @@
 #' format(object.size(d),units="Kb")
 #' nrow(d)
 #' names(d)
-#' d$A
+#' head(d$A)
 #' @seealso \code{\link{saveIndexedFst}}, \code{\link{loadIndexedFst}}
 #' @export
 #' @import methods
@@ -68,6 +68,7 @@ setMethod("initialize", "IndexedFst", function(.Object, ...) {
 
 #' @rdname IndexedFst-class
 #' @importMethodsFrom methods show
+#' @param object an IndexedFst object
 #' @export
 setMethod("show", "IndexedFst", function(object){
   paste0(object@fst.file, " (",nrow(object@index)," sets)")
@@ -81,6 +82,7 @@ setMethod("summary", "IndexedFst", function(object){
 })
 
 #' @rdname IndexedFst-class
+#' @param x an IndexedFst object
 #' @export
 setMethod("names", "IndexedFst", function(x){
   row.names(x@index)
@@ -122,6 +124,9 @@ setMethod("colnames", signature("IndexedFst"), function(x){
 })
 
 #' @rdname IndexedFst-class
+#' @param i the desired index (either numeric or name)
+#' @param j ignored
+#' @param ... ignored
 #' @export
 setMethod("[[", signature("IndexedFst"), function(x, i, j=NULL, ...){
   if(is.numeric(i)){
@@ -145,12 +150,14 @@ setMethod("[", signature("IndexedFst"), function(x, i, j=NULL, ...){
 })
 
 #' @rdname IndexedFst-class
+#' @param name the indexed name to fetch
 #' @export
 setMethod("$", "IndexedFst", definition = function(x, name){
   .fst.read.wrapper(x, match.arg(name, row.names(x@index)))
 })
 
 #' @rdname IndexedFst-class
+#' @param n the desired number of rows
 #' @export
 setMethod("head", "IndexedFst", definition = function(x, n=6L, ...){
   if(!is.numeric(n) || !(n>0) || n!=as.integer(n))
