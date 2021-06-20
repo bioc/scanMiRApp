@@ -20,6 +20,7 @@
 #' @importFrom ggplot2 ggplot aes_string geom_hline geom_point expand_limits
 #' xlab geom_vline geom_rect theme_minimal theme element_line scale_x_continuous
 #' scale_y_continuous
+#' @importFrom AnnotationDbi select
 #' @importFrom Biostrings DNAStringSet
 #' @importFrom waiter waiter_hide waiter_show
 #' @importFrom rintrojs hintjs introjs
@@ -56,16 +57,31 @@ scanMiRserver <- function( annotations=list(), modlists=NULL,
               lapply(m2,FUN=function(x) x$mer8))
   }
 
+  getTxs <- function(db, gene=NULL){
+    if(is.null(gene)) return(NULL)
+    if(is(db,"EnsDB")){
+      if(!is.null(gene)) filt <- ~gene_id==gene
+      tx <- transcripts(db, columns=c("tx_id","tx_biotype"),
+                        filter=~gene_id==gene, return.type="data.frame")
+    }else{
+      tx <- select(db, keys=gene, keytype="GENEID",
+                   columns=c("TXNAME","TXTYPE"))
+      colnames(tx) <- c("gene","tx_id","tx_biotype")
+    }
+    if(nrow(tx)==0) return(NULL)
+    setNames(tx$tx_id, paste0(tx$tx_id, " (",tx$tx_biotype, ")"))
+  }
+
   function(input, output, session){
 
     #############################
     ## intro
-    
+
     hintjs(session)
-    
+
     observeEvent(input$helpBtn, introjs(session,  events=list(onbeforechange=readCallback("switchTabs"))))
     observeEvent(input$helpLink, introjs(session,  events=list(onbeforechange=readCallback("switchTabs"))))
-    
+
     ##############################
     ## initialize inputs
 
@@ -97,11 +113,11 @@ scanMiRserver <- function( annotations=list(), modlists=NULL,
     output$selected_collection <- renderValueBox({
       if(is.null(input$mirlist) || is.null(annotations[[input$mirlist]]))
         return(NULL)
-      valueBox(input$mirlist, color = "light-blue", 
+      valueBox(input$mirlist, color = "light-blue",
         lapply(capture.output(print(anno)),FUN=function(x) tags$p(x))
       )
     })
-    
+
 
     observe({ ## when the selected collection changes,
               ## update the miRNA selection inputs
@@ -124,10 +140,16 @@ scanMiRserver <- function( annotations=list(), modlists=NULL,
 
     allgenes <- reactive({ # all genes in the selected genome
       if(is.null(sel_ensdb())) return(NULL)
-      g <- genes( sel_ensdb(), columns="gene_name",
-                  return.type="data.frame")
-      gs <- g[,2]
-      names(gs) <- paste(g[,1], g[,2])
+      if(is(sel_ensdb(), "EnsDb")){
+        g <- genes(sel_ensdb(), columns="gene_name", return.type="data.frame")
+        gs <- setNames(g[,2], paste(g[,1], g[,2]))
+      }else{
+        g <- genes(sel_ensdb())
+        names(gs) <- gs <- g$gene_id
+        if(!is.null(g$gene_name)){
+          names(gs) <- paste(g$gene_name, gs)
+        }
+      }
       gs
     })
 
@@ -140,18 +162,13 @@ scanMiRserver <- function( annotations=list(), modlists=NULL,
       if(is.null(selgene()) || selgene()=="") return(NULL)
       base <- annotations[[input$annotation]]$ensembl_gene_baselink
       if(is.null(base)) return(NULL)
-      tags$a(href=paste0(base, selgene()), icon("external-link"), 
+      tags$a(href=paste0(base, selgene()), icon("external-link"),
              "view on ensembl", target="_blank")
     })
 
     alltxs <- reactive({ # all tx from selected gene
       if(is.null(selgene()) || selgene()=="") return(NULL)
-      tx <- transcripts(sel_ensdb(), columns=c("tx_id","tx_biotype"),
-                        filter=~gene_id==selgene(), return.type="data.frame")
-      if(nrow(tx)==0) return(NULL)
-      txs <- tx$tx_id
-      names(txs) <- paste0(tx$tx_id, " (", tx$tx_biotype,")")
-      txs
+      getTxs(sel_ensdb(), selgene())
     })
 
     seltx <- reactive({ # the selected transcript
@@ -188,8 +205,7 @@ scanMiRserver <- function( annotations=list(), modlists=NULL,
       if((is.null(selgene()) || selgene()=="") &&
          (is.null(seltx()) || seltx()=="")) return(DNAStringSet())
       gid <- selgene()
-      if(is.null(txid <- seltx()))
-        txid <- transcripts(sel_ensdb(), filter=~gene_id==gid)$tx_id
+      if(is.null(txid <- seltx())) txid <- getTxs(sel_ensdb(), gid)
       getTranscriptSequence( txid, annotations[[input$annotation]],
                              extract=ifelse(input$utr_only,"UTRonly","withORF"))
     })
