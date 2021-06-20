@@ -44,7 +44,7 @@ setClass(
 #' anno <- ScanMiRAnno(species="fake")
 #' anno
 ScanMiRAnno <- function(species=NULL, genome=NULL, ensdb=NULL, models=NULL,
-                        scan=NULL, aggregated=NULL, version=NULL, 
+                        scan=NULL, aggregated=NULL, version=NULL,
                         addDBs=list(), ...){
   blink <- NULL
   if(!is.null(species)){
@@ -150,6 +150,7 @@ setMethod("show", "ScanMiRAnno", function(object){
 #' @importFrom Biostrings DNAStringSet
 #' @importFrom rtracklayer TwoBitFile export.2bit
 #' @importFrom GenomicFeatures makeTxDbFromGRanges
+#' @importFrom utils data
 .fakeAnno <- function(){
   data("SampleKdModel", package="scanMiR", envir = environment())
   data("SampleTranscript", package="scanMiR", envir = environment())

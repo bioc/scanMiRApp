@@ -38,7 +38,7 @@ Imports:
     stats,
     waiter,
     rintrojs
-Suggests: knitr, rmarkdown
+Suggests: knitr, rmarkdown, BiocStyle
 Description:
     A shiny interface to the scanMiR package. The application enables the 
     scanning of transcripts and custom sequences for miRNA binding sites, the 

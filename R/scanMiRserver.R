@@ -24,6 +24,7 @@
 #' @importFrom Biostrings DNAStringSet
 #' @importFrom waiter waiter_hide waiter_show
 #' @importFrom rintrojs hintjs introjs
+#' @importFrom utils capture.output object.size write.csv
 #' @import shiny shinydashboard scanMiR GenomicRanges IRanges
 #' @export
 #' @examples
