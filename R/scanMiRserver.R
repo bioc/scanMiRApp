@@ -24,7 +24,7 @@
 #' @importFrom AnnotationDbi select
 #' @importFrom Biostrings DNAStringSet RNAString DNAString
 #' @importFrom waiter waiter_hide waiter_show
-#' @importFrom rintrojs hintjs introjs
+#' @importFrom rintrojs hintjs introjs readCallback
 #' @importFrom utils capture.output object.size write.csv packageVersion
 #' @import shiny shinydashboard scanMiR GenomicRanges IRanges
 #' @export

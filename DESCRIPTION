@@ -1,8 +1,8 @@
 Package: scanMiRApp
 Type: Package
 Title: scanMiR shiny application
-Version: 0.99.12
-Date: 2021-04-26
+Version: 0.99.13
+Date: 2021-06-18
 Authors@R: c(
     person("Pierre-Luc", "Germain", email="pierre-luc.germain@hest.ethz.ch", 
       role=c("cre","aut"), comment=c(ORCID="0000-0003-3418-4218")),
@@ -28,6 +28,7 @@ Imports:
     Matrix,
     methods,
     plotly,
+    rintrojs,
     rtracklayer,
     S4Vectors,
     scanMiR,
@@ -36,8 +37,8 @@ Imports:
     shinycssloaders,
     shinydashboard,
     stats,
-    waiter,
-    rintrojs
+    utils,
+    waiter
 Suggests: knitr, rmarkdown, BiocStyle
 Description:
     A shiny interface to the scanMiR package. The application enables the 

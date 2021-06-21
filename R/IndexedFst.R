@@ -125,7 +125,7 @@ setMethod("colnames", signature("IndexedFst"), function(x){
 
 #' @rdname IndexedFst-class
 #' @param i the desired index (either numeric or name)
-#' @param j ignored
+#' @param j,drop ignored
 #' @param ... ignored
 #' @export
 setMethod("[[", signature("IndexedFst"), function(x, i, j=NULL, ...){
@@ -139,7 +139,7 @@ setMethod("[[", signature("IndexedFst"), function(x, i, j=NULL, ...){
 
 #' @rdname IndexedFst-class
 #' @export
-setMethod("[", signature("IndexedFst"), function(x, i, j=NULL, ...){
+setMethod("[", signature("IndexedFst"), function(x, i, j=NULL, ..., drop=TRUE){
   if(is.logical(i)) i <- which(i)
   if(is.numeric(i)){
     name <- names(x)[i]

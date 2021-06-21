@@ -37,7 +37,7 @@
 
 \S4method{[[}{IndexedFst,ANY,ANY}(x, i, j = NULL, ...)
 
-\S4method{[}{IndexedFst,ANY,ANY,ANY}(x, i, j, ..., drop = TRUE)
+\S4method{[}{IndexedFst,ANY,ANY,ANY}(x, i, j = NULL, ..., drop = TRUE)
 
 \S4method{$}{IndexedFst}(x, name)
 
@@ -52,7 +52,7 @@
 
 \item{i}{the desired index (either numeric or name)}
 
-\item{j}{ignored}
+\item{j, drop}{ignored}
 
 \item{...}{ignored}
 
