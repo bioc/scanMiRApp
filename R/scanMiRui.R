@@ -92,13 +92,6 @@ We'll look at the former.",
             ),
             tabPanel(
               title="Transcript", value="transcript",
-              tags$div(style="float: right; padding: 20px; width: 30%; min-width: 300px;",
-                       "At the moment, only the sequences from protein-coding
-                       transcripts can be queried in that way. For non-coding
-                       transcripts, you'll have to enter the sequence yourself
-                       (see 'custom sequence' tab above).", tags$br(),
-                       "The next scanMiRApp release in the coming weeks will
-                       include also non-coding transcripts!"),
               selectizeInput("annotation", "Genome & Annotation", choices=c()),
               introBox(data.step=8, data.intro="
 In this sub-tab, you can first select the gene and then
@@ -112,8 +105,10 @@ An overview of the selected sequence is then shown at the bottom.",
               htmlOutput("gene_link"),
               tags$div(style="clear: left;"),
               selectizeInput("transcript", "Transcript", choices=c()),
-              introBox(checkboxInput("utr_only", "UTR only", value = TRUE),
-                       data.hint="You can decide here whether you want to scan just the 3' UTR or also include the coding sequence."),
+              introBox(selectInput("seqFeature", "Part to scan", 
+                                   choices=c("3' UTR only", "CDS+UTR", "whole transcript")),
+                       data.hint="You can decide here whether you want to scan just the 3' UTR or also include the coding sequence,
+                       or scan the whole transcript."),
               withSpinner(tableOutput("tx_overview")))
             )
           )

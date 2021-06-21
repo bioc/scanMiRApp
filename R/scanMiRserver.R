@@ -61,7 +61,7 @@ scanMiRserver <- function( annotations=list(), modlists=NULL,
 
   getTxs <- function(db, gene=NULL){
     if(is.null(gene)) return(NULL)
-    if(is(db,"EnsDB")){
+    if(is(db,"EnsDb")){
       if(!is.null(gene)) filt <- ~gene_id==gene
       tx <- transcripts(db, columns=c("tx_id","tx_biotype"),
                         filter=~gene_id==gene, return.type="data.frame")
@@ -114,7 +114,7 @@ scanMiRserver <- function( annotations=list(), modlists=NULL,
     })
     output$selected_collection <- renderValueBox({
       if(is.null(input$mirlist) || is.null(annotations[[input$mirlist]]))
-        return(NULL)
+        return(valueBox("N/A", color="light-blue"))
       valueBox(input$mirlist, color = "light-blue",
         lapply(capture.output(print(annotations[[input$mirlist]])),
                FUN=function(x) tags$p(x))
@@ -144,7 +144,9 @@ scanMiRserver <- function( annotations=list(), modlists=NULL,
     allgenes <- reactive({ # all genes in the selected genome
       if(is.null(sel_ensdb())) return(NULL)
       if(is(sel_ensdb(), "EnsDb")){
-        g <- genes(sel_ensdb(), columns="gene_name", return.type="data.frame")
+        sl <- gsub("^chr","",seqlevels(annotations[[input$annotation]]$genome))
+        g <- genes(sel_ensdb(), columns="gene_name", return.type="data.frame",
+                   filter=SeqNameFilter(sl))
         gs <- setNames(g[,2], paste(g[,1], g[,2]))
       }else{
         g <- genes(sel_ensdb())
@@ -210,7 +212,8 @@ scanMiRserver <- function( annotations=list(), modlists=NULL,
       gid <- selgene()
       if(is.null(txid <- seltx())) txid <- getTxs(sel_ensdb(), gid)
       getTranscriptSequence( txid, annotations[[input$annotation]],
-                             extract=ifelse(input$utr_only,"UTRonly","withORF"))
+                             extract=switch(input$seqFeature,
+         "CDS+UTR"="withORF", "whole transcript"="exons", "UTRonly"))
     })
 
     output$tx_overview <- renderTable({ # overview of the selected transcript
@@ -412,8 +415,8 @@ scanMiRserver <- function( annotations=list(), modlists=NULL,
       if(cs %in% names(cached.checksums())) return(cached.hits[[cs]])
       waiter_show(color = "#333E4850")
       # then check if the results are pre-computed
-      if(input$subjet_type!="custom" &&
-         !is.null(h <- checkPreComputedScan(seltx(), input$utr_only))){
+      if(input$subjet_type!="custom" && input$seqFeature!="whole transcript" &&
+         !is.null(h <- checkPreComputedScan(seltx(), input$seqFeature=="3' UTR only"))){
         res <- list(hits=h)
       }else{
         res <- list()
@@ -449,14 +452,14 @@ scanMiRserver <- function( annotations=list(), modlists=NULL,
       res$nsel <- nm <- length(selmods())
       res$sel <- ifelse(nm>1,paste(nm,"models"),input$mirnas)
       res$seq <- target()
-      res$utr_only <- input$utr_only
+      res$seqFeature <- input$seqFeature
       res$maxLogKd <- input$maxLogKd
       res$target_length <- nchar(target())
       if(input$subjet_type=="custom"){
         res$target <- "custom sequence"
       }else{
-        res$target <- paste(input$gene,"-", seltx(),
-                            ifelse(input$utr_only, "(UTR)",""))
+        res$target <- paste0(input$gene, " - ", seltx(),
+                            " (", input$seqFeature, ")")
       }
       waiter_hide()
       return(res)
