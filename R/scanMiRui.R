@@ -120,7 +120,9 @@ An overview of the selected sequence is then shown at the bottom.",
         )),
         tabItem(tabName="tab_mirnas",
           introBox(data.step=9, data.intro="
-The next step is to select the miRNA(s) for which you want to scan binding sites.",
+The next step is to select the miRNA(s) for which you want to scan binding sites.
+<br/><br/>You can click in the box again and type the beginning of the miRNA(s) you wish to add
+and the matching miRNAs will show up. Alternatively, you can select a set of miRNAs using the buttons.",
             box( width=12,
               column(12, selectizeInput("mirnas", choices=c(), multiple=TRUE,
                             label="Selected miRNAs: (type in to filter)")),
