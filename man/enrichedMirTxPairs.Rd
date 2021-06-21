@@ -7,7 +7,7 @@
 enrichedMirTxPairs(m, minSites = 5, max.binom.p = 0.001)
 }
 \arguments{
-\item{m}{A GRanges of matches, as produced by \link{\code{findSeedMatches}}.
+\item{m}{A GRanges of matches, as produced by \code{\link{findSeedMatches}}.
 This will be filtered down to only 8mer and 7mer sites.}
 
 \item{minSites}{The minimum number of sites for a given miRNA-target pair to

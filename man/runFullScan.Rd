@@ -29,6 +29,8 @@ filter the set of transcripts to be extracted}
 (default) only the 3' UTR regions are extracted, `withORF` additionally
 extracts the coding regions, and `exons` extracts all exons}
 
+\item{onlyCanonical}{passed to \code{\link[scanMiR]{findSeedMatches}}}
+
 \item{shadow}{The size of the ribosomal shadow at the UTR starts}
 
 \item{cores}{The number of threads to use. Alternatively accepts a
@@ -39,7 +41,7 @@ by \code{\link[BiocParallel]{MulticoreParam}}.}
 
 \item{save.path}{Optional, the path to which to save the results}
 
-\item{...}{Arguments passed to `scanMiR::findSeedMatches`}
+\item{...}{Arguments passed to \code{\link[scanMiR]{findSeedMatches}}}
 }
 \value{
 A `GRanges` object

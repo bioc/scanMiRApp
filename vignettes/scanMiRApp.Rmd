@@ -127,7 +127,7 @@ A `ScanMiRAnno` object is the minimal input for the shiny app, and multiple such
 objects can be provided in the form of a named list:
 
 ```{r, eval=FALSE}
-scanMiRApp( list(Rnor_6=anno) )
+scanMiRApp( list( nameOfAnnotation=anno ) )
 ```
 
 Launched with this object, the app will not have access to any pre-compiled 

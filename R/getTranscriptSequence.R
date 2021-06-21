@@ -121,6 +121,8 @@ getTranscriptSequence <- function(tx=NULL, annotation, annoFilter=NULL,
 #' @param label_notes Logical whether to label special sites in the plot (as
 #'   TDMD or Slicing)
 #' @param verbose Logical; whether to print updates on the processing
+#' @param ... Any further arguments passed to
+#' \code{\link[scanMiR]{findSeedMatches}}
 #'
 #' @return Returns a ggplot.
 #' @importFrom ggplot2 ggplot geom_hline geom_point geom_text labs xlim aes
