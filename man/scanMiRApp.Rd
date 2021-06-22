@@ -22,7 +22,7 @@ A wrapper for launching the scanMiRApp shiny app
 }
 \examples{
 if(interactive()){
-  anno <- ScanMiRAnno("Rnor_6")
-  scanMiRApp(list(rat=anno))
+  anno <- ScanMiRAnno("fake")
+  scanMiRApp(list(fakeAnno=anno))
 }
 }

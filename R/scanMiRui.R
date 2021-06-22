@@ -18,7 +18,7 @@ scanMiRui <- function(){
   dashboardPage( skin="black",
 
     dashboardHeader(title = "scanMiRApp", titleWidth = "300px",
-                    tags$li(class="dropdown",actionLink("helpBtn", label="Help", 
+                    tags$li(class="dropdown",actionLink("helpBtn", label="Help",
                                                       icon=icon("question")))),
 
     ## Sidebar content
@@ -57,7 +57,7 @@ scanMiRui <- function(){
       tabItems(
         tabItem( tabName = "tab_collection",
           tags$h3("Select a miRNA collection"), tags$br(),
-          column(6, 
+          column(6,
             tabBox(id="collection_type", width=12,
                    tabPanel( title="Pre-built", value="prebuilt",
                      selectInput("mirlist", "miRNA collection", choices=c()))#,
@@ -92,17 +92,10 @@ We'll look at the former.",
             ),
             tabPanel(
               title="Transcript", value="transcript",
-              tags$div(style="float: right; padding: 20px; width: 30%; min-width: 300px;",
-                       "At the moment, only the sequences from protein-coding
-                       transcripts can be queried in that way. For non-coding
-                       transcripts, you'll have to enter the sequence yourself
-                       (see 'custom sequence' tab above).", tags$br(),
-                       "The next scanMiRApp release in the coming weeks will
-                       include also non-coding transcripts!"),
               selectizeInput("annotation", "Genome & Annotation", choices=c()),
               introBox(data.step=8, data.intro="
-In this sub-tab, you can first select the gene and then 
-select the transcript.<br/>Again, you can delete the content 
+In this sub-tab, you can first select the gene and then
+select the transcript.<br/>Again, you can delete the content
 of the box and type the first few words to get the matching options.<br/>
 An overview of the selected sequence is then shown at the bottom.",
               tags$div(selectizeInput("gene", "Gene", choices=c()),
@@ -112,15 +105,19 @@ An overview of the selected sequence is then shown at the bottom.",
               htmlOutput("gene_link"),
               tags$div(style="clear: left;"),
               selectizeInput("transcript", "Transcript", choices=c()),
-              introBox(checkboxInput("utr_only", "UTR only", value = TRUE),
-                       data.hint="You can decide here whether you want to scan just the 3' UTR or also include the coding sequence."),
+              introBox(selectInput("seqFeature", "Part to scan", 
+                                   choices=c("3' UTR only", "CDS+UTR", "whole transcript")),
+                       data.hint="You can decide here whether you want to scan just the 3' UTR or also include the coding sequence,
+                       or scan the whole transcript."),
               withSpinner(tableOutput("tx_overview")))
             )
           )
         )),
         tabItem(tabName="tab_mirnas",
           introBox(data.step=9, data.intro="
-The next step is to select the miRNA(s) for which you want to scan binding sites.",
+The next step is to select the miRNA(s) for which you want to scan binding sites.
+<br/><br/>You can click in the box again and type the beginning of the miRNA(s) you wish to add
+and the matching miRNAs will show up. Alternatively, you can select a set of miRNAs using the buttons.",
             box( width=12,
               column(12, selectizeInput("mirnas", choices=c(), multiple=TRUE,
                             label="Selected miRNAs: (type in to filter)")),
@@ -228,7 +225,8 @@ You can also double-click on one of the row to get the details and visualize the
         tags$br(), "Bugs reports and feature requests are welcome ",
         tags$a( href=paste0("https://git","hub.com/ETHZ-INS/scanMiRApp/issues"),
                 target="_blank", "here"),".", tags$br(),
-        style="font-size: 110%;")
+        style="font-size: 110%;"),
+        tags$p(textOutput("pkgVersions"))
     ),
     box(width=12, title="Getting started",
         tags$div( style="font-size: 110%;",

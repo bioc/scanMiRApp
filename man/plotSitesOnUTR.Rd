@@ -28,6 +28,9 @@ plotSitesOnUTR(
 TDMD or Slicing)}
 
 \item{verbose}{Logical; whether to print updates on the processing}
+
+\item{...}{Any further arguments passed to
+\code{\link[scanMiR]{findSeedMatches}}}
 }
 \value{
 Returns a ggplot.

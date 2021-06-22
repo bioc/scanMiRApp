@@ -25,7 +25,8 @@ fetch it from the annotation objects.}
 A shiny server function
 }
 \description{
-Server function for the scanMiR shiny app.
+Server function for the scanMiR shiny app. Most users are expected to use
+\code{\link{scanMiRApp}} instead.
 }
 \examples{
 # we'd normally fetch a real annotation:

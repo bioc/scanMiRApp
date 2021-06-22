@@ -18,7 +18,7 @@ visualizing sites on the UTR of a given transcript, running transcriptome-wide s
 finding enriched miRNA-target pairs.
 
 Click [here](https://ethz-ins.org/scanMiR/) for a live version of the app.
-For more information, see the package's [vignettes](vignettes/).
+For more information, see the package's [vignettes](vignettes/) and the [preprint](https://doi.org/10.1101/2021.06.16.448293).
 
 ## Installation
 

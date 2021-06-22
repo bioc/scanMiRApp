@@ -3,7 +3,7 @@
 #' Identifies pairs of miRNA and target transcripts that have an unexpectedly
 #' high number of sites.
 #'
-#' @param m A GRanges of matches, as produced by \link{\code{findSeedMatches}}.
+#' @param m A GRanges of matches, as produced by \code{\link{findSeedMatches}}.
 #' This will be filtered down to only 8mer and 7mer sites.
 #' @param minSites The minimum number of sites for a given miRNA-target pair to
 #' be considered.

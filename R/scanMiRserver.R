@@ -1,6 +1,7 @@
 #' scanMiRserver
 #'
-#' Server function for the scanMiR shiny app.
+#' Server function for the scanMiR shiny app. Most users are expected to use
+#' \code{\link{scanMiRApp}} instead.
 #'
 #' @param annotations A named list of \code{\link{ScanMiRAnno}} object.
 #' @param modlists A named list of `KdModelList` objects. If omitted, will
@@ -20,9 +21,11 @@
 #' @importFrom ggplot2 ggplot aes_string geom_hline geom_point expand_limits
 #' xlab geom_vline geom_rect theme_minimal theme element_line scale_x_continuous
 #' scale_y_continuous
-#' @importFrom Biostrings DNAStringSet
+#' @importFrom AnnotationDbi select
+#' @importFrom Biostrings DNAStringSet RNAString DNAString
 #' @importFrom waiter waiter_hide waiter_show
-#' @importFrom rintrojs hintjs introjs
+#' @importFrom rintrojs hintjs introjs readCallback
+#' @importFrom utils capture.output object.size write.csv packageVersion
 #' @import shiny shinydashboard scanMiR GenomicRanges IRanges
 #' @export
 #' @examples
@@ -56,16 +59,31 @@ scanMiRserver <- function( annotations=list(), modlists=NULL,
               lapply(m2,FUN=function(x) x$mer8))
   }
 
+  getTxs <- function(db, gene=NULL){
+    if(is.null(gene)) return(NULL)
+    if(is(db,"EnsDb")){
+      if(!is.null(gene)) filt <- ~gene_id==gene
+      tx <- transcripts(db, columns=c("tx_id","tx_biotype"),
+                        filter=~gene_id==gene, return.type="data.frame")
+    }else{
+      tx <- select(db, keys=gene, keytype="GENEID",
+                   columns=c("TXNAME","TXTYPE"))
+      colnames(tx) <- c("gene","tx_id","tx_biotype")
+    }
+    if(nrow(tx)==0) return(NULL)
+    setNames(tx$tx_id, paste0(tx$tx_id, " (",tx$tx_biotype, ")"))
+  }
+
   function(input, output, session){
 
     #############################
     ## intro
-    
+
     hintjs(session)
-    
+
     observeEvent(input$helpBtn, introjs(session,  events=list(onbeforechange=readCallback("switchTabs"))))
     observeEvent(input$helpLink, introjs(session,  events=list(onbeforechange=readCallback("switchTabs"))))
-    
+
     ##############################
     ## initialize inputs
 
@@ -96,12 +114,13 @@ scanMiRserver <- function( annotations=list(), modlists=NULL,
     })
     output$selected_collection <- renderValueBox({
       if(is.null(input$mirlist) || is.null(annotations[[input$mirlist]]))
-        return(NULL)
-      valueBox(input$mirlist, color = "light-blue", 
-        tags$div(lapply(capture.output(print(anno)),FUN=function(x) tags$p(x)))
+        return(valueBox("N/A", color="light-blue"))
+      valueBox(input$mirlist, color = "light-blue",
+        tags$div(lapply(capture.output(print(annotations[[input$mirlist]])),
+               FUN=function(x) tags$p(x)))
       )
     })
-    
+
 
     observe({ ## when the selected collection changes,
               ## update the miRNA selection inputs
@@ -124,10 +143,18 @@ scanMiRserver <- function( annotations=list(), modlists=NULL,
 
     allgenes <- reactive({ # all genes in the selected genome
       if(is.null(sel_ensdb())) return(NULL)
-      g <- genes( sel_ensdb(), columns="gene_name",
-                  return.type="data.frame")
-      gs <- g[,2]
-      names(gs) <- paste(g[,1], g[,2])
+      if(is(sel_ensdb(), "EnsDb")){
+        sl <- gsub("^chr","",seqlevels(annotations[[input$annotation]]$genome))
+        g <- genes(sel_ensdb(), columns="gene_name", return.type="data.frame",
+                   filter=SeqNameFilter(sl))
+        gs <- setNames(g[,2], paste(g[,1], g[,2]))
+      }else{
+        g <- genes(sel_ensdb())
+        names(gs) <- gs <- g$gene_id
+        if(!is.null(g$gene_name)){
+          names(gs) <- paste(g$gene_name, gs)
+        }
+      }
       gs
     })
 
@@ -140,18 +167,13 @@ scanMiRserver <- function( annotations=list(), modlists=NULL,
       if(is.null(selgene()) || selgene()=="") return(NULL)
       base <- annotations[[input$annotation]]$ensembl_gene_baselink
       if(is.null(base)) return(NULL)
-      tags$a(href=paste0(base, selgene()), icon("external-link"), 
+      tags$a(href=paste0(base, selgene()), icon("external-link"),
              "view on ensembl", target="_blank")
     })
 
     alltxs <- reactive({ # all tx from selected gene
       if(is.null(selgene()) || selgene()=="") return(NULL)
-      tx <- transcripts(sel_ensdb(), columns=c("tx_id","tx_biotype"),
-                        filter=~gene_id==selgene(), return.type="data.frame")
-      if(nrow(tx)==0) return(NULL)
-      txs <- tx$tx_id
-      names(txs) <- paste0(tx$tx_id, " (", tx$tx_biotype,")")
-      txs
+      getTxs(sel_ensdb(), selgene())
     })
 
     seltx <- reactive({ # the selected transcript
@@ -188,10 +210,10 @@ scanMiRserver <- function( annotations=list(), modlists=NULL,
       if((is.null(selgene()) || selgene()=="") &&
          (is.null(seltx()) || seltx()=="")) return(DNAStringSet())
       gid <- selgene()
-      if(is.null(txid <- seltx()))
-        txid <- transcripts(sel_ensdb(), filter=~gene_id==gid)$tx_id
+      if(is.null(txid <- seltx())) txid <- getTxs(sel_ensdb(), gid)
       getTranscriptSequence( txid, annotations[[input$annotation]],
-                             extract=ifelse(input$utr_only,"UTRonly","withORF"))
+                             extract=switch(input$seqFeature,
+         "CDS+UTR"="withORF", "whole transcript"="exons", "UTRonly"))
     })
 
     output$tx_overview <- renderTable({ # overview of the selected transcript
@@ -209,11 +231,11 @@ scanMiRserver <- function( annotations=list(), modlists=NULL,
 
     customTarget <- reactive({
       if(is.null(input$customseq) || input$customseq=="") return(NULL)
-      seqtype <- suppressWarnings(scanMiR:::.guessSeqType(input$customseq))
+      isRNA <- grepl("U", input$customseq, fixed=TRUE)
       seq <- gsub("[^ACGTUN]","", toupper(input$customseq))
       if(input$circular) seq <- paste0(seq,substr(seq,1,min(nchar(seq),11)))
-      if(seqtype=="DNA") return(DNAString(seq))
-      return(RNAString(seq))
+      if(isRNA) seq <- RNAString(seq)
+      DNAString(seq)
     })
 
     output$custom_info <- renderPrint({ # overview of the custom sequence
@@ -393,8 +415,8 @@ scanMiRserver <- function( annotations=list(), modlists=NULL,
       if(cs %in% names(cached.checksums())) return(cached.hits[[cs]])
       waiter_show(color = "#333E4850")
       # then check if the results are pre-computed
-      if(input$subjet_type!="custom" &&
-         !is.null(h <- checkPreComputedScan(seltx(), input$utr_only))){
+      if(input$subjet_type!="custom" && input$seqFeature!="whole transcript" &&
+         !is.null(h <- checkPreComputedScan(seltx(), input$seqFeature=="3' UTR only"))){
         res <- list(hits=h)
       }else{
         res <- list()
@@ -430,14 +452,14 @@ scanMiRserver <- function( annotations=list(), modlists=NULL,
       res$nsel <- nm <- length(selmods())
       res$sel <- ifelse(nm>1,paste(nm,"models"),input$mirnas)
       res$seq <- target()
-      res$utr_only <- input$utr_only
+      res$seqFeature <- input$seqFeature
       res$maxLogKd <- input$maxLogKd
       res$target_length <- nchar(target())
       if(input$subjet_type=="custom"){
         res$target <- "custom sequence"
       }else{
-        res$target <- paste(input$gene,"-", seltx(),
-                            ifelse(input$utr_only, "(UTR)",""))
+        res$target <- paste0(input$gene, " - ", seltx(),
+                            " (", input$seqFeature, ")")
       }
       waiter_hide()
       return(res)
@@ -746,6 +768,14 @@ scanMiRserver <- function( annotations=list(), modlists=NULL,
         write.csv(mirtargets_prepared(), con, col.names=TRUE)
       }
     )
+
+    output$pkgVersions <- renderText({
+      paste(
+        "Running on scanMiR", packageVersion("scanMiR"), "and scanMiRApp",
+        packageVersion("scanMiRApp")
+      )
+    })
+
     waiter_hide()
   }
 }
@@ -762,8 +792,8 @@ scanMiRserver <- function( annotations=list(), modlists=NULL,
 #' @export
 #' @examples
 #' if(interactive()){
-#'   anno <- ScanMiRAnno("Rnor_6")
-#'   scanMiRApp(list(rat=anno))
+#'   anno <- ScanMiRAnno("fake")
+#'   scanMiRApp(list(fakeAnno=anno))
 #' }
 scanMiRApp <- function(annotations=NULL, ...){
   if(is.null(annotations)){
