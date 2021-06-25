@@ -116,8 +116,8 @@ scanMiRserver <- function( annotations=list(), modlists=NULL,
       if(is.null(input$mirlist) || is.null(annotations[[input$mirlist]]))
         return(valueBox("N/A", color="light-blue"))
       valueBox(input$mirlist, color = "light-blue",
-        lapply(capture.output(print(annotations[[input$mirlist]])),
-               FUN=function(x) tags$p(x))
+        tags$div(lapply(capture.output(print(annotations[[input$mirlist]])),
+               FUN=function(x) tags$p(x)))
       )
     })
 
