@@ -29,15 +29,18 @@ scanMiRui <- function(){
                                  relative to your species of interest"),
                  tabName="tab_collection"),
         menuItem(introBox("Search in\ngene/sequence", data.step=2,
-                          data.intro="In this section, you can scan and visualize specific transcripts or sequence for miRNA binding sites"),
+                          data.intro="In this section, you can scan and 
+visualize specific transcripts or sequence for miRNA binding sites"),
           menuSubItem("subject", "tab_subject"),
           menuSubItem("miRNAs", "tab_mirnas"),
           menuSubItem("options", "tab_options"),
           menuSubItem("hits", "tab_hits"),
           startExpanded=TRUE
         ),
-        menuItem(introBox("miRNA-based", data.step=3, data.intro="In this section, you can instead start from a specific miRNA, visualize its binding profile, and get its top predicted targets.<br/>
-                          <br/>We'll start by looking at that part."), tabName="tab_mirna"),
+        menuItem(introBox("miRNA-based", data.step=3, data.intro="
+In this section, you can instead start from a specific miRNA, visualize its 
+binding profile, and get its top predicted targets.<br/><br/>
+We'll start by looking at that part."), tabName="tab_mirna"),
         menuItem("About", tabName="tab_about")
       ),
       tags$a(
@@ -107,7 +110,8 @@ An overview of the selected sequence is then shown at the bottom.",
               selectizeInput("transcript", "Transcript", choices=c()),
               introBox(selectInput("seqFeature", "Part to scan", 
                                    choices=c("3' UTR only", "CDS+UTR", "whole transcript")),
-                       data.hint="You can decide here whether you want to scan just the 3' UTR or also include the coding sequence,
+                       data.hint="You can decide here whether you want to scan 
+                       just the 3' UTR or also include the coding sequence,
                        or scan the whole transcript."),
               withSpinner(tableOutput("tx_overview")))
             )
@@ -176,9 +180,11 @@ Well, that's about it for the basic functions!",
           ),
           box(width=12, title="Table", collapsible=TRUE,
             withSpinner(DTOutput("hits_table")),
-            downloadLink('dl_hits', label = "Download all"),
-            tags$p("Double click on a row to visualize the alignment on the ",
-                   "target sequence."),
+            column(6, tags$p("Double click on a row to visualize the alignment",
+                             " on the target sequence."),
+                   downloadLink('dl_hits', label = "Download all")),
+            column(6, style="text-align: right;", 
+                   actionButton("colHelp","What are those columns?"))
           )),
           box(width=12, title="Cached hits", collapsible=TRUE, collapsed=TRUE,
             textOutput("cache.info"),
@@ -192,14 +198,16 @@ Well, that's about it for the basic functions!",
         tabItem(tabName="tab_mirna",
           column(5, introBox(selectizeInput("mirna", "miRNA", choices=c()),
                              data.step=4, data.intro="
-Use this dropdown to select the miRNA you're interested in.<br/><br/>
-Note that you don't have to scroll down until you find it - you can simply erase what's written in the box,
-type the beginning of the miRNA name, and see the matching options.")),
+Use this dropdown to select the miRNA you're interested in.<br/><br/>Note that you 
+don't have to scroll down until you find it - you can simply erase what's written 
+in the box, type the beginning of the miRNA name, and see the matching options.")),
           column(4, tags$strong("Status"), textOutput("modconservation")),
           column(3, htmlOutput("mirbase_link")),
           introBox(data.step=5, data.intro="
-This box contains a plot summarizing the binding profile of the miRNA, plotting the dissociation rate (i.e. affinity) of the top 7mers sequences (with or without the 'A' at position 1).<br/><br/>
-If it's not showing, it's because the box is collapsed - you can open it by clicking the 'plus' button on the right.",
+This box contains a plot summarizing the binding profile of the miRNA, plotting
+the dissociation rate (i.e. affinity) of the top 7mers sequences (with or without
+the 'A' at position 1).<br/><br/>If it's not showing, it's because the box is 
+collapsed - you can open it by clicking the 'plus' button on the right.",
             box(width=12, title="Affinity plot", collapsible=TRUE, collapsed=TRUE,
               withSpinner(plotOutput("modplot")),
               numericInput("modplot_height", "Plot height (px)", value=400,
@@ -207,8 +215,11 @@ If it's not showing, it's because the box is collapsed - you can open it by clic
             )
           ),
           introBox(data.step=6, data.intro="
-This box contains the predicted repression and number of binding sites for all transcripts. You can reorder it anyway you like, and filter or remove any column.<br/><br/>
-You can also double-click on one of the row to get the details and visualize the individual binding sites - this would automatically move us to the transcript-centered section of the app.",
+This box contains the predicted repression and number of binding sites for all 
+transcripts. You can reorder it anyway you like, and filter or remove any column.<br/><br/>
+You can also double-click on one of the row to get the details and visualize 
+the individual binding sites - this would automatically move us to the 
+transcript-centered section of the app.",
                    box(width=12, title="Targets", collapsible=TRUE,
               uiOutput("targets_ui")))
         ),
