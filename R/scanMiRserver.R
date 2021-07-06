@@ -73,6 +73,16 @@ scanMiRserver <- function( annotations=list(), modlists=NULL,
     if(nrow(tx)==0) return(NULL)
     setNames(tx$tx_id, paste0(tx$tx_id, " (",tx$tx_biotype, ")"))
   }
+  getGeneFromTx <- function(db, tx){
+    if(is(db,"EnsDb")){
+      if(!is.null(gene)) filt <- ~gene_id==gene
+      tx <- transcripts(db, columns=c("tx_id","tx_biotype"),
+                        filter=~tx_id==tx, return.type="data.frame")
+      return(as.character(tx$gene_id[1]))
+    }
+    tx <- select(db, keys=tx, keytype="TXNAME", columns=c("TXID","GENEID"))
+    as.character(tx$GENEID[1])
+  }
 
   function(input, output, session){
 
@@ -714,9 +724,15 @@ prediction of TDMD sites)."),
          !(input$mirlist %in% names(annotations))) return(NULL)
       db <- annotations[[input$mirlist]]$ensdb
       if(is.null(db)) return(NULL)
-      tx <- mcols(transcripts(db, c("tx_id","gene_id","tx_biotype")))
-      tx <- merge(tx,mcols(genes(db, c("gene_id","symbol"))), by="gene_id")
-      as.data.frame(tx[,c("symbol","tx_id","tx_biotype")])
+      if(is(db,"EnsDb")){
+        tx <- mcols(transcripts(db, c("tx_id","gene_id","tx_biotype")))
+        tx <- merge(tx,mcols(genes(db, c("gene_id","symbol"))), by="gene_id")
+        tx <- as.data.frame(tx[,c("symbol","tx_id","tx_biotype")])
+      }else{
+        tx <- mcols(transcripts(db, c("gene_id","tx_name","TXTYPE")))
+        colnames(tx) <- c("gene","tx_id","tx_biotype")
+      }
+      tx
     })
 
     mirtargets_prepared <- reactive({
@@ -740,7 +756,7 @@ prediction of TDMD sites)."),
           d <- d[!duplicated(d$symbol),]
         }
       }
-      d[order(d$repression),]
+      as.data.frame(d[order(d$repression),])
     })
 
     output$mirna_targets <- renderDT({
@@ -758,16 +774,11 @@ prediction of TDMD sites)."),
     observeEvent(input$dblClickSubject, {
       sub <- input$dblClickSubject
       if(input$targetlist_gene) return(NULL)
-      tx <- transcripts(sel_ensdb(), columns=c("tx_id", "gene_id"),
-                          filter=~tx_id==sub, return.type="data.frame")
-      gene <- as.character(tx$gene_id[1])
+      gene <- getGeneFromTx(sel_ensdb(), sub)
       isolate(updateSelectizeInput(session, "gene", selected=gene,
                            choices=allgenes(), server=TRUE))
       updateTabItems(session, "subject_type", "transcript")
-      tx <- transcripts(sel_ensdb(), columns=c("tx_id","tx_biotype"),
-                        filter=~gene_id==gene, return.type="data.frame")
-      txs <- tx$tx_id
-      names(txs) <- paste0(tx$tx_id, " (", tx$tx_biotype,")")
+      txs <- getTxs(sel_ensdb(), gene=gene)
       #updateCheckboxInput(session, "utr_only", value=input$targetlist_utronly)
       updateSelectizeInput(session, "transcript", selected=sub, choices=txs)
       updateSelectizeInput(session, "mirnas", selected=input$mirna)

@@ -27,7 +27,7 @@
 #' seq <- getTranscriptSequence( tx="ENSTFAKE0000056456", annotation=anno )
 getTranscriptSequence <- function(tx=NULL, annotation, annoFilter=NULL,
                                   extract=c("UTRonly", "withORF", "exons"),...){
-  if(!is.null(tx)) tx <- gsub("\\.[0-9]+$","",as.character(tx))
+  if(!is.null(tx) && is(annotation$ensdb,"EnsDb")) tx <- gsub("\\.[0-9]+$","",as.character(tx))
   if(!is.null(annoFilter)){
     if(!is(annotation$ensdb,"EnsDb")){
       warning("`annoFilter` is ignored when the annotation is not in ",
@@ -57,12 +57,19 @@ getTranscriptSequence <- function(tx=NULL, annotation, annoFilter=NULL,
       gr <- suppressWarnings(threeUTRsByTranscript(ensdb, filter=annoFilter))
     }
   }else{
-    if(extract=="exons") {
-      gr <- exonsBy(ensdb, by="tx", use.names=TRUE)
-    } else {
-      gr <- suppressWarnings(threeUTRsByTranscript(ensdb, use.names=TRUE))
+    if(is.null(tx)){
+      if(extract=="exons") {
+        gr <- exonsBy(ensdb, by="tx", use.names=TRUE)
+      } else {
+        gr <- suppressWarnings(threeUTRsByTranscript(ensdb, use.names=TRUE))
+      }
+    }else{
+      if(extract=="exons") {
+        gr <- .getExonsFromTxDb(tx, ensdb)
+      }else{
+        gr <- .get3UTRFromTxDb(tx, ensdb)
+      }      
     }
-    if(!is.null(tx)) gr <- gr[names(gr) %in% tx]
   }
   tx_strand <- unlist(unique(strand(gr)))
   genome <- annotation$genome
@@ -84,9 +91,12 @@ getTranscriptSequence <- function(tx=NULL, annotation, annoFilter=NULL,
       grl_ORF <- suppressWarnings(cdsBy(annotation$ensdb, by="tx",
                                         filter=annoFilter))
     }else{
-      grl_ORF <- suppressWarnings(cdsBy(annotation$ensdb, by="tx",
-                                        use.names=TRUE))
-      if(!is.null(tx)) grl_ORF <- grl_ORF[names(grl_ORF) %in% tx]
+      if(is.null(tx)){
+        grl_ORF <- suppressWarnings(cdsBy(annotation$ensdb, by="tx",
+                                          use.names=TRUE))
+      }else{
+        grl_ORF <- .getExonsFromTxDb(tx, ensdb, fn=GenomicFeatures::cds)
+      }
     }
     tx_strand <- unlist(unique(strand(grl_ORF)))
     if(length(grl_ORF)==0) {
@@ -104,6 +114,38 @@ getTranscriptSequence <- function(tx=NULL, annotation, annoFilter=NULL,
   seqs
 }
 
+
+#' @importFrom GenomicFeatures exons cds
+.getExonsFromTxDb <- function(tx, db, fn=GenomicFeatures::exons){
+  a <- fn(db,
+          filter = list(tx_name = tx),
+          columns = list("tx_name"))
+  a$tx_name <- a$tx_name[which(a$tx_name %in% tx)]
+  names(tx) <- tx <- unique(unlist(a$tx_name,use.names=FALSE))
+  a <- GRangesList(lapply(tx, FUN=function(x){
+    y <- a[any(a$tx_name==x)]
+    y$tx_name <- x
+    sort(y, decreasing=as.character(unlist(strand(y)))[1]=="-")
+  }))
+  names(a) <- tx
+  a
+}
+
+.get3UTRFromTxDb <- function(tx, db){
+  te <- .getExonsFromTxDb(tx, db, fn=GenomicFeatures::exons)
+  if(length(te)==0) return(NULL)
+  tcds <- .getExonsFromTxDb(tx, db, fn=GenomicFeatures::cds)
+  i <- intersect(names(tcds[lengths(tcds)>0]), names(te[lengths(te)>0]))
+  if(length(i)==0) return(NULL)
+  te <- GRangesList(mapply(te=te[i], tcds=tcds[i], FUN=function(te,tcds){
+    te <- setdiff(te,tcds)
+    if(as.character(unlist(strand(te),use.names=FALSE)[1])=="-"){
+      return(te[end(te)<=min(start(tcds))])
+    }
+    te[start(te)>=max(end(tcds))]
+  }))
+  te
+}
 
 
 #' plotSitesOnUTR
