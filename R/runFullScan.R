@@ -41,6 +41,7 @@ runFullScan <- function(annotation, mods=NULL, annoFilter = NULL,
 
   stopifnot(is(annotation, "ScanMiRAnno"))
   if(is.null(mods)) mods <- annotation$models
+  if(is(mods,"KdModel")) mods <- KdModelList(mods)
   stopifnot(is(mods,"KdModelList"))
 
   if(is.numeric(cores) && length(cores)==1){
