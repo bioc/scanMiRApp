@@ -66,13 +66,15 @@ scanMiRserver <- function( annotations=list(), modlists=NULL,
       tx <- transcripts(db, columns=c("tx_id","tx_biotype"),
                         filter=~gene_id==gene, return.type="data.frame")
     }else{
-      tx <- select(db, keys=gene, keytype="GENEID",
-                   columns=c("TXNAME","TXTYPE"))
+      try(tx <- select(db, keys=gene, keytype="GENEID",
+                   columns=c("TXNAME","TXTYPE")), silent=TRUE)
+      if(is(tx,"try-error")) return(NULL)
       colnames(tx) <- c("gene","tx_id","tx_biotype")
     }
     if(nrow(tx)==0) return(NULL)
     setNames(tx$tx_id, paste0(tx$tx_id, " (",tx$tx_biotype, ")"))
   }
+  
   getGeneFromTx <- function(db, tx){
     if(is(db,"EnsDb")){
       if(!is.null(gene)) filt <- ~gene_id==gene
@@ -80,7 +82,9 @@ scanMiRserver <- function( annotations=list(), modlists=NULL,
                         filter=~tx_id==tx, return.type="data.frame")
       return(as.character(tx$gene_id[1]))
     }
-    tx <- select(db, keys=tx, keytype="TXNAME", columns=c("TXID","GENEID"))
+    tx <- try(select(db, keys=tx, keytype="TXNAME", columns=c("TXID","GENEID")),
+              silent=TRUE)
+    if(is(tx,"try-error")) return(NULL)
     as.character(tx$GENEID[1])
   }
 
@@ -201,6 +205,8 @@ scanMiRserver <- function( annotations=list(), modlists=NULL,
     observe({
       prev_seltx <- input$transcript
       if(!(prev_seltx %in% alltxs())) prev_seltx <- NULL
+      txs <- alltxs()
+      if(is.null(txs)) txs <- c()
       updateSelectizeInput(session, "transcript", choices=alltxs(), selected=prev_seltx)
     })
 
