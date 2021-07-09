@@ -66,7 +66,7 @@ scanMiRserver <- function( annotations=list(), modlists=NULL,
       tx <- transcripts(db, columns=c("tx_id","tx_biotype"),
                         filter=~gene_id==gene, return.type="data.frame")
     }else{
-      try(tx <- select(db, keys=gene, keytype="GENEID",
+      tx <- try(select(db, keys=gene, keytype="GENEID",
                    columns=c("TXNAME","TXTYPE")), silent=TRUE)
       if(is(tx,"try-error")) return(NULL)
       colnames(tx) <- c("gene","tx_id","tx_biotype")
