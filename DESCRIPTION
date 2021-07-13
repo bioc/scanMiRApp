@@ -39,7 +39,11 @@ Imports:
     stats,
     utils,
     waiter
-Suggests: knitr, rmarkdown, BiocStyle
+Suggests: 
+    knitr,
+    rmarkdown,
+    BiocStyle,
+    testthat (>= 3.0.0)
 Description:
     A shiny interface to the scanMiR package. The application enables the 
     scanning of transcripts and custom sequences for miRNA binding sites, the 
@@ -51,3 +55,4 @@ License: GPL-3
 VignetteBuilder: knitr
 RoxygenNote: 7.1.1
 biocViews: miRNA, SequenceMatching
+Config/testthat/edition: 3
