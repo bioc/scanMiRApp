@@ -27,7 +27,7 @@
 enrichedMirTxPairs <- function(m, minSites=5, max.binom.p=0.001){
   m <- m[as.integer(m$type) %in% grep("8mer|7mer",levels(m$type))]
   b <- .matches2sparse(m)
-  b <- b[rowSums(b>=minSites)>0,]
+  b <- b[rowSums(b>=minSites)>0,,drop=FALSE]
   rs <- rowSums(b)
   cs <- colSums(b)
   p <- as.matrix(rs/sum(rs)) %*% t(cs/sum(cs))
@@ -36,7 +36,7 @@ enrichedMirTxPairs <- function(m, minSites=5, max.binom.p=0.001){
   S <- as(round(S), "sparseMatrix")
   S <- .sparse2df(S, "logp.binom")
   b <- .sparse2df(b, "sites")
-  S$sites <- b$sites
+  S <- merge(S,b,by=c("feature","set"))
   rm(b)
   S <- S[S$logp.binom < as.integer(log(max.binom.p)) &
            S$sites>=as.integer(minSites),]
