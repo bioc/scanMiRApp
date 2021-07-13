@@ -1,7 +1,7 @@
 Package: scanMiRApp
 Type: Package
 Title: scanMiR shiny application
-Version: 0.99.16
+Version: 0.99.17
 Date: 2021-07-06
 Authors@R: c(
     person("Pierre-Luc", "Germain", email="pierre-luc.germain@hest.ethz.ch", 
