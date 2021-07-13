@@ -75,7 +75,10 @@ runFullScan <- function(annotation, mods=NULL, annoFilter = NULL,
     if(!is(ensdb,"EnsDb"))
       warning("`annoFilter` is ignored when the annotation is not in ",
               "`EnsDb` format", immediate.=TRUE)
+  }else{
+    if(!is(ensdb, "Ensdb")) filt <- NULL
   }
+
   message("Extracting transcripts")
   seqs <- getTranscriptSequence(tx=NULL, annotation, annoFilter=filt,
                                 extract=extract)
