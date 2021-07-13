@@ -66,8 +66,8 @@ scanMiRserver <- function( annotations=list(), modlists=NULL,
       tx <- transcripts(db, columns=c("tx_id","tx_biotype"),
                         filter=~gene_id==gene, return.type="data.frame")
     }else{
-      tx <- try(select(db, keys=gene, keytype="GENEID",
-                   columns=c("TXNAME","TXTYPE")), silent=TRUE)
+      tx <- suppressMessages(try(select(db, keys=gene, keytype="GENEID",
+                                    columns=c("TXNAME","TXTYPE")), silent=TRUE))
       if(is(tx,"try-error")) return(NULL)
       colnames(tx) <- c("gene","tx_id","tx_biotype")
     }
@@ -82,8 +82,8 @@ scanMiRserver <- function( annotations=list(), modlists=NULL,
                         filter=~tx_id==tx, return.type="data.frame")
       return(as.character(tx$gene_id[1]))
     }
-    tx <- try(select(db, keys=tx, keytype="TXNAME", columns=c("TXID","GENEID")),
-              silent=TRUE)
+    tx <- suppressMessages(try(select(db, keys=tx, keytype="TXNAME", 
+                                      columns=c("TXID","GENEID")), silent=TRUE))
     if(is(tx,"try-error")) return(NULL)
     as.character(tx$GENEID[1])
   }
@@ -95,8 +95,10 @@ scanMiRserver <- function( annotations=list(), modlists=NULL,
 
     hintjs(session)
 
-    observeEvent(input$helpBtn, introjs(session,  events=list(onbeforechange=readCallback("switchTabs"))))
-    observeEvent(input$helpLink, introjs(session,  events=list(onbeforechange=readCallback("switchTabs"))))
+    observeEvent(input$helpBtn, introjs(session,  
+                      events=list(onbeforechange=readCallback("switchTabs"))))
+    observeEvent(input$helpLink, introjs(session,  
+                      events=list(onbeforechange=readCallback("switchTabs"))))
 
     ##############################
     ## initialize inputs
@@ -128,7 +130,7 @@ scanMiRserver <- function( annotations=list(), modlists=NULL,
     })
     output$selected_collection <- renderValueBox({
       if(is.null(input$mirlist) || is.null(annotations[[input$mirlist]]))
-        return(valueBox("N/A", color="light-blue"))
+        return(valueBox("N/A", subtitle = "Nothing loaded", color="light-blue"))
       valueBox(input$mirlist, color = "light-blue",
         tags$div(lapply(capture.output(print(annotations[[input$mirlist]])),
                FUN=function(x) tags$p(x)))
@@ -590,7 +592,9 @@ prediction of TDMD sites)."),
     })
 
     output$manhattan <- renderPlotly({
-      if(is.null(h <- manhattan_data())) return(NULL)
+      if(is.null(h <- manhattan_data()))
+        return(ggplotly(ggplot(), source="manhattan"))
+      plotlyObserver$resume()
       sn <- as.character(seqnames(h)[1])
       meta <- metadata(h)
       h <- as.data.frame(h)
@@ -647,8 +651,8 @@ prediction of TDMD sites)."),
       ))
     })
 
-    observeEvent(suppressWarnings(event_data("plotly_click", "manhattan",
-                                             priority="event")), {
+    plotlyObserver <- observeEvent(event_data("plotly_click", "manhattan",
+                                          priority="event"), suspended=TRUE, {
       if(is.null(h <- manhattan_data())) return(NULL)
       event <- event_data("plotly_click", "manhattan")
       if(!is.list(event) || is.null(event$pointNumber)) return(NULL)
