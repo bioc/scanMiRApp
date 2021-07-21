@@ -77,7 +77,6 @@ scanMiRserver <- function( annotations=list(), modlists=NULL,
   
   getGeneFromTx <- function(db, tx){
     if(is(db,"EnsDb")){
-      if(!is.null(gene)) filt <- ~gene_id==gene
       tx <- transcripts(db, columns=c("tx_id","tx_biotype"),
                         filter=~tx_id==tx, return.type="data.frame")
       return(as.character(tx$gene_id[1]))
