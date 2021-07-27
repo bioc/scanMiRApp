@@ -14,7 +14,7 @@ test_that("runFullScan works and gives the expected output", {
 })
 
 test_that("indexedFst works and maintains data integrity", {
-  f <- system.file(tempdir(), "ifst.test")
+  f <- file.path(tempdir(), "ifst.test")
   d <- data.frame( category=sample(LETTERS[1:4], 10000, replace=TRUE),
                    var2=sample(LETTERS, 10000, replace=TRUE),
                    var3=runif(10000) )
@@ -38,8 +38,7 @@ test_that("Pair enrichment analysis works", {
   eg$start <- 1L+sample.int(100,nrow(eg))
   gr <- GRanges(eg$target, IRanges(eg$start, eg$start+8), miRNA=eg$mir,
                 type=factor(eg$type) )
-  ep <- enrichedMirTxPairs(gr, max.binom.p=1)
-  print(ep)
+  ep <- enrichedMirTxPairs(gr, max.binom.p=1, minSites=1)
   expect(ep[1,1]=="A" && ep[1,2]=="a", failure_message=
     "enrichedMirTxPairs does not report spiked result as top")
 })
