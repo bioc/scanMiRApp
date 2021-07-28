@@ -49,3 +49,5 @@ test_that("UTR plot works", {
   plotSitesOnUTR(tx="ENSTFAKE0000056456", annotation=anno,
                  anno$models[[1]]$canonical.seed)
 })
+
+
