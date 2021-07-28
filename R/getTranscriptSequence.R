@@ -175,60 +175,62 @@ getTranscriptSequence <- function(tx=NULL, annotation, annoFilter=NULL,
 #' anno <- ScanMiRAnno("fake")
 #' plotSitesOnUTR( tx="ENSTFAKE0000056456", annotation=anno,
 #'                 miRNA="hsa-miR-155-5p" )
-plotSitesOnUTR <- function(tx, annotation, miRNA=NULL, label_6mers=FALSE,
-                           label_notes=FALSE, verbose=TRUE, ...){
-  # Prepare everything & scan
-  stopifnot(is(annotation,"ScanMiRAnno"))
-  if(verbose) message("Prepare miRNA model")
+plotSitesOnUTR <- function(tx, annotation, miRNA = NULL, label_6mers = FALSE, 
+                           label_notes = FALSE, verbose = TRUE, ...){
+  stopifnot(is(annotation, "ScanMiRAnno"))
+  if (verbose) message("Prepare miRNA model")
   mods <- annotation$models
-  if( (is(miRNA,"character") && length(miRNA)==1 &&
-       nchar(gsub("[ACGTU]","",miRNA))==0) || is(miRNA, "KdModel")){
+  if((is(miRNA, "character") && length(miRNA) == 1 && 
+     nchar(gsub("[ACGTU]", "", miRNA)) == 0) || is(miRNA, "KdModel")){
     mods <- miRNA
-  }else if(miRNA %in% names(mods)){
+    if(!(is(miRNA,"KdModel"))){
+      title <- paste0(tx, " - ", miRNA)
+    }
+  } else if(miRNA %in% names(mods)){
     mods <- mods[[miRNA]]
-  }else if(length(w <- grep(miRNA,names(mods),ignore.case = TRUE))==1){
+  } else if(length(w <- grep(miRNA, names(mods), ignore.case=TRUE)) == 1){
     mods <- mods[[w]]
-  }else{
-    stop("The specified microRNA is not listed for this species. Please check",
+  } else {
+    stop("The specified microRNA is not listed for this species. Please check", 
          "\nthe spelling (eg. 'hsa-mir-485-5p') and the organism")
   }
-  if(verbose) message("Get Transcript Sequence")
-  Seq <- getTranscriptSequence(tx=tx, annotation=annotation)
-  if(verbose) message("Scan")
-  m <- findSeedMatches(seqs=Seq, seeds=mods, shadow=15L, keepMatchSeq=TRUE,
-                       p3.extra=TRUE, ret="data.frame", verbose=FALSE, ...)
-
-  # Prepare data.frame
-  m$logKd <- m$log_kd / 1000
-  m$type <- ifelse(m$type == "non-canonical","",as.character(m$type))
-  if(isFALSE(label_6mers)) ifelse(grepl("6mer",m$type),"",as.character(m$type))
-  m <- as.data.frame(m[m$logKd < -1,])
-
-  # get 8mer info
-  mer8 <- getSeed8mers(mods$canonical.seed)
-  wA <- which(substr(mer8,8,8)=="A")
-  mer7 <- substr(mer8,1,7)
-  As <- mods$mer8[wA]
-  names(As) <- mer7[wA]
-  mer.mean <- rowsum(mods$mer8[-wA],mer7[-wA])[,1]/3
-  As <- As-mer.mean[names(As)]
-  d <- data.frame(seed=names(mer.mean), base=mer.mean/-1000,
-                  "A"=As[names(mer.mean)]/-1000,
-                  type=getMatchTypes(names(mer.mean),mods$canonical.seed),
-                  row.names=NULL)
-  d <- d[head(order(d$base+d$A, decreasing=TRUE),n=1),]
-  mer8 <- d$base + d$A
-
-  title <- paste0(tx," - ",miRNA)
-
-  p <- ggplot(m, aes(x = start, y = -`logKd`)) +
-    geom_hline(yintercept=1, linetype="dashed", color = "red", size=1) +
-    geom_hline(yintercept=mer8, linetype="dashed", color = "gray64", size=1) +
-    geom_point(size=2) + geom_text(label = m$type,nudge_y = -0.2) +
-    labs(x="sequence length", y="-logKd", title=title) + xlim(0,width(Seq)) +
-    theme_light()
-  if(label_notes)
-    p <- p + geom_text(data=m[m$note!="-",], label=aes(note), nudge_y = 0.2)
+  if (verbose) 
+    message("Get Transcript Sequence")
+  Seq <- getTranscriptSequence(tx = tx, annotation = annotation)
+  if (verbose) 
+    message("Scan")
+  m <- findSeedMatches(seqs = Seq, seeds = mods, shadow = 15L, 
+                       keepMatchSeq = TRUE, p3.extra = TRUE, ret = "data.frame", 
+                       verbose = FALSE, ...)
+  if (isFALSE(label_6mers)){ 
+    m$type <- ifelse(grepl("6mer", m$type), "", as.character(m$type))}
+  if(is(miRNA, "KdModel")){
+    m$logKd <- m$log_kd/1000
+    m$type <- ifelse(m$type == "non-canonical", "", as.character(m$type))
+    m <- as.data.frame(m[m$logKd < -1, ])
+    mer8 <- get8merRange(mods)/-1000
+    max8 <- max(mer8)
+    title <- paste0(tx, " - ",mods$name)
+    p <- ggplot(m, aes(x = start, y = -logKd)) + 
+      geom_hline(yintercept = 1,linetype = "dashed", color = "red", size = 1) + 
+      geom_point(size = 2) + geom_text(label = m$type, nudge_y = -max8/50) + 
+      labs(x = "sequence length", y = "-logKd", title = title) +  
+      theme_light() + xlim(0, width(Seq)) + expand_limits(y=c(0,max8)) + 
+      geom_rect(
+               xmin = -Inf, xmax = Inf, 
+               ymin = min(mer8), ymax = max8,  fill = "chartreuse3", alpha=.3)
+    
+    if (label_notes){ 
+      p <- p + geom_text(data = m[m$note != "-", ], label = aes(note), 
+                         nudge_y = max8/50)
+    }
+  }else{
+    m <- m[m$type != "",]
+    p <- ggplot(m, aes(x = start, y = type)) + 
+      geom_point(size = 2) + 
+      labs(x = "sequence length", y = "site type", title = title) + xlim(0, width(Seq)) + 
+      theme_light()
+  }
   p
 }
 
