@@ -42,3 +42,10 @@ test_that("Pair enrichment analysis works", {
   expect(ep[1,1]=="A" && ep[1,2]=="a", failure_message=
     "enrichedMirTxPairs does not report spiked result as top")
 })
+
+test_that("UTR plot works", {
+  plotSitesOnUTR(tx="ENSTFAKE0000056456", annotation=anno,
+                 miRNA="hsa-miR-155-5p")
+  plotSitesOnUTR(tx="ENSTFAKE0000056456", annotation=anno,
+                 anno$models[[1]]$canonical.seed)
+})

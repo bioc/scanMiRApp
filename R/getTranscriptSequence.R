@@ -69,7 +69,7 @@ getTranscriptSequence <- function(tx=NULL, annotation, annoFilter=NULL,
         gr <- .getExonsFromTxDb(tx, ensdb)
       }else{
         gr <- .get3UTRFromTxDb(tx, ensdb)
-      }      
+      }
     }
   }
   tx_strand <- unlist(unique(strand(gr)))
@@ -176,60 +176,63 @@ getTranscriptSequence <- function(tx=NULL, annotation, annoFilter=NULL,
 #' anno <- ScanMiRAnno("fake")
 #' plotSitesOnUTR( tx="ENSTFAKE0000056456", annotation=anno,
 #'                 miRNA="hsa-miR-155-5p" )
-plotSitesOnUTR <- function(tx, annotation, miRNA = NULL, label_6mers = FALSE, 
+plotSitesOnUTR <- function(tx, annotation, miRNA = NULL, label_6mers = FALSE,
                            label_notes = FALSE, verbose = TRUE, ...){
   stopifnot(is(annotation, "ScanMiRAnno"))
-  if (verbose) message("Prepare miRNA model")
+  if(verbose) message("Prepare miRNA model")
   mods <- annotation$models
-  if((is(miRNA, "character") && length(miRNA) == 1 && 
+  if((is(miRNA, "character") && length(miRNA) == 1 &&
      nchar(gsub("[ACGTU]", "", miRNA)) == 0) || is(miRNA, "KdModel")){
     mods <- miRNA
     if(!(is(miRNA,"KdModel"))){
       title <- paste0(tx, " - ", miRNA)
     }
-  } else if(miRNA %in% names(mods)){
+  }else if(miRNA %in% names(mods)){
     mods <- mods[[miRNA]]
-  } else if(length(w <- grep(miRNA, names(mods), ignore.case=TRUE)) == 1){
+  }else if(length(w <- grep(miRNA, names(mods), ignore.case=TRUE)) == 1){
     mods <- mods[[w]]
-  } else {
-    stop("The specified microRNA is not listed for this species. Please check", 
+  }else{
+    stop("The specified microRNA is not listed for this species. Please check",
          "\nthe spelling (eg. 'hsa-mir-485-5p') and the organism")
   }
-  if (verbose) 
+  if(verbose)
     message("Get Transcript Sequence")
   Seq <- getTranscriptSequence(tx = tx, annotation = annotation)
-  if (verbose) 
+  if(verbose)
     message("Scan")
-  m <- findSeedMatches(seqs = Seq, seeds = mods, shadow = 15L, 
-                       keepMatchSeq = TRUE, p3.extra = TRUE, ret = "data.frame", 
+  m <- findSeedMatches(seqs = Seq, seeds = mods, shadow = 15L,
+                       keepMatchSeq = TRUE, p3.extra = TRUE, ret = "data.frame",
                        verbose = FALSE, ...)
-  if (isFALSE(label_6mers)){ 
+  if(isFALSE(label_6mers)){
     m$type <- ifelse(grepl("6mer", m$type), "", as.character(m$type))}
-  if(is(miRNA, "KdModel")){
+  if(is(mods, "KdModel")){
     m$logKd <- m$log_kd/1000
     m$type <- ifelse(m$type == "non-canonical", "", as.character(m$type))
     m <- as.data.frame(m[m$logKd < -1, ])
     mer8 <- get8merRange(mods)/-1000
     max8 <- max(mer8)
     title <- paste0(tx, " - ",mods$name)
-    p <- ggplot(m, aes(x = start, y = -logKd)) + 
-      geom_hline(yintercept = 1,linetype = "dashed", color = "red", size = 1) + 
-      geom_point(size = 2) + geom_text(label = m$type, nudge_y = -max8/50) + 
-      labs(x = "sequence length", y = "-logKd", title = title) +  
-      theme_light() + xlim(0, width(Seq)) + expand_limits(y=c(0,max8)) + 
+    p <- ggplot(m, aes(x = start, y = -logKd)) +
+      geom_hline(yintercept = 1,linetype = "dashed", color = "red", size = 1) +
+      geom_point(size = 2) + geom_text(label = m$type, nudge_y = -max8/50) +
+      labs(x = "sequence length", y = "-logKd", title = title) +
+      theme_light() + xlim(0, width(Seq)) + expand_limits(y=c(0,max8)) +
       geom_rect(
-               xmin = -Inf, xmax = Inf, 
+               xmin = -Inf, xmax = Inf,
                ymin = min(mer8), ymax = max8,  fill = "chartreuse3", alpha=.3)
-    
-    if (label_notes){ 
-      p <- p + geom_text(data = m[m$note != "-", ], label = aes(note), 
+    if(label_notes && !("note" %in% colnames(m))){
+      label_notes <- FALSE
+      if(verbose) message("No label_notes to plot")
+    }
+    if(label_notes){
+      p <- p + geom_text(data = m[m$note != "-", ], label = aes(note),
                          nudge_y = max8/50)
     }
   }else{
     m <- m[m$type != "",]
-    p <- ggplot(m, aes(x = start, y = type)) + 
-      geom_point(size = 2) + 
-      labs(x = "sequence length", y = "site type", title = title) + xlim(0, width(Seq)) + 
+    p <- ggplot(m, aes(x = start, y = type)) +
+      geom_point(size = 2) +
+      labs(x = "sequence length", y = "site type", title = title) + xlim(0, width(Seq)) +
       theme_light()
   }
   p
