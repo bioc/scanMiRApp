@@ -27,7 +27,8 @@
 #' seq <- getTranscriptSequence( tx="ENSTFAKE0000056456", annotation=anno )
 getTranscriptSequence <- function(tx=NULL, annotation, annoFilter=NULL,
                                   extract=c("UTRonly", "withORF", "exons"),...){
-  if(!is.null(tx) && is(annotation$ensdb,"EnsDb")) tx <- gsub("\\.[0-9]+$","",as.character(tx))
+  if(!is.null(tx) && is(annotation$ensdb,"EnsDb"))
+    tx <- gsub("\\.[0-9]+$","",as.character(tx))
   if(!is.null(annoFilter)){
     if(!is(annotation$ensdb,"EnsDb")){
       warning("`annoFilter` is ignored when the annotation is not in ",
