@@ -22,7 +22,7 @@ jobs:
         shell: Rscript {0}
 
       - name: Install latest BiocCheck
-        run: BiocManager::install(c("BiocCheck"))
+        run: BiocManager::install(c("BiocCheck","shinytest"))
         shell: Rscript {0}
 
       - name: Check
