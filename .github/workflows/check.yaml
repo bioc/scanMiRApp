@@ -24,6 +24,10 @@ jobs:
       - name: Install latest BiocCheck
         run: BiocManager::install(c("BiocCheck","shinytest"))
         shell: Rscript {0}
+        
+      - name: Install phantomJS
+        run: shinytest::installDependencies()
+        shell: Rscript {0}
 
       - name: Check
         env:
