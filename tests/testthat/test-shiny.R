@@ -23,7 +23,7 @@ test_that("shiny app (server) works", {
     current.cs(cs)
     session$flushReact()
     h <- hits()$hits
-    expect_equal(start(h), c(281L,482L))
+    expect_equal(GenomicRanges::start(h), c(281L,482L))
     expect_equal(as.character(h$type), c("8mer","7mer-m8"))
     p <- output$manhattan
     selectedMatch(h[1])
