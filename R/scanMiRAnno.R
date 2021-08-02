@@ -60,15 +60,15 @@ ScanMiRAnno <- function(species=NULL, genome=NULL, ensdb=NULL, models=NULL,
                        GRCm38=scanMiRData::getKdModels("mmu"),
                        GRCm39=scanMiRData::getKdModels("mmu"),
                        "Rnor_6"=scanMiRData::getKdModels("rno"),
-                       stop("Species not among the pre-defined one, please",
+                       stop("Species not among the pre-defined ones, please",
                             "provide `models` manually.")
                       )
     ah <- AnnotationHub(...)
     ensdb <- ah[[rev(query(ah, c("EnsDb", species, version))$ah_id)[1]]]
     genome <- switch(species,
-      GRCh38=BSgenome.Hsapiens.UCSC.hg38:::BSgenome.Hsapiens.UCSC.hg38,
-      GRCm38=BSgenome.Mmusculus.UCSC.mm10:::BSgenome.Mmusculus.UCSC.mm10,
-      "Rnor_6"=BSgenome.Rnorvegicus.UCSC.rn6:::BSgenome.Rnorvegicus.UCSC.rn6,
+      GRCh38=BSgenome.Hsapiens.UCSC.hg38::BSgenome.Hsapiens.UCSC.hg38,
+      GRCm38=BSgenome.Mmusculus.UCSC.mm10::BSgenome.Mmusculus.UCSC.mm10,
+      "Rnor_6"=BSgenome.Rnorvegicus.UCSC.rn6::BSgenome.Rnorvegicus.UCSC.rn6,
       getGenomeTwoBitFile(ensdb)
     )
     blink <- switch( species,
