@@ -60,18 +60,28 @@ ScanMiRAnno <- function(species=NULL, genome=NULL, ensdb=NULL, models=NULL,
                        GRCm38=scanMiRData::getKdModels("mmu"),
                        GRCm39=scanMiRData::getKdModels("mmu"),
                        "Rnor_6"=scanMiRData::getKdModels("rno"),
+<<<<<<< HEAD
                        "Rnor_7"=scanMiRData::getKdModels("rno"),
                        stop("Species not among the pre-defined one, please",
+=======
+                       stop("Species not among the pre-defined ones, please",
+>>>>>>> 2d905319143866ba9129ff6f65fcfdb83a40099b
                             "provide `models` manually.")
                       )
     ah <- AnnotationHub(...)
     ensdb <- ah[[rev(query(ah, c("EnsDb", species, version))$ah_id)[1]]]
     genome <- switch(species,
+<<<<<<< HEAD
       GRCh38=BSgenome.Hsapiens.UCSC.hg38:::BSgenome.Hsapiens.UCSC.hg38,
       GRCm38=BSgenome.Mmusculus.UCSC.mm10:::BSgenome.Mmusculus.UCSC.mm10,
       GRCm39=BSgenome.Mmusculus.UCSC.mm39:::BSgenome.Mmusculus.UCSC.mm39,
       "Rnor_6"=BSgenome.Rnorvegicus.UCSC.rn6:::BSgenome.Rnorvegicus.UCSC.rn6,
       "Rnor_7"=BSgenome.Rnorvegicus.UCSC.rn7:::BSgenome.Rnorvegicus.UCSC.rn7,
+=======
+      GRCh38=BSgenome.Hsapiens.UCSC.hg38::BSgenome.Hsapiens.UCSC.hg38,
+      GRCm38=BSgenome.Mmusculus.UCSC.mm10::BSgenome.Mmusculus.UCSC.mm10,
+      "Rnor_6"=BSgenome.Rnorvegicus.UCSC.rn6::BSgenome.Rnorvegicus.UCSC.rn6,
+>>>>>>> 2d905319143866ba9129ff6f65fcfdb83a40099b
       getGenomeTwoBitFile(ensdb)
     )
     blink <- switch( species,

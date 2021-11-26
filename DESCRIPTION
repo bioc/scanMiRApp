@@ -1,7 +1,7 @@
 Package: scanMiRApp
 Type: Package
 Title: scanMiR shiny application
-Version: 0.99.17
+Version: 1.1.1
 Date: 2021-07-06
 Authors@R: c(
     person("Pierre-Luc", "Germain", email="pierre-luc.germain@hest.ethz.ch", 
@@ -43,7 +43,11 @@ Suggests:
     knitr,
     rmarkdown,
     BiocStyle,
-    testthat (>= 3.0.0)
+    testthat (>= 3.0.0),
+    shinytest,
+    BSgenome.Hsapiens.UCSC.hg38,
+    BSgenome.Mmusculus.UCSC.mm10,
+    BSgenome.Rnorvegicus.UCSC.rn6
 Description:
     A shiny interface to the scanMiR package. The application enables the 
     scanning of transcripts and custom sequences for miRNA binding sites, the 

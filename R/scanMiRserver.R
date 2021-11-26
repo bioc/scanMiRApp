@@ -74,14 +74,14 @@ scanMiRserver <- function( annotations=list(), modlists=NULL,
     if(nrow(tx)==0) return(NULL)
     setNames(tx$tx_id, paste0(tx$tx_id, " (",tx$tx_biotype, ")"))
   }
-  
+
   getGeneFromTx <- function(db, tx){
     if(is(db,"EnsDb")){
       tx <- transcripts(db, columns=c("tx_id","gene_id"),
                         filter=~tx_id==tx, return.type="data.frame")
       return(as.character(tx$gene_id[1]))
     }
-    tx <- suppressMessages(try(select(db, keys=tx, keytype="TXNAME", 
+    tx <- suppressMessages(try(select(db, keys=tx, keytype="TXNAME",
                                       columns=c("TXID","GENEID")), silent=TRUE))
     if(is(tx,"try-error")) return(NULL)
     as.character(tx$GENEID[1])
@@ -94,9 +94,9 @@ scanMiRserver <- function( annotations=list(), modlists=NULL,
 
     hintjs(session)
 
-    observeEvent(input$helpBtn, introjs(session,  
+    observeEvent(input$helpBtn, introjs(session,
                       events=list(onbeforechange=readCallback("switchTabs"))))
-    observeEvent(input$helpLink, introjs(session,  
+    observeEvent(input$helpLink, introjs(session,
                       events=list(onbeforechange=readCallback("switchTabs"))))
 
     ##############################
@@ -550,25 +550,25 @@ scanMiRserver <- function( annotations=list(), modlists=NULL,
         write.csv(h, con, col.names=TRUE)
       }
     )
-    
+
     observeEvent(input$colHelp, {
       showModal(modalDialog(
         title = "Columns of the hits table:",
         tags$p("The start and end columns represent the coordinates of the seed
-binding site (i.e. corresponding to positions 1-8 of the miRNA) on the 
-target sequence. The coordinates are based on the beginning of the sequence 
-scanned (i.e. if you scanned only the UTR region, 1 represents the first 
+binding site (i.e. corresponding to positions 1-8 of the miRNA) on the
+target sequence. The coordinates are based on the beginning of the sequence
+scanned (i.e. if you scanned only the UTR region, 1 represents the first
 nucleotide of the UTR)."), tags$p("
 The 'type' column indicates the type of match in the seed region."), tags$p("
-The 'log_kd' column indicates the log of the estimated dissociation rate. A 
+The 'log_kd' column indicates the log of the estimated dissociation rate. A
 lower log_kd value is indicative of a stronger affinity."), tags$p("
-The 'p3.score' represent the strength of the 3' supplementary alignment. In 
-most cases, it roughly corresponds to the number of consecutive complementary 
-bases (exluding the seed region). However, because of tolerance for G-U 
-bindings or mismatches in large regions of complementarity, it can depart from 
-this rule of thumb. To visualize this alignment, you can simply double click 
+The 'p3.score' represent the strength of the 3' supplementary alignment. In
+most cases, it roughly corresponds to the number of consecutive complementary
+bases (exluding the seed region). However, because of tolerance for G-U
+bindings or mismatches in large regions of complementarity, it can depart from
+this rule of thumb. To visualize this alignment, you can simply double click
 on one of the rows of the table."), tags$p("
-The 'note' column contains eventual special features of the binding site (e.g. 
+The 'note' column contains eventual special features of the binding site (e.g.
 prediction of TDMD sites)."),
         easyClose = TRUE,
         footer = NULL

@@ -47,7 +47,7 @@ runFullScan <- function(annotation, mods=NULL, annoFilter = NULL,
   if(is.numeric(cores) && length(cores)==1){
     cores <- as.integer(cores)
     if(cores>1){
-      BP <- MulticoreParam(cores, progress=TRUE)
+      BP <- MulticoreParam(cores, progressbar=TRUE)
     }else{
       BP <- SerialParam()
     }
@@ -76,7 +76,7 @@ runFullScan <- function(annotation, mods=NULL, annoFilter = NULL,
       warning("`annoFilter` is ignored when the annotation is not in ",
               "`EnsDb` format", immediate.=TRUE)
   }else{
-    if(!is(ensdb, "Ensdb")) filt <- NULL
+    if(!is(ensdb, "EnsDb")) filt <- NULL
   }
 
   message("Extracting transcripts")

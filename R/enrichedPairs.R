@@ -22,7 +22,7 @@
 #' mirs <- c("TTGTATAA","AGCATTAA")
 #' m <- findSeedMatches(seqs,mirs,verbose=FALSE)
 #' # we look for enriched pairs
-#' res <- enrichedMirTxPairs(m)
+#' res <- enrichedMirTxPairs(m, minSites=1, max.binom.p=1)
 #' res
 enrichedMirTxPairs <- function(m, minSites=5, max.binom.p=0.001){
   m <- m[as.integer(m$type) %in% grep("8mer|7mer",levels(m$type))]

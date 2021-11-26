@@ -30,6 +30,6 @@ seqs <- getRandomSeq(n=10)
 mirs <- c("TTGTATAA","AGCATTAA")
 m <- findSeedMatches(seqs,mirs,verbose=FALSE)
 # we look for enriched pairs
-res <- enrichedMirTxPairs(m)
+res <- enrichedMirTxPairs(m, minSites=1, max.binom.p=1)
 res
 }
