@@ -21,8 +21,8 @@ jobs:
         run: BiocManager::install(c("scanMiR","scanMiRData"), ref="devel")
         shell: Rscript {0}
 
-      - name: Install latest BiocCheck
-        run: BiocManager::install(c("BiocCheck","shinytest"))
+      - name: Install latest BiocCheck and co
+        run: BiocManager::install(c("BiocCheck","shinytest","shinyjqui"))
         shell: Rscript {0}
         
       - name: Install phantomJS
