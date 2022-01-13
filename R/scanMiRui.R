@@ -6,6 +6,7 @@
 #' @importFrom plotly plotlyOutput ggplotly
 #' @importFrom shinycssloaders withSpinner
 #' @importFrom rintrojs introjsUI introBox
+#' @importFrom shinyjqui jqui_resizable
 #' @importFrom waiter use_waiter waiter_show_on_load spin_1
 #' @return A shiny ui
 #' @export
@@ -107,18 +108,21 @@ scanMiRui <- function(){
         tabItem(tabName="tab_mirnas",
           box(id="mirnasbox", width=12,
             column(12, selectizeInput("mirnas", choices=c(), multiple=TRUE,
-                          label="Selected miRNAs: (type in to filter)"),
-             tags$br(), actionButton("mirnas_vert",
+                                label="Selected miRNAs: (type in to filter)")),
+            column(8, actionButton("mirnas_vert",
                           "Select miRNAs conserved across vertebrates"), 
              tags$br(), actionButton("mirnas_mammals",
                           "Select miRNAs conserved across mammals"),
              tags$br(), actionButton("mirnas_confident",
                                      "Select confidently annotated miRNAs")
             ),
-            column(6,
+            column(4, "The conservation status of miRNAs is obtained from",
+                   tags$a(href="http://www.targetscan.org/", target="_blank",
+                          "TargetScan")),
+            column(8,
               checkboxInput("mirnas_all", "Search for all miRNAs")
             ),
-            column(6, actionButton("mirnas_clear",
+            column(4, actionButton("mirnas_clear",
                                    "Clear all selected miRNAs"))
           )
         ),
@@ -148,27 +152,33 @@ scanMiRui <- function(){
           ),
           tags$div(id="hitsbox", style="min-height: 300px;",
           box(width=12, collapsible=TRUE, collapsed=TRUE,
-               title="Plot along transcript",
-               tags$p("Hover on points to view details, and click to ",
+              title="Display sites along transcript",
+              actionButton("manhattanHelp", label="", style="float: right;", 
+                           icon=icon("question-circle")),
+              tags$p("Hover on points to view details, and click to ",
                       "visualize the alignment on the target sequence. You may
                       also select miRNAs to show/hide by clicking on the legend."),
-               withSpinner(plotlyOutput("manhattan")),
-            column(6, numericInput("manhattan_n", "Max number of miRNAs",
+              withSpinner(plotlyOutput("manhattan")),
+            column(6, numericInput("manhattan_n", "Number of top miRNAs displayed",
                                    value=10, min=1, max=50)),
             column(6, checkboxInput("manhattan_ordinal", "Ordinal position",
                                     value=FALSE))
           ),
           box(width=12, title="Table", collapsible=TRUE,
-            withSpinner(DTOutput("hits_table")),
-            column(6, tags$p("Double click on a row to visualize the alignment",
-                             " on the target sequence."),
-                   downloadLink('dl_hits', label = "Download all")),
-            column(6, style="text-align: right;", 
+            fluidRow(
+              column(6,
+                tags$p("Double click on a row to visualize the alignment",
+                        " on the target sequence.")),
+              column(6, style="text-align: right;", 
                    actionButton("colHelp","What are those columns?",
                                 icon=icon("question-circle")),
                    actionButton("stypeHelp","Site types",
                                 icon=icon("question-circle"))
-                   )
+              )
+            ),
+            withSpinner(DTOutput("hits_table")),
+            tags$p(downloadLink('dl_hits', label = "Download all"))
+            
           )),
           box(width=12, title="Cached hits", collapsible=TRUE, collapsed=TRUE,
             textOutput("cache.info"),
@@ -190,9 +200,7 @@ scanMiRui <- function(){
           tags$div(id="affinitybox", style="min-height: 40px;",
             box(width=12, title="Affinity plot", collapsible=TRUE, 
                 collapsed=TRUE,
-                withSpinner(plotOutput("modplot")),
-                numericInput("modplot_height", "Plot height (px)", value=400,
-                             min=200, max=1000, step=50)
+                withSpinner(jqui_resizable(plotOutput("modplot")))
             )
           ),
           tags$div(id="targetsbox", style="min-height: 100px;",

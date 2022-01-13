@@ -21,7 +21,7 @@ ScanMiRAnno(
 \arguments{
 \item{species}{The species/build acronym for automatic construction; if
 omitted, `genome` and `ensdb` should be given. Current possible values are:
-GRCh38, GRCm38, Rnor_6.}
+GRCh38, GRCm38, GRCm39, Rnor_6.}
 
 \item{genome}{A \link[BSgenome]{BSgenome-class}, or a
 \code{\link[rtracklayer]{TwoBitFile}}}

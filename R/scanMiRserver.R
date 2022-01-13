@@ -320,6 +320,15 @@ scanMiRserver <- function( annotations=list(), modlists=NULL,
     observeEvent(input$mirnas_clear, {
       updateSelectizeInput(session, "mirnas", selected="")
     })
+    
+    observe({
+      if(!is.null(input$mirnas) && length(input$mirnas)>0)
+        updateCheckboxInput(session, "mirnas_all", value=FALSE)
+    })
+    observe({
+      if(input$mirnas_all)
+        updateSelectizeInput(session, "mirnas", selected="")
+    })
 
     selmods <- reactive({ # models selected for scanning
       if(is.null(allmods())) return(NULL)
@@ -567,29 +576,9 @@ scanMiRserver <- function( annotations=list(), modlists=NULL,
       }
     )
 
-    observeEvent(input$colHelp, {
-      showModal(modalDialog(
-        title = "Columns of the hits table:",
-        tags$p("The start and end columns represent the coordinates of the seed
-binding site (i.e. corresponding to positions 1-8 of the miRNA) on the
-target sequence. The coordinates are based on the beginning of the sequence
-scanned (i.e. if you scanned only the UTR region, 1 represents the first
-nucleotide of the UTR)."), tags$p("
-The 'type' column indicates the type of match in the seed region."), tags$p("
-The 'log_kd' column indicates the log of the estimated dissociation rate. A
-lower log_kd value is indicative of a stronger affinity."), tags$p("
-The 'p3.score' represent the strength of the 3' supplementary alignment. In
-most cases, it roughly corresponds to the number of consecutive complementary
-bases (exluding the seed region). However, because of tolerance for G-U
-bindings or mismatches in large regions of complementarity, it can depart from
-this rule of thumb. To visualize this alignment, you can simply double click
-on one of the rows of the table."), tags$p("
-The 'note' column contains eventual special features of the binding site (e.g.
-prediction of TDMD sites)."),
-        easyClose = TRUE,
-        footer = NULL
-      ))
-    })
+    observeEvent(input$colHelp, .getHelpModal("hitsCol"))
+    observeEvent(input$stypeHelp, .getHelpModal("stypes"))
+    observeEvent(input$manhattanHelp, .getHelpModal("manhattan"))
 
     ## end scan hits and cache
 
@@ -727,7 +716,7 @@ prediction of TDMD sites)."),
     output$modplot <- renderPlot({ # affinity plot
       if(is.null(mod())) return(NULL)
       plotKdModel(mod())
-    }, height=reactive(max(100,input$modplot_height)))
+    })
 
     output$targets_ui <- renderUI({
       if(is.null(annotations[[input$mirlist]]$aggregated)){
