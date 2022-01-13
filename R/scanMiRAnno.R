@@ -24,7 +24,7 @@ setClass(
 #'
 #' @param species The species/build acronym for automatic construction; if
 #' omitted, `genome` and `ensdb` should be given. Current possible values are:
-#' GRCh38, GRCm38, Rnor_6.
+#' GRCh38, GRCm38, GRCm39, Rnor_6.
 #' @param genome A \link[BSgenome]{BSgenome-class}, or a
 #' \code{\link[rtracklayer]{TwoBitFile}}
 #' @param ensdb An \link[ensembldb]{EnsDb-class} (or a
@@ -52,7 +52,7 @@ ScanMiRAnno <- function(species=NULL, genome=NULL, ensdb=NULL, models=NULL,
   blink <- NULL
   if(!is.null(species)){
     stopifnot(is.null(genome) && is.null(ensdb))
-    species <- match.arg(species, c("GRCh38","GRCm38","Rnor_6","fake"))
+    species <- match.arg(species, c("GRCh38","GRCm38","GRCm39","Rnor_6","fake"))
     if(species=="fake") return(.fakeAnno())
     if(is.null(models))
       models <- switch(species,
@@ -60,20 +60,24 @@ ScanMiRAnno <- function(species=NULL, genome=NULL, ensdb=NULL, models=NULL,
                        GRCm38=scanMiRData::getKdModels("mmu"),
                        GRCm39=scanMiRData::getKdModels("mmu"),
                        "Rnor_6"=scanMiRData::getKdModels("rno"),
-                       stop("Species not among the pre-defined ones, please",
+                       #"Rnor_7"=scanMiRData::getKdModels("rno"),
+                       stop("Species not among the pre-defined one, please",
                             "provide `models` manually.")
                       )
     ah <- AnnotationHub(...)
     ensdb <- ah[[rev(query(ah, c("EnsDb", species, version))$ah_id)[1]]]
     genome <- switch(species,
-      GRCh38=BSgenome.Hsapiens.UCSC.hg38::BSgenome.Hsapiens.UCSC.hg38,
-      GRCm38=BSgenome.Mmusculus.UCSC.mm10::BSgenome.Mmusculus.UCSC.mm10,
-      "Rnor_6"=BSgenome.Rnorvegicus.UCSC.rn6::BSgenome.Rnorvegicus.UCSC.rn6,
+      GRCh38=BSgenome.Hsapiens.UCSC.hg38:::BSgenome.Hsapiens.UCSC.hg38,
+      GRCm38=BSgenome.Mmusculus.UCSC.mm10:::BSgenome.Mmusculus.UCSC.mm10,
+      GRCm39=BSgenome.Mmusculus.UCSC.mm39:::BSgenome.Mmusculus.UCSC.mm39,
+      "Rnor_6"=BSgenome.Rnorvegicus.UCSC.rn6:::BSgenome.Rnorvegicus.UCSC.rn6,
+      #"Rnor_7"=BSgenome.Rnorvegicus.UCSC.rn7:::BSgenome.Rnorvegicus.UCSC.rn7,
       getGenomeTwoBitFile(ensdb)
     )
     blink <- switch( species,
       GRCh38="https://www.ensembl.org/Homo_sapiens/Gene/Summary?db=core;g=",
-      GRCm38="https://www.ensembl.org/Mus_musculus/Gene/Summary?db=core;g=",
+      GRCm38="https://nov2020.archive.ensembl.org/Mus_musculus/Gene/Summary?db=core;g=",
+      GRCm39="https://www.ensembl.org/Mus_musculus/Gene/Summary?db=core;g=",
       "Rnor_6"="https://www.ensembl.org/Rattus_norvegicus/Gene/Summary?db=core;g=",
       NULL )
   }
