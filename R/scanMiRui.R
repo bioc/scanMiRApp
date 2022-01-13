@@ -15,33 +15,29 @@ scanMiRui <- function(){
   scanMiRlogo <- paste0("https://raw.git",
                         "hubusercontent.com/ETHZ-INS/scanMiR/",
                         "master/inst/docs/sticker.svg")
+  mer12scheme <- paste0("https://raw.git",
+                        "hubusercontent.com/ETHZ-INS/scanMiR/",
+                        "master/inst/docs/12mer.png")
   dashboardPage( skin="black",
 
     dashboardHeader(title = "scanMiRApp", titleWidth = "300px",
-                    tags$li(class="dropdown",actionLink("helpBtn", label="Help",
-                                                      icon=icon("question")))),
+                    tags$li(class="dropdown",
+                            actionLink("helpBtn", label="Quick start",
+                                       icon=icon("question")))),
 
     ## Sidebar content
     dashboardSidebar( width = "200px",
       sidebarMenu(id="main_tabs",
-        menuItem(introBox("Species Collection", data.step = 1,
-                 data.intro = "First, use this tab to select the miRNA collection
-                                 relative to your species of interest"),
-                 tabName="tab_collection"),
-        menuItem(introBox("Search in\ngene/sequence", data.step=2,
-                          data.intro="In this section, you can scan and 
-visualize specific transcripts or sequence for miRNA binding sites"),
+        menuItem("About", tabName="tab_about"),
+        menuItemOutput("menuCollection"),
+        menuItem("Search in\ngene/sequence", id="menuSearch",
           menuSubItem("subject", "tab_subject"),
-          menuSubItem("miRNAs", "tab_mirnas"),
+          menuItemOutput("menuMirnas"),
           menuSubItem("options", "tab_options"),
           menuSubItem("hits", "tab_hits"),
           startExpanded=TRUE
         ),
-        menuItem(introBox("miRNA-based", data.step=3, data.intro="
-In this section, you can instead start from a specific miRNA, visualize its 
-binding profile, and get its top predicted targets.<br/><br/>
-We'll start by looking at that part."), tabName="tab_mirna"),
-        menuItem("About", tabName="tab_about")
+        menuItem(tags$span(id="menuMiRNA", "miRNA-based"), tabName="tab_mirna")
       ),
       tags$a(
         href=paste0("https://git","hub.com/ETHZ-INS/scanMiR"), target="_blank",
@@ -51,7 +47,7 @@ We'll start by looking at that part."), tabName="tab_mirna"),
     ## Body Content
     dashboardBody(
       introjsUI(),
-      use_waiter(spinners = 3),
+      use_waiter(),
       waiter_show_on_load(html = tagList(
         tags$img(src=scanMiRlogo), tags$br(), tags$br(),
         tags$h3("Please wait while the application is initialized..."),
@@ -62,23 +58,18 @@ We'll start by looking at that part."), tabName="tab_mirna"),
           tags$h3("Select a miRNA collection"), tags$br(),
           column(6,
             tabBox(id="collection_type", width=12,
-                   tabPanel( title="Pre-built", value="prebuilt",
-                     selectInput("mirlist", "miRNA collection", choices=c()))#,
-  #                 tabPanel(title="Upload", value="upload",
-  #                          tags$p("Not yet implemented."))
+              tabPanel( title="Pre-built", value="prebuilt",
+                        actionButton(inputId="help_collections", label="",
+                          style="float:right;", icon=icon("question-circle")),
+                     selectInput("mirlist", "miRNA collection", choices=c()))
             )),
           column(6, valueBoxOutput("selected_collection", width=12)),
-          box(width=12, title="Details", collapsible=TRUE, collapsed=TRUE,
+          box(width=12, title="Extra annotation information", 
+              collapsible=TRUE, collapsed=TRUE,
               withSpinner(verbatimTextOutput("collection_summary")))
         ),
-        tabItem(tabName = "tab_subject",
-          introBox(data.step=7, data.intro="
-Moving on to the <b>transcript-centered</b> section!<br/><br/>
-Opening the '<i>Search in gene/sequence</i>' menu provides access to sub-sections,
-the first of which is about selecting the sequence we want to scan.<br/><br/>
-There are two options here, available through the tabs on the top right:<br>
-you can either scan an annotated transcript, or a custom sequence that you'll copy-paste.
-We'll look at the former.",
+        tabItem(tabName="tab_subject",
+          tags$div(id="subjectsbox", style="min-height: 200px;",
           tabBox(
             title="Search bindings in", side="right",
             id="subjet_type", width=12, selected = "transcript",
@@ -96,11 +87,7 @@ We'll look at the former.",
             tabPanel(
               title="Transcript", value="transcript",
               selectizeInput("annotation", "Genome & Annotation", choices=c()),
-              introBox(data.step=8, data.intro="
-In this sub-tab, you can first select the gene and then
-select the transcript.<br/>Again, you can delete the content
-of the box and type the first few words to get the matching options.<br/>
-An overview of the selected sequence is then shown at the bottom.",
+              tags$div(id="txbox",
               tags$div(selectizeInput("gene", "Gene", choices=c()),
                        style="float: left; padding-right: 10px;"),
               tags$br(), tags$p(style="text-align: left;", "Type in the first ",
@@ -118,24 +105,21 @@ An overview of the selected sequence is then shown at the bottom.",
           )
         )),
         tabItem(tabName="tab_mirnas",
-          introBox(data.step=9, data.intro="
-The next step is to select the miRNA(s) for which you want to scan binding sites.
-<br/><br/>You can click in the box again and type the beginning of the miRNA(s) you wish to add
-and the matching miRNAs will show up. Alternatively, you can select a set of miRNAs using the buttons.",
-            box( width=12,
-              column(12, selectizeInput("mirnas", choices=c(), multiple=TRUE,
-                            label="Selected miRNAs: (type in to filter)")),
-              column(4,
-                checkboxInput("mirnas_all", "Search for all miRNAs"),
-                actionButton("mirnas_confident",
-                             "Select confidently annotated miRNAs"),
-                actionButton("mirnas_mammals",
-                             "Select miRNAs conserved across mammals"),
-                actionButton("mirnas_vert",
-                             "Select miRNAs conserved across vertebrates"),
-                actionButton("mirnas_clear", "Clear all selected miRNAs")
-              )
-            )
+          box(id="mirnasbox", width=12,
+            column(12, selectizeInput("mirnas", choices=c(), multiple=TRUE,
+                          label="Selected miRNAs: (type in to filter)"),
+             tags$br(), actionButton("mirnas_vert",
+                          "Select miRNAs conserved across vertebrates"), 
+             tags$br(), actionButton("mirnas_mammals",
+                          "Select miRNAs conserved across mammals"),
+             tags$br(), actionButton("mirnas_confident",
+                                     "Select confidently annotated miRNAs")
+            ),
+            column(6,
+              checkboxInput("mirnas_all", "Search for all miRNAs")
+            ),
+            column(6, actionButton("mirnas_clear",
+                                   "Clear all selected miRNAs"))
           )
         ),
         tabItem(tabName="tab_options",
@@ -156,18 +140,14 @@ and the matching miRNAs will show up. Alternatively, you can select a set of miR
                             "Search also for non-canonical sites", value=TRUE))
         ),
         tabItem(tabName="tab_hits",
-          column(2, introBox(data.step=10, uiOutput("scanBtn"), data.intro="
-Finally, you can click on the scan button to launch it!<br/>
-If it's disabled, it's most likely because you didn't select any miRNA and/or sequence.")),
-          column(10, tags$h5(textOutput("scan_target"))),
-          introBox(data.step=11, data.intro="
-The putative binding sites are shown in the <i>'hits'</i> tab.<br/>
-You've got two ways to browse sites: you can either visualize
-them on a plot along the length of the sequence, or through the table.<br/>
-In both cases, you can <i>double click</i> on a given match to view the supplementary
-3' alignment on the target sequence.<br/><br/>
-Well, that's about it for the basic functions!",
-          box( width=12, collapsible=TRUE, collapsed=TRUE,
+          fluidRow(
+            column(2, tags$div(id="scanBtnBox", 
+              style="display: inline-block; min-height: 30px; min-width: 100px;",
+              uiOutput("scanBtn"), HTML("&nbsp;"))),
+            column(10, tags$h5(textOutput("scan_target")))
+          ),
+          tags$div(id="hitsbox", style="min-height: 300px;",
+          box(width=12, collapsible=TRUE, collapsed=TRUE,
                title="Plot along transcript",
                tags$p("Hover on points to view details, and click to ",
                       "visualize the alignment on the target sequence. You may
@@ -184,7 +164,11 @@ Well, that's about it for the basic functions!",
                              " on the target sequence."),
                    downloadLink('dl_hits', label = "Download all")),
             column(6, style="text-align: right;", 
-                   actionButton("colHelp","What are those columns?"))
+                   actionButton("colHelp","What are those columns?",
+                                icon=icon("question-circle")),
+                   actionButton("stypeHelp","Site types",
+                                icon=icon("question-circle"))
+                   )
           )),
           box(width=12, title="Cached hits", collapsible=TRUE, collapsed=TRUE,
             textOutput("cache.info"),
@@ -196,50 +180,44 @@ Well, that's about it for the basic functions!",
 
         # miRNA-based
         tabItem(tabName="tab_mirna",
-          column(5, introBox(selectizeInput("mirna", "miRNA", choices=c()),
-                             data.step=4, data.intro="
-Use this dropdown to select the miRNA you're interested in.<br/><br/>Note that you 
-don't have to scroll down until you find it - you can simply erase what's written 
-in the box, type the beginning of the miRNA name, and see the matching options.")),
-          column(4, tags$strong("Status"), textOutput("modconservation")),
-          column(3, htmlOutput("mirbase_link")),
-          introBox(data.step=5, data.intro="
-This box contains a plot summarizing the binding profile of the miRNA, plotting
-the dissociation rate (i.e. affinity) of the top 7mers sequences (with or without
-the 'A' at position 1).<br/><br/>If it's not showing, it's because the box is 
-collapsed - you can open it by clicking the 'plus' button on the right.",
-            box(width=12, title="Affinity plot", collapsible=TRUE, collapsed=TRUE,
-              withSpinner(plotOutput("modplot")),
-              numericInput("modplot_height", "Plot height (px)", value=400,
-                           min=200, max=1000, step=50)
+          fluidRow(
+            column(5, tags$div(id="mirnainput",
+                        selectizeInput("mirna", "miRNA", choices=c()))),
+            column(4, tags$strong("TargetScan conservation status"), 
+                  textOutput("modconservation")),
+            column(3, htmlOutput("mirbase_link"))
+          ),
+          tags$div(id="affinitybox", style="min-height: 40px;",
+            box(width=12, title="Affinity plot", collapsible=TRUE, 
+                collapsed=TRUE,
+                withSpinner(plotOutput("modplot")),
+                numericInput("modplot_height", "Plot height (px)", value=400,
+                             min=200, max=1000, step=50)
             )
           ),
-          introBox(data.step=6, data.intro="
-This box contains the predicted repression and number of binding sites for all 
-transcripts. You can reorder it anyway you like, and filter or remove any column.<br/><br/>
-You can also double-click on one of the row to get the details and visualize 
-the individual binding sites - this would automatically move us to the 
-transcript-centered section of the app.",
-                   box(width=12, title="Targets", collapsible=TRUE,
-              uiOutput("targets_ui")))
+          tags$div(id="targetsbox", style="min-height: 100px;",
+            box(width=12, title="Targets", collapsible=TRUE, 
+                uiOutput("targets_ui"))
+          )
         ),
         tabItem(tabName = "tab_about",
 ## TAB ABOUT
-    box(width=12, title="About",
-        tags$p("The scanMiRApp is an interface to the ",
-        tags$a( href=paste0("https://git","hub.com/ETHZ-INS/scanMiR"),
-                target="_blank", "scanMiR"),
-        "package (see ", tags$a("preprint", target="_blank", 
-            href="https://www.biorxiv.org/content/10.1101/2021.06.16.448293"),
-        "). The shiny app was developed by Pierre-Luc Germain and ",
-        "Michael Soutschek in the context of broader research in the ",
-        tags$a( href="http://schrattlab.ethz.ch", "Schratt lab",
-                target="_blank"), ".",
-        tags$br(), "Bugs reports and feature requests are welcome ",
-        tags$a( href=paste0("https://git","hub.com/ETHZ-INS/scanMiRApp/issues"),
-                target="_blank", "here"),".", tags$br(),
-        style="font-size: 110%;"),
-        tags$p(textOutput("pkgVersions"))
+    box(width=12, title="miRNA binding prediction",
+      tags$div(style="font-size: 110%;",
+        tags$img(src=mer12scheme, style="float: right; margin: 20px; width: 25%;"), 
+        tags$p("micro-RNAs (miRNAs) regulate transcripts stability and 
+          translation by targeting the Argonaute complex to RNAs exhibiting a 
+          partial complementarity with, in particular, the miRNA's seed 
+          sequence.", tags$a(href="https://dx.doi.org/10.1126/science.aav1741", 
+            "McGeary, Lin et al. (2019)"), " have additionally shown the 
+      relevance of flanking nucleotides by empirically measuring the affinity 
+      (specifically the dissociation rate constant, KD) of a set of miRNAs to 
+      random 12-mer sequences, and then computationally extrapolating to other 
+      miRNAs). The ",
+      tags$a( href=paste0("https://git","hub.com/ETHZ-INS/scanMiR"),
+              target="_blank", "scanMiR package"), ", to which this app is an 
+      interface, builds on this work to offer a powerful and flexible binding 
+      and repression framework."))
     ),
     box(width=12, title="Getting started",
         tags$div( style="font-size: 110%;",
@@ -255,7 +233,17 @@ transcript-centered section of the app.",
                   "including for instance its general binding profile and its",
                   "top targets.")
         )
-    )
+    ),
+    tags$div(style="text-align: right; font-weight: normal;",
+      tags$p("The shiny app was developed by Pierre-Luc Germain and ",
+           "Michael Soutschek in the context of broader research in the ",
+           tags$a( href="http://schrattlab.ethz.ch", "Schratt lab",
+                   target="_blank"), ".",
+           tags$br(), "Bugs reports and feature requests are welcome on the ",
+           tags$a( href=paste0("https://git","hub.com/ETHZ-INS/scanMiRApp/issues"),
+                   target="_blank", "github repository"), "."),
+           textOutput("pkgVersions")
+      )
 ## END TAB ABOUT
         )
       ),

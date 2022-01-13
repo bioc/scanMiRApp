@@ -92,16 +92,32 @@ scanMiRserver <- function( annotations=list(), modlists=NULL,
     #############################
     ## intro
 
-    hintjs(session)
-
-    observeEvent(input$helpBtn, introjs(session,
-                      events=list(onbeforechange=readCallback("switchTabs"))))
-    observeEvent(input$helpLink, introjs(session,
-                      events=list(onbeforechange=readCallback("switchTabs"))))
+    startIntro <- function(session){
+      introjs(session, options=list(steps=.getAppIntro(), "nextLabel"="Next",
+                                    "prevLabel"="Previous"),
+              events=list(onbeforechange=readCallback("switchTabs")))
+    }
+    
+    observeEvent(input$helpBtn, startIntro(session))
+    observeEvent(input$helpLink, startIntro(session))
 
     ##############################
     ## initialize inputs
 
+    output$menuCollection <- renderUI({
+      menuItem(tags$span("miRNA Collection:", 
+                         HTML("<br/>&nbsp;&nbsp;&nbsp;&nbsp;"), input$mirlist),
+               tabName="tab_collection")
+    })
+    output$menuMirnas <- renderUI({
+      if( (nsel <- length(selmods()))== 0){
+        lab <- "miRNAs (none selected)"
+      }else{
+        lab <- paste0("miRNAs (", nsel, ")")
+      }
+      menuSubItem(lab, "tab_mirnas")
+    })
+    
     updateSelectizeInput(session, "mirlist", choices=names(modlists))
     updateSelectizeInput(session, "annotation", choices=names(annotations))
 
@@ -720,9 +736,12 @@ prediction of TDMD sites)."),
       }
       list(
         fluidRow(
-          column(6, tags$p("Double-click on a row to visualize hits.")),
-          column(6, checkboxInput("targetlist_gene",
-                                  "Only top transcript per gene",value=FALSE))),
+          column(5, tags$p("Double-click on a row to visualize hits.")),
+          column(4, checkboxInput("targetlist_gene",
+                                  "Only top transcript per gene",value=FALSE)),
+          column(3, actionButton("stypeHelp2","Site types",
+                                 icon=icon("question-circle")))
+        ),
         withSpinner(DTOutput("mirna_targets")),
         downloadLink('dl_mirTargets', label = "Download all")
       )
