@@ -579,6 +579,12 @@ scanMiRserver <- function( annotations=list(), modlists=NULL,
     observeEvent(input$colHelp, .getHelpModal("hitsCol"))
     observeEvent(input$stypeHelp, .getHelpModal("stypes"))
     observeEvent(input$manhattanHelp, .getHelpModal("manhattan"))
+    
+    output$bartel2009 <- renderImage({
+      list(src=system.file("docs", "Bartel2009_sites.png", package="scanMiRApp"),
+           contentType = 'image/png', width=772, height=576,
+           alt="miRNA sites types from Bartel, Cell 2009")
+    })
 
     ## end scan hits and cache
 
