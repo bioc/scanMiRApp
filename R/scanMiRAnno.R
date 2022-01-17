@@ -51,7 +51,6 @@ ScanMiRAnno <- function(species=NULL, genome=NULL, ensdb=NULL, models=NULL,
                         addDBs=list(), ...){
   blink <- NULL
   if(!is.null(species)){
-    stopifnot(is.null(genome) && is.null(ensdb))
     species <- match.arg(species, c("GRCh38","GRCm38","GRCm39","Rnor_6","fake"))
     if(species=="fake") return(.fakeAnno())
     if(is.null(models))
@@ -65,7 +64,8 @@ ScanMiRAnno <- function(species=NULL, genome=NULL, ensdb=NULL, models=NULL,
                             "provide `models` manually.")
                       )
     ah <- AnnotationHub(...)
-    ensdb <- ah[[rev(query(ah, c("EnsDb", species, version))$ah_id)[1]]]
+    if(is.null(ensdb))
+      ensdb <- ah[[rev(query(ah, c("EnsDb", species, version))$ah_id)[1]]]
     genome <- switch(species,
       GRCh38=BSgenome.Hsapiens.UCSC.hg38:::BSgenome.Hsapiens.UCSC.hg38,
       GRCm38=BSgenome.Mmusculus.UCSC.mm10:::BSgenome.Mmusculus.UCSC.mm10,
