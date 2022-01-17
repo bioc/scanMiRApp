@@ -16,19 +16,20 @@
       Note that you don't have to scroll down until you find it - you can 
       simply erase what's written in the box, type the beginning of the miRNA 
       name, and see the matching options.",
-      "This box contains a plot summarizing the binding profile of the miRNA, plotting
-the dissociation rate (i.e. affinity) of the top 7mers sequences (with or without
-the 'A' at position 1).<br/><br/>If it's not showing, it's because the box is 
-collapsed - you can open it by clicking the 'plus' button on the right.",
-      "This box contains the predicted repression and number of binding sites for all 
-transcripts. You can reorder it anyway you like, and filter or remove any column.
-<br/><br/>You can also double-click on one of the row to get the details and 
-visualize the individual binding sites - this would automatically move us to the 
-transcript-centered section of the app.",
+      "This box contains a plot summarizing the binding profile of the miRNA, 
+      plotting the dissociation rate (i.e. affinity) of the top 7mers sequences
+      (with or without the 'A' at position 1).<br/><br/>If it's not showing, 
+      it's because the box is collapsed - you can open it by clicking the 'plus'
+      button on the right.",
+      "This box contains the predicted repression and number of binding sites 
+      for all transcripts. You can reorder it anyway you like, and filter or 
+      remove any column.<br/><br/>You can also double-click on one of the row 
+      to get the details and visualize the individual binding sites - this would
+      automatically move us to the transcript-centered section of the app.",
       "Moving on to the <b>transcript-centered</b> section!<br/><br/>
-The '<i>Search in gene/sequence</i>' menu on the left provides access to 
-sub-sections, the first of which ('subject') is about selecting the sequence we 
-want to scan.",
+      The '<i>Search in gene/sequence</i>' menu on the left provides access to 
+      sub-sections, the first of which ('subject') is about selecting the 
+      sequence we want to scan.",
       "There are two ways to select a sequence to scan, available through the 
       tabs on the top right:<br>
       you can either scan an annotated transcript, or a custom sequence that 
@@ -110,8 +111,8 @@ prediction of TDMD sites)."), easyClose=TRUE, footer=NULL)),
         (= -log(KD)) information on the y-axis is a proxy for the  affinity of 
         a specific miRNA to its complementary sequence at that position. The 
         higher a '-log_kd' value is, the more time the Ago-miRNA complex will 
-        spend at that site and the more likely it gets that this particular 
-        binding site leads to post-transcriptional repression of the transcript."),
+        spend at that site and the more likely this particular binding site 
+        will lead to post-transcriptional repression of the transcript."),
       tags$p("If the scan has been performed with a single miRNA, a green area 
         highlighting will show the affinity range of the strongest site types 
         for this miRNA (i.e. the -log_kd range of 8mers), which can help assess
