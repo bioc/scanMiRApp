@@ -77,11 +77,42 @@ The 'note' column contains eventual special features of the binding site (e.g.
 prediction of TDMD sites)."), easyClose=TRUE, footer=NULL)),
     stypes=showModal(modalDialog(easyClose=TRUE, footer=NULL,
       title="Description of the site types",
-      tags$p("blablabla")
+      tags$p("MicroRNAs can bind to mRNAs in different kinds, generally defined by the 
+             'binding site types'. See the figure below from"), 
+      tags$a(href="https://doi.org/10.1016/j.cell.2009.01.002", "Bartel (2009)"),
+      tags$p("for a first overview and the corresponding review for detailed 
+             information."),
+      tags$img(src="Bartel_2009.png"),
+      tags$p("In brief, there are canonical and non-canonical binding sites. The canonical
+             binding sites are primarily classified by the number of consecutive nucleotides of the 
+             extended seed region of a miRNA that are bound to their complements. '7mer-m8'
+             indicates that the 8th nucleotide (nt) of the miRNA is bound at that binding site,
+             '7mer-A1' that there is an 'A' opposite the first nt of the miRNA, which is beneficial
+             at that specific position. Non-canoncial binding sites most commonly include wobble bindings
+             or bulged out nucleotides, though often do not cause effective silencing of transcripts."),
+      tags$a(href="https://dx.doi.org/10.1126/science.aav1741", 
+             "McGeary, Lin et al. (2019)"), tags$p("show that in order to determine the efficacy of a binding
+             site, it's important to not only consider the type of the site but also take the flanking 
+             di-nucleotides into account. By neglecting this immediate surrounding information one can
+             though generally state that 8mer binding sites are the most effective ones, followed by 
+             '7mer-m8' and '7mer-A1' binding sites.")
     )),
     manhattan=showModal(modalDialog(easyClose=TRUE, footer=NULL,
       title="Plotting sites along transcript",
-      tags$p("blablabla")
+      tags$p("This plot shows the detected miRNA binding sites at their positions within the
+             selected sequence. The '-log_kd' (= -log(KD)) information on the y-axis is a proxy for the 
+             affinity of a specific miRNA to its complementary sequence at that position. The higher 
+             a '-log_kd' value is, the more time the Ago-miRNA complex will spend at that site and the 
+             more likely it gets that this particular binding site leads to post-transcriptional 
+             repression of the transcript. HOWEVER: Due to the nature of the biochemical model,
+             this is not true for comparisons of binding sites bound by different miRNAs!! In case the 
+             scan has been performed with a single miRNA, a green area highlighting the typical 8mer affinity 
+             range (meaning the -log_kd values which on average correspond to the most effective binding sites
+             of the chosen miRNA) can give further information on the strenght of individual binding sites."),
+      tags$p("If the scan has been performed with several miRNAs, those with the highest affinity values
+             (see also the order in the hits-table) will be displayed by default in the plot. The number
+             of shown miRNAs can be altered in the 'max number of miRNA' input"),
+      tags$p("A 'log_kd' of -1 (indicated by the dashed red line) indicates background binding.")
     )),
     modalDialog(title=topic, "No help currently available for this topic.")
   )

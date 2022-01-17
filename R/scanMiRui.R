@@ -216,7 +216,10 @@ scanMiRui <- function(){
         tags$p("micro-RNAs (miRNAs) regulate transcripts stability and 
           translation by targeting the Argonaute complex to RNAs exhibiting a 
           partial complementarity with, in particular, the miRNA's seed 
-          sequence.", tags$a(href="https://dx.doi.org/10.1126/science.aav1741", 
+          sequence. For a general review on miRNA biology and targeting, see
+               ", tags$a(href="https://doi.org/10.1016/j.cell.2018.03.006", 
+                         "Bartel (2018)"),".", 
+               tags$a(href="https://dx.doi.org/10.1126/science.aav1741", 
             "McGeary, Lin et al. (2019)"), " have additionally shown the 
       relevance of flanking nucleotides by empirically measuring the affinity 
       (specifically the dissociation rate constant, KD) of a set of miRNAs to 
