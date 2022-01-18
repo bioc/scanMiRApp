@@ -65,7 +65,7 @@ scanMiRui <- function(){
                      selectInput("mirlist", "miRNA collection", choices=c()))
             )),
           column(6, valueBoxOutput("selected_collection", width=12)),
-          box(width=12, title="Extra annotation information", 
+          box(width=12, title="Extra collection information", 
               collapsible=TRUE, collapsed=TRUE,
               withSpinner(verbatimTextOutput("collection_summary")))
         ),

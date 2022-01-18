@@ -141,7 +141,10 @@ scanMiRserver <- function( annotations=list(), modlists=NULL,
     output$collection_summary <- renderPrint({
       if(is.null(input$mirlist) || is.null(annotations[[input$mirlist]]))
         return(NULL)
-      summary(annotations[[input$mirlist]])
+      summary(allmods())
+      ad <- annotations[[input$mirlist]]$addDBs
+      if(!is.null(ad) && length(ad)>0)
+        cat("\nAdditional DB(s):", paste(names(ad), collapse=", "))
     })
     output$selected_collection <- renderValueBox({
       if(is.null(input$mirlist) || is.null(annotations[[input$mirlist]]))
