@@ -218,7 +218,7 @@ scanMiRui <- function(){
           partial complementarity with, in particular, the miRNA's seed 
           sequence. For a general review on miRNA biology and targeting, see
                ", tags$a(href="https://doi.org/10.1016/j.cell.2018.03.006", 
-                         "Bartel (2018)"),".", 
+                         "Bartel (2018)",.noWS = "outside"),".", 
                tags$a(href="https://dx.doi.org/10.1126/science.aav1741", 
             "McGeary, Lin et al. (2019)"), " have additionally shown the 
       relevance of flanking nucleotides by empirically measuring the affinity 
@@ -226,13 +226,13 @@ scanMiRui <- function(){
       random 12-mer sequences, and then computationally extrapolating to other 
       miRNAs). The ",
       tags$a( href=paste0("https://git","hub.com/ETHZ-INS/scanMiR"),
-              target="_blank", "scanMiR package"), ", to which this app is an 
+              target="_blank", "scanMiR package",.noWS = "outside"), ", to which this app is an 
       interface, builds on this work to offer a powerful and flexible binding 
       and repression framework."))
     ),
     box(width=12, title="Getting started",
         tags$div( style="font-size: 110%;",
-           tags$p("For a quick tour of the app, ", actionLink("helpLink", "click here")),
+           tags$p("For a quick tour of the app, ", actionLink("helpLink", "click here",.noWS = "outside"),"."),
            tags$p("There are two main ways to use scanMiRApp:"),
            tags$br(), tags$h4("Transcript-centered:"),
            tags$p("In the 'Search in gene/sequence' menu, you'll be able to ",
@@ -249,10 +249,10 @@ scanMiRui <- function(){
       tags$p("The shiny app was developed by Pierre-Luc Germain and ",
            "Michael Soutschek in the context of broader research in the ",
            tags$a( href="http://schrattlab.ethz.ch", "Schratt lab",
-                   target="_blank"), ".",
+                   target="_blank",.noWS = "outside"), ".",
            tags$br(), "Bugs reports and feature requests are welcome on the ",
            tags$a( href=paste0("https://git","hub.com/ETHZ-INS/scanMiRApp/issues"),
-                   target="_blank", "github repository"), "."),
+                   target="_blank", "github repository",.noWS = "outside"), "."),
            textOutput("pkgVersions")
       )
 ## END TAB ABOUT

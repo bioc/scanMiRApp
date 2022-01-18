@@ -141,7 +141,7 @@ scanMiRserver <- function( annotations=list(), modlists=NULL,
     output$collection_summary <- renderPrint({
       if(is.null(input$mirlist) || is.null(annotations[[input$mirlist]]))
         return(NULL)
-      summary(annotations[[input$mirlist]])
+      summary(annotations[[input$mirlist]]$models)
     })
     output$selected_collection <- renderValueBox({
       if(is.null(input$mirlist) || is.null(annotations[[input$mirlist]]))
@@ -579,6 +579,7 @@ scanMiRserver <- function( annotations=list(), modlists=NULL,
     observeEvent(input$colHelp, .getHelpModal("hitsCol"))
     observeEvent(input$stypeHelp, .getHelpModal("stypes"))
     observeEvent(input$manhattanHelp, .getHelpModal("manhattan"))
+    observeEvent(input$help_collections, .getHelpModal("collections"))
     
     output$bartel2009 <- renderImage({
       list(src=system.file("docs", "Bartel2009_sites.png", package="scanMiRApp"),
