@@ -81,7 +81,7 @@ prediction of TDMD sites)."), easyClose=TRUE, footer=NULL)),
       tags$p("miRNAs can bind to mRNAs in different kinds, generally defined by
         the 'binding site types'. See the figure below from ", 
       tags$a(href="https://doi.org/10.1016/j.cell.2009.01.002", 
-             "Bartel (Cell 2009)", target="_blank"), "for a first overview and 
+             "Bartel (2009)", target="_blank"), "for a first overview and 
         the corresponding  review for detailed information."),
       tags$div(style="height: 576px;", imageOutput("bartel2009")), 
       tags$p("In brief, there are canonical and non-canonical binding sites. The
@@ -124,6 +124,23 @@ prediction of TDMD sites)."), easyClose=TRUE, footer=NULL)),
       tags$p("A 'log_kd' of -1 (indicated by the dashed red line) indicates 
              background binding."),
       tags$p("Note log_kd values are not necessarily comparable across miRNAs!")
+    )),
+    collections=showModal(modalDialog(easyClose=TRUE, footer=NULL,
+      title="miRNA Kd-Model collections",
+      tags$p("In this section you can select a miRNA species collection, which will determine 
+        the available miRNA-KdModels that you can subsequently choose to scan sequences or
+        display in the miRNA-based tab. We pre-compiled KdModels for all human, mouse and rat",
+        tags$a(href="https://www.mirbase.org/index.shtml", 
+        "miRBase v22", target="_blank"), "miRNAs. To get an overview of the number of available miRNAs 
+        for the selected species and their",
+        tags$a(href="http://www.targetscan.org/vert_80/", 
+        "Targetscan", target="_blank"),"conservation status simply click on 'Details'."),
+      tags$p("You can also run the App with your own list of KdModels if your species of interest is for example
+             not provided by default. Consult the vignette of the Bioconductor package",
+             tags$a(href="http://bioconductor.org/packages/release/bioc/html/scanMiRApp.html", 
+        "ScanMiRApp", target="_blank"),"for further information."),
+      tags$p("Further information about the availability of full genome scans (='+ Scan') and aggregated repression predictions 
+             (='+ Aggregated') get displayed on the right side in the blue rectangle.")
     )),
     modalDialog(title=topic, "No help currently available for this topic.")
   )

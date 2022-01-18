@@ -582,6 +582,7 @@ scanMiRserver <- function( annotations=list(), modlists=NULL,
     observeEvent(input$colHelp, .getHelpModal("hitsCol"))
     observeEvent(input$stypeHelp, .getHelpModal("stypes"))
     observeEvent(input$manhattanHelp, .getHelpModal("manhattan"))
+    observeEvent(input$help_collections, .getHelpModal("collections"))
     
     output$bartel2009 <- renderImage({
       list(src=system.file("docs", "Bartel2009_sites.png", package="scanMiRApp"),
