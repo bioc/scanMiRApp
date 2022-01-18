@@ -127,20 +127,20 @@ prediction of TDMD sites)."), easyClose=TRUE, footer=NULL)),
     )),
     collections=showModal(modalDialog(easyClose=TRUE, footer=NULL,
       title="miRNA Kd-Model collections",
-      tags$p("In this section you can select a miRNA species collection, which will determine 
-        the available miRNA-KdModels that you can subsequently choose to scan sequences or
-        display in the miRNA-based tab. We pre-compiled KdModels for all human, mouse and rat",
-        tags$a(href="https://www.mirbase.org/index.shtml", 
-        "miRBase v22", target="_blank"), "miRNAs. To get an overview of the number of available miRNAs 
-        for the selected species and their",
-        tags$a(href="http://www.targetscan.org/vert_80/", 
-        "Targetscan", target="_blank"),"conservation status simply click on 'Details'."),
-      tags$p("You can also run the App with your own list of KdModels if your species of interest is for example
-             not provided by default. Consult the vignette of the Bioconductor package",
-             tags$a(href="http://bioconductor.org/packages/release/bioc/html/scanMiRApp.html", 
-        "ScanMiRApp", target="_blank"),"for further information."),
-      tags$p("Further information about the availability of full genome scans (='+ Scan') and aggregated repression predictions 
-             (='+ Aggregated') get displayed on the right side in the blue rectangle.")
+      tags$p("In this section you can select a miRNA species collection, which 
+        will determine the available miRNA-KdModels that you can subsequently 
+        choose to scan sequences or display in the miRNA-based tab. We 
+        pre-compiled KdModels for all human, mouse and rat",
+        tags$a(href="https://www.mirbase.org/index.shtml", "miRBase v22", 
+          target="_blank"), "miRNAs. To get an overview of the number of 
+        available miRNAs for the selected species and their",
+        tags$a(href="http://www.targetscan.org/vert_80/", "Targetscan", 
+          target="_blank"),"conservation status simply click on 'Details'."),
+      tags$p("You can also run the App with your own list of KdModels if your 
+        species of interest is for example not provided by default. Consult the
+        ", tags$a(href="http://bioconductor.org/packages/release/bioc/html/scanMiRApp.html", 
+        "vignette", target="_blank"),"of the Bioconductor package for further 
+        information.")
     )),
     modalDialog(title=topic, "No help currently available for this topic.")
   )
