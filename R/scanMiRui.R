@@ -228,7 +228,7 @@ scanMiRui <- function(){
       tags$a( href=paste0("https://git","hub.com/ETHZ-INS/scanMiR"),
               target="_blank", "scanMiR package",.noWS = "outside"), ", to which this app is an 
       interface, builds on this work to offer a powerful and flexible binding 
-      and repression framework."))
+      and repression prediction framework."))
     ),
     box(width=12, title="Getting started",
         tags$div( style="font-size: 110%;",
