@@ -1,8 +1,8 @@
 Package: scanMiRApp
 Type: Package
 Title: scanMiR shiny application
-Version: 1.3.0
-Date: 2022-01-17
+Version: 1.3.1
+Date: 2022-10-11
 Authors@R: c(
     person("Pierre-Luc", "Germain", email="pierre-luc.germain@hest.ethz.ch", 
       role=c("cre","aut"), comment=c(ORCID="0000-0003-3418-4218")),
