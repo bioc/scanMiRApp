@@ -26,6 +26,7 @@
 #' @importFrom waiter waiter_hide waiter_show
 #' @importFrom rintrojs hintjs introjs readCallback
 #' @importFrom utils capture.output object.size write.csv packageVersion
+#' @importFrom S4Vectors mcols mcols<-
 #' @import shiny shinydashboard scanMiR GenomicRanges IRanges
 #' @export
 #' @examples
@@ -595,7 +596,9 @@ scanMiRserver <- function( annotations=list(), modlists=NULL,
     agghits_data <- reactive({
       if(is.null(hits()$hits)) return(NULL)
       h <- hits()$hits
-      ag <- scanMiR::aggregateMatches(hits()$hits, keepSiteInfo=TRUE)
+      h <- GRanges(hits()$target, IRanges(h$start, h$end))
+      mcols(h) <- mcols(hits()$hits)
+      ag <- scanMiR::aggregateMatches(h, keepSiteInfo=TRUE)
       ag <- ag[order(ag$repression),]
       ag$transcript <- ag$repression <- NULL
       ag
