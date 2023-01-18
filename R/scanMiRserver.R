@@ -596,6 +596,10 @@ scanMiRserver <- function( annotations=list(), modlists=NULL,
     agghits_data <- reactive({
       if(is.null(hits()$hits)) return(NULL)
       h <- hits()$hits
+      ag <- scanMiR::aggregateMatches(h, keepSiteInfo=TRUE)
+      ag <- ag[order(ag$repression),]
+      ag$transcript <- ag$repression <- NULL
+      
       h <- GRanges(rep(as.factor(hits()$target),nrow(h)), IRanges(h$start, h$end))
       mcols(h) <- mcols(hits()$hits)
       ag <- scanMiR::aggregateMatches(h, keepSiteInfo=TRUE)
