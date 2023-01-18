@@ -166,9 +166,9 @@ scanMiRui <- function(){
           ),
           box(width=12, title="Aggregated per miRNA", collapsible=TRUE, collapsed=TRUE,
               withSpinner(DTOutput("agghits_table")),
-              column(6,tags$p(downloadLink('dl_agghits', label = "Download all")))
+              column(6,tags$p(downloadLink('dl_agghits', label = "Download all"))),
               column(6, actionButton("help_aggregatedHits","About aggregation...",
-                                     icon=icon("question-circle")),)
+                                     icon=icon("question-circle")))
           ),
           box(width=12, title="Table", collapsible=TRUE,
             fluidRow(
