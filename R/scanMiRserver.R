@@ -584,13 +584,48 @@ scanMiRserver <- function( annotations=list(), modlists=NULL,
     observeEvent(input$stypeHelp2, .getHelpModal("stypes"))
     observeEvent(input$manhattanHelp, .getHelpModal("manhattan"))
     observeEvent(input$help_collections, .getHelpModal("collections"))
+    observeEvent(input$help_aggregatedHits, .getHelpModal("aggregatedHits"))
     
     output$bartel2009 <- renderImage({
       list(src=system.file("docs", "Bartel2009_sites.png", package="scanMiRApp"),
            contentType = 'image/png', width=772, height=576,
            alt="miRNA sites types from Bartel, Cell 2009")
     })
+    
+    agghits_data <- reactive({
+      if(is.null(hits()$hits)) return(NULL)
+      h <- hits()$hits
+      ag <- scanMiR::aggregateMatches(hits()$hits, keepSiteInfo=TRUE)
+      ag <- ag[order(ag$repression),]
+      ag$transcript <- ag$repression <- NULL
+      ag
+    })
 
+    output$agghits_table <- renderDT({
+      if(is.null(agghits_data())) return(NULL)
+      h <- as.data.frame(agghits_data())
+      dtwrapper(h)
+    })
+    
+    output$dl_agghits <- downloadHandler(
+      filename = function() {
+        if(is.null(agghits_data())) return(NULL)
+        fn <- paste0("agghits-", gsub("\\.[09]+", "",
+                                   cached.hits[[current.cs()]]$target))
+        if(hits()$nsel == 1){
+          fn <- paste0(fn,"-",cached.hits[[cs]]$sel,".csv")
+        }else{
+          fn <- paste0(fn,"-",Sys.Date(),".csv")
+        }
+        fn
+      },
+      content = function(con) {
+        if(is.null(agghits_data())) return(NULL)
+        h <- as.data.frame(agghits_data())
+        write.csv(h, con, col.names=TRUE)
+      }
+    )
+    
     ## end scan hits and cache
 
     manhattan_data <- reactive({
