@@ -47,6 +47,7 @@ Suggests:
     shinytest,
     BSgenome.Hsapiens.UCSC.hg38,
     BSgenome.Mmusculus.UCSC.mm10,
+    BSgenome.Mmusculus.UCSC.mm39,
     BSgenome.Rnorvegicus.UCSC.rn6
 Description:
     A shiny interface to the scanMiR package. The application enables the 
@@ -60,6 +61,6 @@ Depends:
     scanMiR
 License: GPL-3
 VignetteBuilder: knitr
-RoxygenNote: 7.2.1
+RoxygenNote: 7.2.3
 biocViews: miRNA, SequenceMatching, GUI, ShinyApps
 Config/testthat/edition: 3
