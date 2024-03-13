@@ -161,9 +161,17 @@ setMethod("show", "ScanMiRAnno", function(object){
 .fakeAnno <- function(){
   data("SampleKdModel", package="scanMiR", envir = environment())
   data("SampleTranscript", package="scanMiR", envir = environment())
-  data("fakeTxDb", package="scanMiRApp", envir = environment())
   f <- tempfile()
   export.2bit(DNAStringSet(SampleTranscript), f)
   ge <- TwoBitFile(f)
-  ScanMiRAnno(genome=ge, ensdb=fakeTxDb, models=c(SampleKdModel))
+  gr <- GRanges(seqlevels(ge), IRanges(c(1,1,1,1),c(898,898,898,210)),
+                type=c("gene","transcript","exon","CDS"),
+                exon_id=c(NA,NA,"e1",NA), exon_number=c(NA,NA,1,NA),
+                strand="+", source="fake", gene_biotype="protein_coding")
+  gr$entrezid <- gr$gene_id <- gr$gene_name <- "gene1"
+  gr$transcript_id <- gr$tx_id <- "ENSTFAKE0000056456"
+  md <- data.frame(name=c("Organism","Genome"), value=c("Fake falsus","fake1"))
+  db <- makeTxDbFromGRanges(gr, metadata=md)
+  ScanMiRAnno(genome=ge, ensdb=db, models=c(SampleKdModel))
 }
+
