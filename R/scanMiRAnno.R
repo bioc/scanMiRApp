@@ -160,6 +160,7 @@ setMethod("show", "ScanMiRAnno", function(object){
 #' @importFrom utils data
 .fakeAnno <- function(){
   data("SampleKdModel", package="scanMiR", envir = environment())
+  data("SampleTranscript", package="scanMiR", envir = environment())
   data("fakeTxDb", package="scanMiRApp", envir = environment())
   f <- tempfile()
   export.2bit(DNAStringSet(SampleTranscript), f)
