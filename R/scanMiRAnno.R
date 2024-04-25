@@ -156,7 +156,7 @@ setMethod("show", "ScanMiRAnno", function(object){
 
 #' @importFrom Biostrings DNAStringSet
 #' @importFrom rtracklayer TwoBitFile export.2bit
-#' @importFrom GenomicFeatures makeTxDbFromGRanges
+#' @importFrom txdbmaker makeTxDbFromGRanges
 #' @importFrom utils data
 .fakeAnno <- function(){
   data("SampleKdModel", package="scanMiR", envir = environment())
@@ -171,7 +171,7 @@ setMethod("show", "ScanMiRAnno", function(object){
   gr$entrezid <- gr$gene_id <- gr$gene_name <- "gene1"
   gr$transcript_id <- gr$tx_id <- "ENSTFAKE0000056456"
   md <- data.frame(name=c("Organism","Genome"), value=c("Fake falsus","fake1"))
-  db <- makeTxDbFromGRanges(gr, metadata=md)
+  db <- txdbmaker::makeTxDbFromGRanges(gr, metadata=md)
   ScanMiRAnno(genome=ge, ensdb=db, models=c(SampleKdModel))
 }
 
