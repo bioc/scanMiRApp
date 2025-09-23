@@ -90,6 +90,12 @@ scanMiRserver <- function( annotations=list(), modlists=NULL,
 
   function(input, output, session){
 
+    observe({
+      # free memory every 5min
+      invalidateLater(600000, session)
+      gc(verbose=FALSE)
+    })
+
     #############################
     ## intro
 
