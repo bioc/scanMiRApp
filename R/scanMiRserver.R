@@ -6,6 +6,8 @@
 #' @param annotations A named list of \code{\link{ScanMiRAnno}} object.
 #' @param modlists A named list of `KdModelList` objects. If omitted, will
 #' fetch it from the annotation objects.
+#' @param gc.time The number of microseconds after which a garbage collect
+#' should be performed.
 #' @param maxCacheSize Maximum cache size in bytes.
 #' @param BP BPPARAM for multithreading
 #'
@@ -35,7 +37,7 @@
 #' # here we'll use a fake one:
 #' anno <- ScanMiRAnno("fake")
 #' srv <- scanMiRserver(list(fake=anno))
-scanMiRserver <- function( annotations=list(), modlists=NULL,
+scanMiRserver <- function( annotations=list(), modlists=NULL, gc.time=Inf,
                            maxCacheSize=10*10^6, BP=SerialParam() ){
   stopifnot(length(annotations)>0)
   stopifnot(all(vapply(annotations, class2="ScanMiRAnno",
@@ -91,9 +93,10 @@ scanMiRserver <- function( annotations=list(), modlists=NULL,
   function(input, output, session){
 
     observe({
-      # free memory every 5min
-      invalidateLater(600000, session)
-      gc(verbose=FALSE)
+      if(gc.time>0 & !is.infinite(gc.time)){
+        invalidateLater(gc.time, session)
+        gc(verbose=FALSE)
+      }
     })
 
     #############################

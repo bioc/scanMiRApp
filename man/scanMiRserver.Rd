@@ -7,6 +7,7 @@
 scanMiRserver(
   annotations = list(),
   modlists = NULL,
+  gc.time = Inf,
   maxCacheSize = 10 * 10^6,
   BP = SerialParam()
 )
@@ -16,6 +17,9 @@ scanMiRserver(
 
 \item{modlists}{A named list of `KdModelList` objects. If omitted, will
 fetch it from the annotation objects.}
+
+\item{gc.time}{The number of microseconds after which a garbage collect
+should be performed.}
 
 \item{maxCacheSize}{Maximum cache size in bytes.}
 
