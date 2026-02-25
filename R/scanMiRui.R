@@ -238,7 +238,7 @@ scanMiRui <- function(){
     ),
     box(width=12, title="Getting started",
         tags$div( style="font-size: 110%;",
-           tags$p("For a quick tour of the app, ", actionLink("helpLink", "click here",.noWS = "outside"),"."),
+           tags$p("For a quick tour of the app, ", actionLink("helpLink", "click here"),"."),
            tags$p("There are two main ways to use scanMiRApp:"),
            tags$br(), tags$h4("Transcript-centered:"),
            tags$p("In the 'Search in gene/sequence' menu, you'll be able to ",
