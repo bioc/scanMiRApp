@@ -47,7 +47,7 @@ scanMiRserver <- function( annotations=list(), modlists=NULL, gc.time=Inf,
   stopifnot(all(vapply(modlists, class2="KdModelList",
                        FUN.VALUE=logical(1), FUN=is)))
   stopifnot(all(names(modlists) %in% names(annotations)))
-
+  
   dtwrapper <- function(d, pageLength=25, rownames=TRUE, ...){
     datatable( d, filter="top", class="compact",
                extensions=c("Buttons","ColReorder"),
@@ -56,12 +56,12 @@ scanMiRserver <- function( annotations=list(), modlists=NULL, gc.time=Inf,
                  buttons=c('copy', 'csv', 'excel', 'csvHtml5', 'colvis')
                ), rownames=rownames, ... )
   }
-
+  
   checkModIdentity <- function(m1,m2){
     identical(lapply(m1,FUN=function(x) x$mer8),
               lapply(m2,FUN=function(x) x$mer8))
   }
-
+  
   getTxs <- function(db, gene=NULL){
     if(is.null(gene)) return(NULL)
     if(is(db,"EnsDb")){
@@ -70,14 +70,14 @@ scanMiRserver <- function( annotations=list(), modlists=NULL, gc.time=Inf,
                         filter=~gene_id==gene, return.type="data.frame")
     }else{
       tx <- suppressMessages(try(select(db, keys=gene, keytype="GENEID",
-                                    columns=c("TXNAME","TXTYPE")), silent=TRUE))
+                                        columns=c("TXNAME","TXTYPE")), silent=TRUE))
       if(is(tx,"try-error")) return(NULL)
       colnames(tx) <- c("gene","tx_id","tx_biotype")
     }
     if(nrow(tx)==0) return(NULL)
     setNames(tx$tx_id, paste0(tx$tx_id, " (",tx$tx_biotype, ")"))
   }
-
+  
   getGeneFromTx <- function(db, tx){
     if(is(db,"EnsDb")){
       tx <- transcripts(db, columns=c("tx_id","gene_id"),
@@ -89,19 +89,19 @@ scanMiRserver <- function( annotations=list(), modlists=NULL, gc.time=Inf,
     if(is(tx,"try-error")) return(NULL)
     as.character(tx$GENEID[1])
   }
-
+  
   function(input, output, session){
-
+    
     observe({
       if(gc.time>0 & !is.infinite(gc.time)){
         invalidateLater(gc.time, session)
         gc(verbose=FALSE)
       }
     })
-
+    
     #############################
     ## intro
-
+    
     startIntro <- function(session){
       introjs(session, options=list(steps=.getAppIntro(), "nextLabel"="Next",
                                     "prevLabel"="Previous"),
@@ -110,10 +110,10 @@ scanMiRserver <- function( annotations=list(), modlists=NULL, gc.time=Inf,
     
     observeEvent(input$helpBtn, startIntro(session))
     observeEvent(input$helpLink, startIntro(session))
-
+    
     ##############################
     ## initialize inputs
-
+    
     output$menuCollection <- renderUI({
       menuItem(tags$span("miRNA Collection:", 
                          HTML("<br/>&nbsp;&nbsp;&nbsp;&nbsp;"), input$mirlist),
@@ -130,23 +130,23 @@ scanMiRserver <- function( annotations=list(), modlists=NULL, gc.time=Inf,
     
     updateSelectizeInput(session, "mirlist", choices=names(modlists))
     updateSelectizeInput(session, "annotation", choices=names(annotations))
-
+    
     observe({
       # when the choice of collection changes, update the annotation to
       # use the same genome
       if(!is.null(input$mirlist) && input$mirlist!="")
         updateSelectizeInput(session, "annotation", selected=input$mirlist)
     })
-
-
+    
+    
     ##############################
     ## select collection
-
+    
     allmods <- reactive({ # all models from collection
       if(is.null(input$mirlist)) return(NULL)
       modlists[[input$mirlist]]
     })
-
+    
     # prints a summary of the model collection
     output$collection_summary <- renderPrint({
       if(is.null(input$mirlist) || is.null(annotations[[input$mirlist]]))
@@ -160,31 +160,31 @@ scanMiRserver <- function( annotations=list(), modlists=NULL, gc.time=Inf,
       if(is.null(input$mirlist) || is.null(annotations[[input$mirlist]]))
         return(valueBox("N/A", subtitle = "Nothing loaded", color="light-blue"))
       valueBox(input$mirlist, color = "light-blue",
-        tags$div(lapply(capture.output(print(annotations[[input$mirlist]])),
-               FUN=function(x) tags$p(x)))
+               tags$div(lapply(capture.output(print(annotations[[input$mirlist]])),
+                               FUN=function(x) tags$p(x)))
       )
     })
-
-
+    
+    
     observe({ ## when the selected collection changes,
-              ## update the miRNA selection inputs
+      ## update the miRNA selection inputs
       updateSelectizeInput(session, "mirnas", choices=names(allmods()),
                            server=TRUE)
       updateSelectizeInput(session, "mirna", choices=names(allmods()),
                            server=TRUE)
     })
-
+    
     ##############################
     ## scan specific sequence
-
+    
     ## transcript selection
-
+    
     sel_ensdb <- reactive({ # the ensembldb for the selected genome
       if(is.null(input$annotation) || input$annotation=="" ||
          !(input$annotation %in% names(annotations))) return(NULL)
       annotations[[input$annotation]]$ensdb
     })
-
+    
     allgenes <- reactive({ # all genes in the selected genome
       if(is.null(sel_ensdb())) return(NULL)
       if(is(sel_ensdb(), "EnsDb")){
@@ -201,12 +201,12 @@ scanMiRserver <- function( annotations=list(), modlists=NULL, gc.time=Inf,
       }
       gs
     })
-
+    
     selgene <- reactive({ # selected gene id
       if(is.null(input$gene) || input$gene=="") return(NULL)
       input$gene
     })
-
+    
     output$gene_link <- renderUI({
       if(is.null(selgene()) || selgene()=="") return(NULL)
       base <- annotations[[input$annotation]]$ensembl_gene_baselink
@@ -214,12 +214,12 @@ scanMiRserver <- function( annotations=list(), modlists=NULL, gc.time=Inf,
       tags$a(href=paste0(base, selgene()), icon("external-link"),
              "view on ensembl", target="_blank")
     })
-
+    
     alltxs <- reactive({ # all tx from selected gene
       if(is.null(selgene()) || selgene()=="") return(NULL)
       getTxs(sel_ensdb(), selgene())
     })
-
+    
     seltx <- reactive({ # the selected transcript
       if(is.null(input$transcript) || input$transcript=="" ||
          is.na(input$transcript))
@@ -227,7 +227,7 @@ scanMiRserver <- function( annotations=list(), modlists=NULL, gc.time=Inf,
       changeFlag()
       input$transcript
     })
-
+    
     # when the ensembldb is updated, update the gene input
     observe(updateSelectizeInput(session, "gene", choices=allgenes(),
                                  server=TRUE))
@@ -239,7 +239,7 @@ scanMiRserver <- function( annotations=list(), modlists=NULL, gc.time=Inf,
       if(is.null(txs)) txs <- c()
       updateSelectizeInput(session, "transcript", choices=alltxs(), selected=prev_seltx)
     })
-
+    
     # takes a genome package name as input, and returns the genome
     getGenome <- function(x){
       if(is.character(x)){
@@ -251,7 +251,7 @@ scanMiRserver <- function( annotations=list(), modlists=NULL, gc.time=Inf,
       seqlevels(x) <- gsub("^chr","",seqlevels(x))
       x
     }
-
+    
     seqs <- reactive({ # returns the selected sequence(s)
       if((is.null(selgene()) || selgene()=="") &&
          (is.null(seltx()) || seltx()=="")) return(DNAStringSet())
@@ -259,9 +259,9 @@ scanMiRserver <- function( annotations=list(), modlists=NULL, gc.time=Inf,
       if(is.null(txid <- seltx())) txid <- getTxs(sel_ensdb(), gid)
       getTranscriptSequence( txid, annotations[[input$annotation]],
                              extract=switch(input$seqFeature,
-         "CDS+UTR"="withORF", "whole transcript"="exons", "UTRonly"))
+                                            "CDS+UTR"="withORF", "whole transcript"="exons", "UTRonly"))
     })
-
+    
     output$tx_overview <- renderTable({ # overview of the selected transcript
       if(is.null(seqs()) || length(seqs())==0)
         return(data.frame(sequence="Empty sequence!"))
@@ -270,11 +270,11 @@ scanMiRserver <- function( annotations=list(), modlists=NULL, gc.time=Inf,
       ss[w>40] <- paste0(ss[w>40],"...")
       data.frame(transcript=names(seqs()), length=w, sequence=ss)
     })
-
+    
     ## end transcript selection
-
+    
     ## custom sequence
-
+    
     customTarget <- reactive({
       if(is.null(input$customseq) || input$customseq=="") return(NULL)
       isRNA <- grepl("U", input$customseq, fixed=TRUE)
@@ -283,7 +283,7 @@ scanMiRserver <- function( annotations=list(), modlists=NULL, gc.time=Inf,
       if(isRNA) seq <- RNAString(seq)
       DNAString(seq)
     })
-
+    
     output$custom_info <- renderPrint({ # overview of the custom sequence
       if(is.null(input$customseq)) return("")
       out <- capture.output(customTarget())
@@ -292,23 +292,23 @@ scanMiRserver <- function( annotations=list(), modlists=NULL, gc.time=Inf,
                  "the end of the sequence.\n", out)
       cat(out)
     })
-
+    
     target <- reactive({ # target subject sequence
       if(input$subjet_type=="custom"){
         return(as.character(DNAStringSet(customTarget())))
       }
       if(is.null(seqs()) || length(seqs())>1) return(NULL)
       changeFlag()
-      as.character(seqs())
+      seqs()
     })
-
+    
     observeEvent(input$rndseq, { # generate random sequence
       updateTextAreaInput(session, "customseq",
                           value=as.character(getRandomSeq()))
     })
-
+    
     ## Select miRNAs for scanning
-
+    
     observeEvent(input$mirnas_confident, {
       if(is.null(allmods())) return(NULL)
       cons <- conservation(allmods())
@@ -342,29 +342,28 @@ scanMiRserver <- function( annotations=list(), modlists=NULL, gc.time=Inf,
       if(input$mirnas_all)
         updateSelectizeInput(session, "mirnas", selected="")
     })
-
+    
     selmods <- reactive({ # models selected for scanning
       if(is.null(allmods())) return(NULL)
       if(input$mirnas_all) return(allmods())
       if(is.null(input$mirnas)) return(NULL)
       allmods()[input$mirnas]
     })
-
+    
     ## Begin scan and results caching
-
+    
     output$scanBtn <- renderUI({
-      if(is.null(target()) || !isTRUE(nchar(target())>0) ||
-         is.null(selmods()) || length(selmods())==0)
+      if(targetIsNull())
         return(actionButton("noscan", "Cannot launch scan - check input",
                             icon("exclamation-triangle"), disabled=TRUE))
       actionButton("scan", "Scan!", icon = icon("search"))
-   })
-
+    })
+    
     # actual and past scanning results are stored in this object
     cached.hits <- reactiveValues()
-
+    
     changeFlag <- reactiveVal(0)
-
+    
     cached.checksums <- reactive({
       ch <- reactiveValuesToList(cached.hits)
       ch <- ch[!vapply(ch, FUN.VALUE=logical(1), FUN=is.null)]
@@ -373,44 +372,46 @@ scanMiRserver <- function( annotations=list(), modlists=NULL, gc.time=Inf,
       })
     })
     current.cs <- reactiveVal()
-
+    
     hits <- reactive({ # the results currently loaded are stored in this object
       if(is.null(current.cs())) return(NULL)
       if(current.cs() %in% names(cached.checksums()))
         return(cached.hits[[current.cs()]])
       NULL
     })
-
+    
     checksum <- reactive({ # generate a unique hash for the given input
       changeFlag()
       paste( digest::digest(selmods()),
-             digest::digest(list(target=target(), shadow=input$shadow,
-                                 keepMatchSeq=input$keepMatchSeq,
+             digest::digest(list(target=as.character(target()),
+                                 shadow=input$shadow, 
+                                 keepMatchSeq=input$keepmatchseq,
+                                 circular=input$circular,
                                  minDist=input$minDist, maxLogKd=input$maxLogKd,
                                  scanNonCanonical=input$scanNonCanonical))
       )
     })
-
+    
     cache.size <- reactive({
       ch <- cached.checksums()
       if(is.null(ch) || length(ch)==0) return(0)
       sum(vapply(ch, FUN.VALUE=numeric(1), FUN=function(x) as.numeric(x$size)))
     })
-
+    
     cleanCache <- function(){
       # remove last-used results when over the cache size limit
       cs <- isolate(cached.checksums())
       if(length(cs)<3 || as.numeric(cache.size())<maxCacheSize) return(NULL)
       cs <- cs[order(unlist(lapply(cs,FUN=function(x) x$last)),decreasing=TRUE)]
       sizes <- vapply(ch, FUN.VALUE=numeric(1), FUN=function(x)
-                                                            as.numeric(x$size))
+        as.numeric(x$size))
       while(length(cs)>2 & sum(sizes)>maxCacheSize){
         cached.hits[[rev(names(cs))[1]]] <- NULL
         cs <- cs[-length(cs)]
         sizes <- sizes[-length(sizes)]
       }
     }
-
+    
     checkPreComputedScan <- function(txid, utr_only=FALSE){
       if(is.null(preScan <- annotations[[input$annotation]]$scan)) return(NULL)
       if(is.null(origMods <- annotations[[input$annotation]]$models) ||
@@ -443,24 +444,31 @@ scanMiRserver <- function( annotations=list(), modlists=NULL, gc.time=Inf,
           h <- IRanges::shift(h, -1L * as.integer(s))
         }
       }
+      if(input$shadow > 0) h <- h[start(h) > input$shadow]
       if(length(h)==0) return(h)
       if(!input$scanNonCanonical)
         h <- h[grep("canonical|bulged",h$type,invert=TRUE)]
-      h <- h[h$log_kd < input$maxLogKd]
+      h <- h[h$log_kd < input$maxLogKd*1000L]
       h[order(h$log_kd)]
     }
-
+    
+    targetIsNull <- reactive({
+      if(is.null(selmods()) || length(selmods())==0 || is.null(target()))
+        return(TRUE)
+      target <- as.character(target())
+      if(length(target)==0 || nchar(target)==0) return(TRUE)
+      FALSE
+    })
+    
     observeEvent(input$scan, { # actual scanning
-      if(is.null(selmods()) || is.null(target()) || nchar(target())==0)
-        return(NULL)
+      if(targetIsNull()) return(NULL)
       cs <- checksum()
       cached.hits[[cs]] <- do.scan()
       current.cs(cs)
     })
-
+    
     do.scan <- reactive({
-      if(is.null(selmods()) || is.null(target()) || length(target())==0 ||
-        nchar(target())==0){
+      if(targetIsNull()){
         waiter_hide()
         return(NULL)
       }
@@ -490,9 +498,9 @@ scanMiRserver <- function( annotations=list(), modlists=NULL, gc.time=Inf,
         maxLogKd <- input$maxLogKd
         withProgress(message=msg, detail=detail, value=1, max=3, {
           res$hits = findSeedMatches(
-              scantarget, scanmods, keepMatchSeq=keepmatchseq,
-              minDist=minDist, maxLogKd=maxLogKd, shadow=shadow,
-              onlyCanonical=onlyCanonical, p3.extra=TRUE, BP=BP )
+            scantarget, scanmods, keepMatchSeq=keepmatchseq,
+            minDist=minDist, maxLogKd=maxLogKd, shadow=shadow,
+            onlyCanonical=onlyCanonical, p3.extra=TRUE, BP=BP )
         })
       }
       if(length(res$hits)>0){
@@ -506,32 +514,32 @@ scanMiRserver <- function( annotations=list(), modlists=NULL, gc.time=Inf,
       res$collection <- input$mirlist
       res$nsel <- nm <- length(selmods())
       res$sel <- ifelse(nm>1,paste(nm,"models"),input$mirnas)
-      res$seq <- target()
+      res$seq <- as.character(target())
       res$seqFeature <- input$seqFeature
       res$maxLogKd <- input$maxLogKd
-      res$target_length <- nchar(target())
+      res$target_length <- nchar(as.character(target()))
       if(input$subjet_type=="custom"){
         res$target <- "custom sequence"
       }else{
         res$target <- paste0(input$gene, " - ", seltx(),
-                            " (", input$seqFeature, ")")
+                             " (", input$seqFeature, ")")
       }
       waiter_hide()
       return(res)
     })
-
+    
     output$scan_target <- renderText({
       if(is.null(current.cs()) || is.null(cached.hits[[current.cs()]]))
         return(NULL)
       paste("Scan results in: ", cached.hits[[current.cs()]]$target)
     })
-
+    
     output$cache.info <- renderText({
       if(cache.size()==0) return("Cache empty.")
       paste0(length(cached.checksums()), " results cached (",
              round(cache.size()/1024^2,3)," Mb)")
     })
-
+    
     output$cached.results <- renderUI({
       ch <- cached.checksums()
       ch2 <- names(ch)
@@ -541,18 +549,18 @@ scanMiRserver <- function( annotations=list(), modlists=NULL, gc.time=Inf,
       })
       radioButtons("selected.cache", "Cached results", choices=ch2)
     })
-
+    
     observeEvent(input$loadCache, {
       if(is.null(input$selected.cache)) return(NULL)
       current.cs(input$selected.cache)
     })
-
+    
     observeEvent(input$deleteCache, {
       if(is.null(input$selected.cache)) return(NULL)
       cached.hits[[input$selected.cache]] <- NULL
       if(current.cs()==input$selected.cache) current.cs(NULL)
     })
-
+    
     output$hits_table <- renderDT({ # prints the current hits
       if(is.null(hits()$hits)) return(NULL)
       h <- as.data.frame(hits()$hits)
@@ -568,7 +576,7 @@ scanMiRserver <- function( annotations=list(), modlists=NULL, gc.time=Inf,
         })
       '))
     })
-
+    
     output$dl_hits <- downloadHandler(
       filename = function() {
         if(is.null(hits()$hits)) return(NULL)
@@ -588,7 +596,7 @@ scanMiRserver <- function( annotations=list(), modlists=NULL, gc.time=Inf,
         write.csv(h, con, col.names=TRUE)
       }
     )
-
+    
     observeEvent(input$colHelp, .getHelpModal("hitsCol"))
     observeEvent(input$stypeHelp, .getHelpModal("stypes"))
     observeEvent(input$stypeHelp2, .getHelpModal("stypes"))
@@ -616,7 +624,7 @@ scanMiRserver <- function( annotations=list(), modlists=NULL, gc.time=Inf,
       ag$transcript <- ag$repression <- NULL
       ag
     })
-
+    
     output$agghits_table <- renderDT({
       if(is.null(agghits_data())) return(NULL)
       h <- as.data.frame(agghits_data())
@@ -627,7 +635,7 @@ scanMiRserver <- function( annotations=list(), modlists=NULL, gc.time=Inf,
       filename = function() {
         if(is.null(agghits_data())) return(NULL)
         fn <- paste0("agghits-", gsub("\\.[09]+", "",
-                                   cached.hits[[current.cs()]]$target))
+                                      cached.hits[[current.cs()]]$target))
         if(hits()$nsel == 1){
           fn <- paste0(fn,"-",cached.hits[[cs]]$sel,".csv")
         }else{
@@ -643,7 +651,7 @@ scanMiRserver <- function( annotations=list(), modlists=NULL, gc.time=Inf,
     )
     
     ## end scan hits and cache
-
+    
     manhattan_data <- reactive({
       if(is.null(hits()$hits)) return(NULL)
       h <- hits()$hits
@@ -656,7 +664,7 @@ scanMiRserver <- function( annotations=list(), modlists=NULL, gc.time=Inf,
       if(length(h)==0) return(NULL)
       h
     })
-
+    
     output$manhattan <- renderPlotly({
       if(is.null(h <- manhattan_data()))
         return(ggplotly(ggplot(), source="manhattan"))
@@ -682,9 +690,9 @@ scanMiRserver <- function( annotations=list(), modlists=NULL, gc.time=Inf,
         mer8 <- get8merRange(selmods()[[1]])/-1000
         ymax <- max(mer8)
         p <- p + geom_rect(aes(colour=NULL),
-          data=data.frame(type="8mer range", log_kd=0, position=1),
-          xmin=xlim[1], xmax=xlim[2], ymin=min(mer8), ymax=max(mer8),
-          alpha=0.2, fill="green")
+                           data=data.frame(type="8mer range", log_kd=0, position=1),
+                           xmin=xlim[1], xmax=xlim[2], ymin=min(mer8), ymax=max(mer8),
+                           alpha=0.2, fill="green")
       }
       p <- p + theme_minimal() + theme(axis.line.x=element_line()) +
         geom_hline(yintercept=-hits()$maxLogKd, linetype="dashed",
@@ -698,9 +706,9 @@ scanMiRserver <- function( annotations=list(), modlists=NULL, gc.time=Inf,
         scale_y_continuous(limits=c(0,ymax), expand=c(0,0.1))
       ggplotly(p, source="manhattan")
     })
-
+    
     selectedMatch <- reactiveVal()
-
+    
     observeEvent(input$dblClickMatch, {
       if(is.null(hits()$hits)) return(NULL)
       if(is.null(input$dblClickMatch)) return(NULL)
@@ -716,9 +724,9 @@ scanMiRserver <- function( annotations=list(), modlists=NULL, gc.time=Inf,
         footer = NULL
       ))
     })
-
+    
     plotlyObserver <- observeEvent(event_data("plotly_click", "manhattan",
-                                          priority="event"), suspended=TRUE, {
+                                              priority="event"), suspended=TRUE, {
       if(is.null(h <- manhattan_data())) return(NULL)
       event <- event_data("plotly_click", "manhattan")
       if(!is.list(event) || is.null(event$pointNumber)) return(NULL)
@@ -736,8 +744,8 @@ scanMiRserver <- function( annotations=list(), modlists=NULL, gc.time=Inf,
         easyClose = TRUE,
         footer = NULL
       ))
-    })
-
+                                              })
+    
     output$alignment_header <- renderText({
       if(is.null(m <- selectedMatch()))
         return("Double-click on a row of the table above to visualize it here")
@@ -745,7 +753,7 @@ scanMiRserver <- function( annotations=list(), modlists=NULL, gc.time=Inf,
                       as.character(mcols(m)$miRNA),hits()$sel)
       paste0(miRNA, " match at ",start(m),"-",end(m)," (", mcols(m)$type, ")")
     })
-
+    
     output$alignment <- renderPrint({
       if(is.null(m <- selectedMatch())) return(NULL)
       mir <- ifelse("miRNA" %in% colnames(mcols(m)),
@@ -755,31 +763,31 @@ scanMiRserver <- function( annotations=list(), modlists=NULL, gc.time=Inf,
       seqs <- setNames(as.character(seqs), as.character(seqnames(m)))
       viewTargetAlignment(m, mod, seqs=seqs)
     })
-
+    
     ##############################
     ## miRNA-centric tab
-
+    
     mod <- reactive({ # the currently-selected KdModel
       if(is.null(allmods()) || is.null(input$mirna)) return(NULL)
       allmods()[[input$mirna]]
     })
-
+    
     output$modconservation <- renderText({
       if(is.null(mod())) return(NULL)
       as.character(conservation(mod()))
     })
-
+    
     output$mirbase_link <- renderUI({
       tags$a(href=paste0("http://www.mirbase.org/textsearch.shtml?q=",
                          input$mirna),
              icon("external-link"), "miRBase", target="_blank")
     })
-
+    
     output$modplot <- renderPlot({ # affinity plot
       if(is.null(mod())) return(NULL)
       plotKdModel(mod())
     })
-
+    
     output$targets_ui <- renderUI({
       if(is.null(annotations[[input$mirlist]]$aggregated)){
         return(tags$p("Targets not accessible ",
@@ -797,7 +805,7 @@ scanMiRserver <- function( annotations=list(), modlists=NULL, gc.time=Inf,
         downloadLink('dl_mirTargets', label = "Download all")
       )
     })
-
+    
     txs <- reactive({ # the tx to gene symbol table for the current annotation
       if(is.null(input$mirlist) || input$mirlist=="" ||
          !(input$mirlist %in% names(annotations))) return(NULL)
@@ -813,7 +821,7 @@ scanMiRserver <- function( annotations=list(), modlists=NULL, gc.time=Inf,
       }
       tx
     })
-
+    
     mirtargets_prepared <- reactive({
       if(is.null(preTargets <- annotations[[input$mirlist]]$aggregated) ||
          !(input$mirna %in% names(preTargets))) return(NULL)
@@ -837,7 +845,7 @@ scanMiRserver <- function( annotations=list(), modlists=NULL, gc.time=Inf,
       }
       as.data.frame(d[order(d$repression),])
     })
-
+    
     output$mirna_targets <- renderDT({
       d <- mirtargets_prepared()
       if(is.null(d)) return(NULL)
@@ -848,14 +856,14 @@ scanMiRserver <- function( annotations=list(), modlists=NULL, gc.time=Inf,
       })
     '))
     })
-
+    
     ## double-click on a transcript in miRNA targets:
     observeEvent(input$dblClickSubject, {
       sub <- input$dblClickSubject
       if(input$targetlist_gene) return(NULL)
       gene <- getGeneFromTx(sel_ensdb(), sub)
       isolate(updateSelectizeInput(session, "gene", selected=gene,
-                           choices=allgenes(), server=TRUE))
+                                   choices=allgenes(), server=TRUE))
       updateTabItems(session, "subject_type", "transcript")
       txs <- getTxs(sel_ensdb(), gene=gene)
       #updateCheckboxInput(session, "utr_only", value=input$targetlist_utronly)
@@ -872,7 +880,7 @@ scanMiRserver <- function( annotations=list(), modlists=NULL, gc.time=Inf,
       })
       updateTabItems(session, "main_tabs", "tab_hits")
     })
-
+    
     output$dl_mirTargets <- downloadHandler(
       filename = function() {
         if(is.null(input$mirna)) return(NULL)
@@ -882,14 +890,14 @@ scanMiRserver <- function( annotations=list(), modlists=NULL, gc.time=Inf,
         write.csv(mirtargets_prepared(), con, col.names=TRUE)
       }
     )
-
+    
     output$pkgVersions <- renderText({
       paste(
         "Running on scanMiR", packageVersion("scanMiR"), "and scanMiRApp",
         packageVersion("scanMiRApp")
       )
     })
-
+    
     waiter_hide()
   }
 }
