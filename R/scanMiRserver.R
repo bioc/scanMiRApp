@@ -444,7 +444,7 @@ scanMiRserver <- function( annotations=list(), modlists=NULL, gc.time=Inf,
           h <- IRanges::shift(h, -1L * as.integer(s))
         }
       }
-      if(input$shadow > 0) h <- h[start(h) > input$shadow]
+      if(input$shadow > 0) h <- h[start(h) >= input$shadow]
       if(length(h)==0) return(h)
       if(!input$scanNonCanonical)
         h <- h[grep("canonical|bulged",h$type,invert=TRUE)]
